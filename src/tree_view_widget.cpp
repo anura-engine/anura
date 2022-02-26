@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,25 +39,25 @@
 #include "text_editor_widget.hpp"
 #include "tree_view_widget.hpp"
 
-namespace gui 
+namespace gui
 {
 	TreeViewWidget::TreeViewWidget(int w, int h, const variant& tree)
-		: tree_(tree), 
-		hpad_(10), 
-		col_size_(80), 
-		font_size_(12), 
-		selected_row_(-1), 
-		char_height_(KRE::Font::charHeight(font_size_)), 
+		: tree_(tree),
+		hpad_(10),
+		col_size_(80),
+		font_size_(12),
+		selected_row_(-1),
+		char_height_(KRE::Font::charHeight(font_size_)),
 		allow_selection_(false),
-		must_select_(false), 
-		nrows_(0), 
+		must_select_(false),
+		nrows_(0),
 		swallow_clicks_(false),
-		max_height_(-1), 
-		min_col_size_(20), 
-		max_col_size_(80), 
+		max_height_(-1),
+		min_col_size_(20),
+		max_col_size_(80),
 		char_width_(KRE::Font::charWidth(font_size_)),
-		persistent_highlight_(false), 
-		highlight_color_(KRE::Color::colorBlue()), 
+		persistent_highlight_(false),
+		highlight_color_(KRE::Color::colorBlue()),
 		highlighted_row_(-1)
 	{
 		row_height_ = KRE::Font::charHeight(font_size_);
@@ -67,13 +67,13 @@ namespace gui
 	}
 
 	TreeViewWidget::TreeViewWidget(const variant& v, game_logic::FormulaCallable* e)
-		: ScrollableWidget(v,e), 
-		selected_row_(-1), 
+		: ScrollableWidget(v,e),
+		selected_row_(-1),
 		nrows_(0),
-		min_col_size_(20), 
+		min_col_size_(20),
 		max_col_size_(80),
-		persistent_highlight_(false), 
-		highlight_color_(KRE::Color::colorBlue()), 
+		persistent_highlight_(false),
+		highlight_color_(KRE::Color::colorBlue()),
 		highlighted_row_(-1)
 	{
 		tree_ = v["child"];
@@ -185,7 +185,7 @@ namespace gui
 				y += key_label->height();
 				onTraverseElement(key, parent, value, nrows_);
 			}
-		
+
 			for(int index = 0; index != value->as_list().size(); index++) {
 				variant* item = value->get_index_mutable(index);
 				y = traverse(depth+1, x, y, value, item->is_map() ? variant("<map>") : variant(), item);
@@ -213,9 +213,9 @@ namespace gui
 		return y;
 	}
 
-	void TreeViewWidget::genTraverse(int depth, 
-		std::function<void(int,const variant&,variant*)> fn, 
-		const variant& key, 
+	void TreeViewWidget::genTraverse(int depth,
+		std::function<void(int,const variant&,variant*)> fn,
+		const variant& key,
 		variant* value)
 	{
 		if(value->is_map()) {
@@ -336,7 +336,7 @@ namespace gui
 		int desired_height = row_height_*getNRows();
 		setVirtualHeight(desired_height);
 		setScrollStep(row_height_);
-	
+
 		if(max_height_ > 0 && desired_height > max_height_) {
 			desired_height = max_height_;
 			while(desired_height%row_height_) {
@@ -351,7 +351,7 @@ namespace gui
 				w->setVisible(false);
 			}
 		}
-	
+
 		updateScrollbar();
 	}
 
@@ -388,7 +388,7 @@ namespace gui
 						}
 					} else {
 						int y3 = getYscroll() + 3*row_height_;
-						setYscroll(getVirtualHeight() - y3 < height() 
+						setYscroll(getVirtualHeight() - y3 < height()
 							? getVirtualHeight() - height()
 							: y3);
 						selected_row_ += 3;
@@ -547,7 +547,7 @@ namespace gui
 	{
 		if(button == SDL_BUTTON_RIGHT) {
 			if(selection != -1) {
-				std::map<int, std::pair<variant*, variant*> >::const_iterator it 
+				std::map<int, std::pair<variant*, variant*> >::const_iterator it
 					= row_map_.find(selection);
 				if(it == row_map_.end()) {
 					selection = row_map_.end()->first;
@@ -613,7 +613,7 @@ namespace gui
 			return;
 		}
 		LOG_INFO("Tree selection: " << tree_selection);
-	
+
 		// Menu seperators have a '-' character in the first position.
 		if(choices[menu_selection][0] == '-') {
 			return;
@@ -738,10 +738,10 @@ namespace gui
 			return;
 		}
 
-		if(v->is_map() 
-			|| v->is_list() 
-			|| v->is_function() 
-			|| v->is_callable() 
+		if(v->is_map()
+			|| v->is_list()
+			|| v->is_function()
+			|| v->is_callable()
 			|| v->is_null()) {
 			return;
 		}

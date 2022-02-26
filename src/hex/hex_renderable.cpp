@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2014-2015 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -43,7 +43,7 @@ namespace hex
 
 	const int g_hex_tile_size = 72;
 
-	namespace 
+	namespace
 	{
 		rng::Seed hex_tile_seed;
 	}
@@ -141,7 +141,7 @@ namespace hex
 					aml->setCrop(img.crop);
 					aml->setColor(1.0f, 1.0f, 1.0f, img.opacity);
 					aml->setBCO(img.base, img.center, img.offset);
-					
+
 					layer.first = aml;
 				} else {
 					if(tex) {
@@ -151,15 +151,15 @@ namespace hex
 						}
 
 						layer.first->setTexture(tex);
-						add_tex_coords(&layer.second, 
-							tex->getTextureCoords(0, area), 
-							area.w(), 
-							area.h(), 
-							borders, 
-							img.base, 
-							img.center, 
+						add_tex_coords(&layer.second,
+							tex->getTextureCoords(0, area),
+							area.w(),
+							area.h(),
+							borders,
+							img.base,
+							img.center,
 							img.offset,
-							get_pixel_pos_from_tile_pos_evenq(hex.getPosition(), 
+							get_pixel_pos_from_tile_pos_evenq(hex.getPosition(),
 							g_hex_tile_size));
 						layer.first->setColor(1.0f, 1.0f, 1.0f, img.opacity);
 					}
@@ -193,7 +193,7 @@ namespace hex
 		as->addAttribute(attr_);
 		addAttributeSet(as);
 	}
-	
+
 	void MapLayer::updateAttributes(std::vector<KRE::vertex_texcoord>* attrs)
 	{
 		attr_->update(attrs);
@@ -232,7 +232,7 @@ namespace hex
 				alpha_uv_ = tex->getTextureCoords(0, area);
 				mask_.reset(new Blittable(tex));
 				auto shader = ShaderProgram::getSystemDefault()->clone();
-				shader->setUniformDrawFunction([](ShaderProgramPtr shader) { 
+				shader->setUniformDrawFunction([](ShaderProgramPtr shader) {
 					shader->setUniformValue(shader->getDiscardUniform(), 1);
 				});
 				mask_->setShader(shader);
@@ -249,13 +249,13 @@ namespace hex
 				if(!crop_rect_.empty()) {
 					area = rect(area.x1() + crop_rect_.x1(), area.y1() + crop_rect_.y1(), crop_rect_.w(), crop_rect_.h());
 				}
-				point p = add_tex_coords(&vtx, 
+				point p = add_tex_coords(&vtx,
 					tex->getTextureCoords(0, area),
 					area.w(),
 					area.h(),
-					frame[current_frame_pos_ % frame.size()].borders, 
-					base_, 
-					center_, 
+					frame[current_frame_pos_ % frame.size()].borders,
+					base_,
+					center_,
 					offset_,
 					pos);
 				if(it != frames_.cbegin()) {

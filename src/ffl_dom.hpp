@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -89,7 +89,7 @@ namespace xhtml
 		game_logic::FormulaCallable* getEnvironment() const { return environment_; }
 
 		void setLayoutSize(const rect& r) { layout_size_ = r; }
-		
+
 		ElementObjectPtr getActiveElement() const;
 		ElementObjectPtr getElementById(const std::string& element_id) const;
 		ElementObjectPtr getElementByNode(const NodePtr& node) const;
@@ -105,7 +105,7 @@ namespace xhtml
 		KRE::SceneNodePtr root_;
 		KRE::RenderManagerPtr rmanager_;
 		int last_process_time_;
-		
+
 		xhtml::DocumentPtr doc_;
 		xhtml::StyleNodePtr style_tree_;
 		KRE::SceneTreePtr scene_tree_;
@@ -118,6 +118,6 @@ namespace xhtml
 
 		mutable std::map<NodePtr, ElementObjectPtr> element_cache_;
 	};
-	
+
 	typedef ffl::IntrusivePtr<DocumentObject> DocumentObjectPtr;
 }

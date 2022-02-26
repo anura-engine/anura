@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -77,7 +77,7 @@ namespace voxel
 		bool isXEdge(int x) const;
 		bool isyEedge(int y) const;
 		bool isZEdge(int z) const;
-		
+
 		size_t sizeX() const { return size_x_; }
 		size_t sizeY() const { return size_y_; }
 		size_t sizeZ() const { return size_z_; }
@@ -150,7 +150,7 @@ namespace voxel
 		std::vector<graphics::DrawPrimitivePtr> DrawPrimitives_;
 
 		LogicalWorldPtr logic_;
-		
+
 		void get_active_chunks();
 	};
 

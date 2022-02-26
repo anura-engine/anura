@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,7 +38,7 @@ PREF_INT(editor_tileset_button_size, 44, "Size of tileset editing buttons in the
 
 namespace editor_dialogs
 {
-	namespace 
+	namespace
 	{
 		std::set<TilesetEditorDialog*>& all_tileset_editor_dialogs() {
 			static std::set<TilesetEditorDialog*>* all = new std::set<TilesetEditorDialog*>;
@@ -54,8 +54,8 @@ namespace editor_dialogs
 	}
 
 	TilesetEditorDialog::TilesetEditorDialog(editor& e)
-	  : Dialog(KRE::WindowManager::getMainWindow()->width() - EDITOR_SIDEBAR_WIDTH, 160, EDITOR_SIDEBAR_WIDTH, 440), 
-	    editor_(e), 
+	  : Dialog(KRE::WindowManager::getMainWindow()->width() - EDITOR_SIDEBAR_WIDTH, 160, EDITOR_SIDEBAR_WIDTH, 440),
+	    editor_(e),
 		first_index_(-1)
 	{
 		all_tileset_editor_dialogs().insert(this);

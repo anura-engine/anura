@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,8 +36,8 @@ namespace KRE
 				SVG_LENGTHTYPE_UNKNOWN,
 				SVG_LENGTHTYPE_NUMBER,
 				SVG_LENGTHTYPE_PERCENTAGE,
-				SVG_LENGTHTYPE_EMS,			// the 'font-size' of the relevant font 
-				SVG_LENGTHTYPE_EXS,			// the 'x-height' of the relevant font 
+				SVG_LENGTHTYPE_EMS,			// the 'font-size' of the relevant font
+				SVG_LENGTHTYPE_EXS,			// the 'x-height' of the relevant font
 				SVG_LENGTHTYPE_PX,			// pixels, relative to the viewing device
 				SVG_LENGTHTYPE_CM,			// centimetres
 				SVG_LENGTHTYPE_MM,			// millimetres
@@ -45,7 +45,7 @@ namespace KRE
 				SVG_LENGTHTYPE_PT,			// points -- equal to 1/72th of an inch
 				SVG_LENGTHTYPE_PC,			// picas -- 1 pica is equal to 12 points
 			};
-			svg_length() : value_(100.0f), units_(SVG_LENGTHTYPE_PERCENTAGE) {			
+			svg_length() : value_(100.0f), units_(SVG_LENGTHTYPE_PERCENTAGE) {
 			}
 			explicit svg_length(float value, LengthUnit unit) : value_(value), units_(unit) {
 			}

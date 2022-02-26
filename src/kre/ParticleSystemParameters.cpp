@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -74,15 +74,15 @@ namespace KRE
 
 			geometry::control_point_vector cps;
 			if(ntype == "curved_linear" || ntype == "curved_spline") {
-				ASSERT_LOG(node.has_key("control_point") 
+				ASSERT_LOG(node.has_key("control_point")
 					&& node["control_point"].is_list()
-					&& node["control_point"].num_elements() >= 2, 
+					&& node["control_point"].num_elements() >= 2,
 					"curved parameters must have at least 2 control points.");
 				for(size_t n = 0; n != node["control_point"].num_elements(); ++n) {
-					ASSERT_LOG(node["control_point"][n].is_list() 
+					ASSERT_LOG(node["control_point"][n].is_list()
 						&& node["control_point"][n].num_elements() == 2,
 						"Control points should be list of two elements.");
-					auto p = std::make_pair(node["control_point"][n][0].as_float(), 
+					auto p = std::make_pair(node["control_point"][n][0].as_float(),
 						node["control_point"][n][1].as_float());
 					cps.emplace_back(p);
 				}
@@ -104,16 +104,16 @@ namespace KRE
 				float ampl = 0.0f;
 				if(node.has_key("oscillate_frequency")) {
 					freq = node["oscillate_frequency"].as_float();
-				} 
+				}
 				if(node.has_key("oscillate_phase")) {
 					phase = node["oscillate_phase"].as_float();
-				} 
+				}
 				if(node.has_key("oscillate_base")) {
 					base = node["oscillate_base"].as_float();
-				} 
+				}
 				if(node.has_key("oscillate_amplitude")) {
 					ampl = node["oscillate_amplitude"].as_float();
-				} 
+				}
 				if(node.has_key("oscillate_type")) {
 					const std::string& type = node["oscillate_type"].as_string();
 					if(type == "sine" || type == "sin") {
@@ -178,7 +178,7 @@ namespace KRE
 					res.add("oscillate_amplitude", oscillate_.amplitude);
 					break;
 				}
-				default: 
+				default:
 					ASSERT_LOG(false, "Something went wrong with the parameter type: " << static_cast<int>(type_));
 					break;
 			}

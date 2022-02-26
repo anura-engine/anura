@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -84,7 +84,7 @@ namespace xhtml
 
 	std::string url_handler::getResource()
 	{
-		//ASSERT_LOG(future_.valid(), "Tried to access a resource which hasn't been scehduled to be created.");	
+		//ASSERT_LOG(future_.valid(), "Tried to access a resource which hasn't been scehduled to be created.");
 		// XXX we should probably wait for a timeout here or such if the result isn't immediately available.
 		future_.wait();
 		return future_.get();

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -35,7 +35,7 @@
 #include "tbs_bot.hpp"
 #include "variant.hpp"
 
-namespace tbs 
+namespace tbs
 {
 	class GameType;
 
@@ -110,7 +110,7 @@ namespace tbs
 		virtual void set_as_current_game(bool set) {}
 
 		void process();
-	
+
 		int state_id() const { return state_id_; }
 
 		void player_disconnect(int nplayer);
@@ -201,7 +201,7 @@ namespace tbs
 		void verify_replay();
 	};
 
-	class game_context 
+	class game_context
 	{
 		game* old_game_;
 	public:

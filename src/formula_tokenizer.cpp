@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@
 
 namespace formula_tokenizer
 {
-	namespace 
+	namespace
 	{
 		const FFL_TOKEN_TYPE* create_single_char_tokens() {
 			static FFL_TOKEN_TYPE chars[256];
@@ -653,7 +653,7 @@ BENCHMARK(tokenizer_bench)
 {
 	const std::string input =
 "	  #function which returns true if the object is in an animation that"
-"	   requires frogatto be on the ground#"	
+"	   requires frogatto be on the ground#"
 "	  def animation_requires_standing(obj)"
 "	    obj.animation in ['stand', 'stand_up_slope', 'stand_down_slope', 'run', 'walk', 'lookup', 'crouch', 'enter_crouch', 'leave_crouch', 'turn', 'roll','skid'];"
 "	  def set_facing(obj, facing) if(obj.facing != facing and (not (obj.animation in ['interact', 'slide'])),"
@@ -682,20 +682,20 @@ BENCHMARK(tokenizer_bench)
 "	    if( obj.animation in ['crouch'] and obj.is_standing, animation('roll'));"
 "	  def get_charge_cycles(obj)"
 "	    if(obj.tmp.start_attack_cycle, obj.cycle - obj.tmp.start_attack_cycle, 0);"
-	  
+
 "	  #Function to make Frogatto attack. Does checking and chooses the"
 "	   appropriate type of attack animation, if any.#"
 "	  def attack(obj, charge_cycles)"
 "	  [if('fat' in obj.variations,"
 "				[animation('spit')],["
 "					if(obj.animation in ['stand', 'stand_up_slope', 'stand_down_slope', 'walk', 'lookup','skid'], animation(if(obj.ctrl_up, 'up_', '') + if(charge_cycles >= obj.vars.charge_time, 'energyshot', 'attack'))),"
-					
+
 "					if(obj.animation in ['run'], animation('run_attack')),"
-					
+
 "					if(obj.animation in ['jump', 'fall'], animation(if(charge_cycles >= obj.vars.charge_time,'energyshot' + if(obj.ctrl_down,'_down','_jump'),  if(obj.ctrl_down, 'fall_spin_attack', 'jump_attack' )))),"
-					
+
 "					if(obj.animation in ['crouch'] and (charge_cycles > obj.vars.charge_time), animation('energyshot_crouch'))]"
-				
+
 "	    )];";
 
 	BENCHMARK_LOOP {

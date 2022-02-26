@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -318,7 +318,7 @@ bool animation_renderer::handleEvent(const SDL_Event& event, bool claimed)
 			if(motion.yrel) {
 				camera_vangle_ += motion.yrel*0.02;
 			}
-			
+
 			calculate_camera();
 		}
 

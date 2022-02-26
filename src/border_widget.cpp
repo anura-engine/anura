@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,10 +27,10 @@
 #include "border_widget.hpp"
 #include "widget_factory.hpp"
 
-namespace gui 
+namespace gui
 {
 	BorderWidget::BorderWidget(WidgetPtr child, const KRE::Color& col, int border_size)
-	  : child_(child), 
+	  : child_(child),
 	    border_size_(border_size)
 	{
 		setEnvironment();
@@ -39,7 +39,7 @@ namespace gui
 		child_->setLoc(border_size, border_size);
 	}
 
-	BorderWidget::BorderWidget(const variant& v, game_logic::FormulaCallable* e) 
+	BorderWidget::BorderWidget(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v,e),
 		  border_size_(1)
 	{

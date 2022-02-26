@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -74,7 +74,7 @@ namespace voxel
 		const std::vector<int>& getPropertiesWithInit() const { return properties_with_init_; }
 		const std::vector<int>& getPropertiesRequiringInitialization() const { return properties_requiring_initialization_; }
 		const game_logic::Formula* event_handler(int event_id) const;
-	
+
 		const std::string& getLastInitializationProperty() const { return last_initialization_property_; }
 
 		const voxel_object* prototype() const { return prototype_.get(); }

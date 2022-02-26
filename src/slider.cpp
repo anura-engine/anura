@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -30,12 +30,12 @@
 #include "slider.hpp"
 #include "widget_factory.hpp"
 
-namespace gui 
+namespace gui
 {
 	Slider::Slider(int width, ChangeFn onchange, float position, int scale)
-		: width_(width), 
-		  onchange_(onchange), 
-		  dragging_(false), 
+		: width_(width),
+		  onchange_(onchange),
+		  dragging_(false),
 		  position_(position),
 		  slider_left_(new GuiSectionWidget("slider_side_left", -1, -1, scale)),
 		  slider_right_(new GuiSectionWidget("slider_side_right", -1, -1, scale)),
@@ -48,7 +48,7 @@ namespace gui
 	}
 
 	Slider::Slider(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v,e), 
+		: Widget(v,e),
 		  dragging_(false)
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
@@ -60,24 +60,24 @@ namespace gui
 		}
 
 		position_ = v.has_key("position") ? v["position"].as_float() : 0.0f;
-	
-		slider_left_ = v.has_key("slider_left") 
-			? widget_factory::create(v["slider_left"], e) 
+
+		slider_left_ = v.has_key("slider_left")
+			? widget_factory::create(v["slider_left"], e)
 			: new GuiSectionWidget("slider_side_left", -1, -1, 2);
-		slider_right_ = v.has_key("slider_right") 
-			? widget_factory::create(v["slider_right"], e) 
+		slider_right_ = v.has_key("slider_right")
+			? widget_factory::create(v["slider_right"], e)
 			: new GuiSectionWidget("slider_side_right", -1, -1, 2);
-		slider_middle_ = v.has_key("slider_middle") 
-			? widget_factory::create(v["slider_middle"], e) 
+		slider_middle_ = v.has_key("slider_middle")
+			? widget_factory::create(v["slider_middle"], e)
 			: new GuiSectionWidget("slider_middle", -1, -1, 2);
-		slider_button_ = v.has_key("slider_button") 
-			? widget_factory::create(v["slider_button"], e) 
+		slider_button_ = v.has_key("slider_button")
+			? widget_factory::create(v["slider_button"], e)
 			: new GuiSectionWidget("slider_button", -1, -1, 2);
 
 		init();
 		setDim(width_+slider_left_->width()*2, slider_button_->height());
 	}
-	
+
 	void Slider::init() const
 	{
 		int slider_y = height()/2 - slider_middle_->height()/2;
@@ -96,13 +96,13 @@ namespace gui
 		int button_x = slider_left_->width() + int(position_*width_);
 		return xloc > button_x-40 && xloc < button_x + slider_button_->width()+40 && yloc > -10 && yloc < height()+10;
 	}
-	
+
 	bool Slider::inSlider(int xloc, int yloc) const
 	{
 		return xloc > x() && xloc < x() + width() &&
 		yloc > y() && yloc < y() + height();
 	}
-	
+
 	void Slider::handleDraw() const
 	{
 		init();
@@ -180,7 +180,7 @@ namespace gui
 		if(claimed) {
 			dragging_ = false;
 		}
-		
+
 		if(event.type == SDL_MOUSEMOTION && dragging_) {
 			const SDL_MouseMotionEvent& e = event.motion;
 			int mouse_x = e.x - getPos().x;

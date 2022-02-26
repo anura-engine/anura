@@ -1,7 +1,7 @@
 /*
-	Copyright (C) 2013-2014 by David White <davewx7@gmail.com> and 
+	Copyright (C) 2013-2014 by David White <davewx7@gmail.com> and
 	Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,7 +38,7 @@
 
 namespace graphics
 {
-	namespace 
+	namespace
 	{
 		bool g_alpha_test = false;
 
@@ -92,7 +92,7 @@ namespace graphics
 		{
 		public:
 			explicit BindTextureCommand(TextureObject* tex, int binding_point)
-				: texture_(tex), 
+				: texture_(tex),
 				  binding_point_(binding_point)
 			{}
 			virtual void execute(FormulaCallable& ob) const override
@@ -104,7 +104,7 @@ namespace graphics
 			int binding_point_;
 		};
 
-		class BindTextureFunction : public game_logic::FunctionExpression 
+		class BindTextureFunction : public game_logic::FunctionExpression
 		{
 		public:
 			explicit BindTextureFunction(const args_list& args)
@@ -123,7 +123,7 @@ namespace graphics
 			}
 		};
 
-		class LoadTextureFunction : public game_logic::FunctionExpression 
+		class LoadTextureFunction : public game_logic::FunctionExpression
 		{
 		public:
 			explicit LoadTextureFunction(const args_list& args)
@@ -155,7 +155,7 @@ namespace graphics
 			KRE::BlendMode bm_;
 		};
 
-		class BlendModeFunction : public game_logic::FunctionExpression 
+		class BlendModeFunction : public game_logic::FunctionExpression
 		{
 		public:
 			explicit BlendModeFunction(const args_list& args)
@@ -268,7 +268,7 @@ namespace graphics
 		init();
 	}
 
-	AnuraShader::AnuraShader(const AnuraShader& o) 
+	AnuraShader::AnuraShader(const AnuraShader& o)
 		: shader_(o.shader_),
 		  u_anura_discard_(KRE::ShaderProgram::INVALID_UNIFORM),
 		  u_anura_tex_map_(KRE::ShaderProgram::INVALID_UNIFORM),
@@ -360,7 +360,7 @@ namespace graphics
 				ASSERT_LOG(false, "draw must be string or list, found: " << d.to_debug_string());
 			}
 		}
-	
+
 		if(create_formulas_.empty() && shader_node.has_key("create")) {
 			const variant& c = shader_node["create"];
 			if(c.is_list()) {
@@ -380,8 +380,8 @@ namespace graphics
 
 	void AnuraShader::setDrawArea(const rect& draw_area)
 	{
-		draw_area_ = glm::vec4(static_cast<float>(draw_area.x1()), 
-			static_cast<float>(draw_area.y1()), 
+		draw_area_ = glm::vec4(static_cast<float>(draw_area.x1()),
+			static_cast<float>(draw_area.y1()),
 			static_cast<float>(draw_area.x2()),
 			static_cast<float>(draw_area.y2()));
 	}
@@ -465,7 +465,7 @@ namespace graphics
 				shader_->setUniformFromVariant(u.uniform, v);
 			}
 		}
-		
+
 		for(auto& u : uniforms_to_set_) {
 			if(u.first != KRE::ShaderProgram::INVALID_UNIFORM) {
 				shader_->setUniformFromVariant(u.first, u.second);
@@ -507,7 +507,7 @@ namespace graphics
 		DEFINE_FIELD(color, "[decimal]")
 			if(obj.renderable_.isColorSet()) {
 				return obj.renderable_.getColor().write();
-			} 
+			}
 			return KRE::ColorScope::getCurrentColor().write();
 		DEFINE_FIELD(textures, "[object]")
 			std::vector<variant> res;
@@ -579,9 +579,9 @@ namespace graphics
 		uniform_commands_->executeOnDraw();
 	}
 
-	AnuraShader::DrawCommand::DrawCommand() 
+	AnuraShader::DrawCommand::DrawCommand()
 		: name(),
-		  target(KRE::ShaderProgram::INVALID_UNIFORM), 
+		  target(KRE::ShaderProgram::INVALID_UNIFORM),
 		  increment(false),
 		  value()
 	{
@@ -732,10 +732,10 @@ namespace graphics
 		}
 	}
 
-	void AnuraShader::setParent(Entity* parent) 
-	{ 
+	void AnuraShader::setParent(Entity* parent)
+	{
 		//LOG_DEBUG("Set parent for '" << getName() << "' to " << parent);
-		parent_ = parent; 
+		parent_ = parent;
 		game_logic::FormulaCallablePtr e(this);
 		for(auto & cf : create_formulas_) {
 			e->executeCommand(cf->execute(*e));
@@ -818,7 +818,7 @@ namespace graphics
 	ShaderRenderable::ShaderRenderable()
 		: SceneObject("ShaderRenderable")
 	{
-		addAttributeSet(KRE::DisplayDevice::createAttributeSet(false, false, false));		
+		addAttributeSet(KRE::DisplayDevice::createAttributeSet(false, false, false));
 	}
 
 	void ShaderRenderable::addAttribute(const variant& node)

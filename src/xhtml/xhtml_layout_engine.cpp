@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,7 +39,7 @@ namespace xhtml
 
 	using namespace css;
 
-	namespace 
+	namespace
 	{
 		std::string display_string(Display disp) {
 			switch(disp) {
@@ -58,7 +58,7 @@ namespace xhtml
 				case Display::TABLE_CELL:			return "table-cell";
 				case Display::TABLE_CAPTION:		return "table-caption";
 				case Display::NONE:					return "none";
-				default: 
+				default:
 					ASSERT_LOG(false, "illegal display value: " << static_cast<int>(disp));
 					break;
 			}
@@ -73,12 +73,12 @@ namespace xhtml
 			std::stack<T>& counter_;
 		};
 	}
-	
+
 	// XXX We're not handling text alignment or justification yet.
-	LayoutEngine::LayoutEngine() 
-		: root_(nullptr), 
-		  dims_(), 
-		  ctx_(RenderContext::get()), 
+	LayoutEngine::LayoutEngine()
+		: root_(nullptr),
+		  dims_(),
+		  ctx_(RenderContext::get()),
 		  list_item_counter_(),
 		  offset_(),
 		  float_list_(),
@@ -90,7 +90,7 @@ namespace xhtml
 		float_list_.emplace(FloatList());
 	}
 
-	void LayoutEngine::layoutRoot(StyleNodePtr node, BoxPtr parent, const point& container) 
+	void LayoutEngine::layoutRoot(StyleNodePtr node, BoxPtr parent, const point& container)
 	{
 		if(root_ == nullptr) {
 			root_ = std::make_shared<RootBox>(nullptr, node);
@@ -105,7 +105,7 @@ namespace xhtml
 			return;
 		}
 	}
-	
+
 	std::vector<BoxPtr> LayoutEngine::layoutChildren(const std::vector<StyleNodePtr>& children, BoxPtr parent)
 	{
 		StackManager<point> offset_manager(offset_, point(parent->getLeft(), parent->getTop()) + offset_.top());
@@ -150,7 +150,7 @@ namespace xhtml
 						// XXX need to add an offset to position for the float box based on body margin.
 						// N.B. if the current display is one of the CssDisplay::TABLE* styles then this should be
 						// a table box rather than a block box. Inline boxes are going to get wrapped in a BlockBox
-						
+
 						if(display == Display::BLOCK) {
 							res.emplace_back(std::make_shared<BlockBox>(parent, child, root_));
 						} else if(display == Display::LIST_ITEM) {
@@ -263,7 +263,7 @@ namespace xhtml
 		return res;
 	}
 
-	FixedPoint LayoutEngine::getDescent() const 
+	FixedPoint LayoutEngine::getDescent() const
 	{
 		return ctx_.getFontHandle()->getDescender();
 	}
@@ -278,7 +278,7 @@ namespace xhtml
 		}
 	}
 
-	FixedPoint LayoutEngine::getXAtPosition(FixedPoint y1, FixedPoint y2) const 
+	FixedPoint LayoutEngine::getXAtPosition(FixedPoint y1, FixedPoint y2) const
 	{
 		FixedPoint x = 0;
 		// since we expect only a small number of floats per element
@@ -293,7 +293,7 @@ namespace xhtml
 		return x;
 	}
 
-	FixedPoint LayoutEngine::getX2AtPosition(FixedPoint y1, FixedPoint y2) const 
+	FixedPoint LayoutEngine::getX2AtPosition(FixedPoint y1, FixedPoint y2) const
 	{
 		FixedPoint x2 = dims_.content_.width;
 		// since we expect only a small number of floats per element
@@ -308,7 +308,7 @@ namespace xhtml
 		return x2;
 	}
 
-	FixedPoint LayoutEngine::getWidthAtPosition(FixedPoint y1, FixedPoint y2, FixedPoint width) const 
+	FixedPoint LayoutEngine::getWidthAtPosition(FixedPoint y1, FixedPoint y2, FixedPoint width) const
 	{
 		// since we expect only a small number of floats per element
 		// a linear search through them seems fine at this point.
@@ -372,9 +372,9 @@ namespace xhtml
 		return false;
 	}
 
-	const FloatList& LayoutEngine::getFloatList() const 
-	{ 
+	const FloatList& LayoutEngine::getFloatList() const
+	{
 		ASSERT_LOG(!float_list_.empty(), "Float list was empty!");
-		return float_list_.top(); 
+		return float_list_.top();
 	}
 }

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -35,7 +35,7 @@ namespace KRE
 	public:
 		virtual ~StencilScope();
 		void applyNewSettings(const StencilSettings& settings) { settings_ = settings; handleUpdatedSettings(); }
-		void updateMask(unsigned mask) { settings_.setMask(mask); handleUpdatedMask();} 
+		void updateMask(unsigned mask) { settings_.setMask(mask); handleUpdatedMask();}
 		const StencilSettings& getSettings() { return settings_; }
 		static StencilScopePtr create(const StencilSettings& settings);
 	protected:

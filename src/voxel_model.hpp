@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,12 +39,12 @@
 
 #include <glm/glm.hpp>
 
-namespace voxel 
+namespace voxel
 {
 	typedef glm::ivec3 VoxelPos;
 	void get_voxel_pos_adjacent(const VoxelPos& pos, VoxelPos* adj);
 
-	struct Voxel 
+	struct Voxel
 	{
 		Voxel() : nlayer(-1) {}
 		KRE::Color color;
@@ -81,7 +81,7 @@ namespace voxel
 			boost::hash_combine(seed, p.z);
 			return seed;
 		}
-	}; 
+	};
 	typedef std::map<VoxelPos, Voxel, VoxelPosLess> VoxelMap;
 	typedef std::pair<VoxelPos, Voxel> VoxelPair;
 

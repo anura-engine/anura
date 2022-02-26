@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2014-2015 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -41,8 +41,8 @@ namespace hex
 	using namespace KRE;
 
 	MaskNode::MaskNode(const variant& node)
-	  : graphics::SceneObjectCallable(node), 
-		id_(node["id"].as_string_default("")), 
+	  : graphics::SceneObjectCallable(node),
+		id_(node["id"].as_string_default("")),
 		attr_(nullptr),
 		locs_(),
 		changed_(false),

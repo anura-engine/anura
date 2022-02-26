@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -54,7 +54,7 @@ typedef std::shared_ptr<const CustomObjectType> ConstCustomObjectTypePtr;
 
 std::map<std::string, std::string>& prototype_file_paths();
 
-namespace wml 
+namespace wml
 {
 	class modifier;
 	typedef std::shared_ptr<const modifier> const_modifier_ptr;
@@ -146,7 +146,7 @@ public:
 			return parallax_scale_millis_->second;
 		}
 	}
-	
+
 	int zorder() const { return zorder_; }
 	int zSubOrder() const { return zsub_order_; }
 	bool isHuman() const { return is_human_;}
@@ -335,7 +335,7 @@ private:
 	std::shared_ptr<game_logic::FunctionSymbolTable> object_functions_;
 
 	std::shared_ptr<std::pair<int, int> > parallax_scale_millis_;
-	
+
 	int zorder_;
 	int zsub_order_;
 
@@ -396,7 +396,7 @@ private:
 	int teleport_offset_x_, teleport_offset_y_;
 	bool no_move_to_standing_;
 	bool reverse_global_vertical_zordering_;
-	
+
 	bool serializable_;
 
 	ConstSolidInfoPtr solid_, platform_;
@@ -458,9 +458,9 @@ private:
 	mutable std::vector<graphics::AnuraShaderPtr> shader_variants_;
 
 	graphics::AnuraShaderPtr shader_;
-	std::vector<graphics::AnuraShaderPtr> effects_shaders_;	
+	std::vector<graphics::AnuraShaderPtr> effects_shaders_;
 
-	variant particle_system_desc_;	
+	variant particle_system_desc_;
 
 	std::vector<std::string> preload_objects_;
 

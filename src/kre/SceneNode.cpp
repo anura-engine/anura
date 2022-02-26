@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -71,8 +71,8 @@ namespace KRE
 			auto& lights = node["lights"];
 			if(lights.is_map()) {
 				for(auto& pair : lights.as_map()) {
-					ASSERT_LOG(pair.first.is_int() && pair.second.is_map(), 
-						"'lights' map should be int:light_map pairs. " 
+					ASSERT_LOG(pair.first.is_int() && pair.second.is_map(),
+						"'lights' map should be int:light_map pairs. "
 						<< pair.first.to_debug_string() << " : " << pair.second.to_debug_string());
 					size_t ref = pair.first.as_int32();
 					auto light_obj = std::make_shared<Light>(pair.second);
@@ -190,7 +190,7 @@ namespace KRE
 			rp->render_target = render_target_;
 			render_target_->clear();
 		}
-		
+
 		for(auto o : objects_) {
 			o->setDerivedModel(getPosition(), getRotation(), getScale());
 			o->setCamera(rp->camera);
@@ -200,42 +200,42 @@ namespace KRE
 		}
 	}
 
-	void SceneNode::setPosition(const glm::vec3& position) 
+	void SceneNode::setPosition(const glm::vec3& position)
 	{
 		position_ = position;
 	}
 
-	void SceneNode::setPosition(float x, float y, float z) 
+	void SceneNode::setPosition(float x, float y, float z)
 	{
 		position_ = glm::vec3(x, y, z);
 	}
 
-	void SceneNode::setPosition(int x, int y, int z) 
+	void SceneNode::setPosition(int x, int y, int z)
 	{
 		position_ = glm::vec3(float(x), float(y), float(z));
 	}
 
-	void SceneNode::setRotation(float angle, const glm::vec3& axis) 
+	void SceneNode::setRotation(float angle, const glm::vec3& axis)
 	{
 		rotation_ = glm::angleAxis(glm::radians(angle), axis);
 	}
 
-	void SceneNode::setRotation(const glm::quat& rot) 
+	void SceneNode::setRotation(const glm::quat& rot)
 	{
 		rotation_ = rot;
 	}
 
-	void SceneNode::setScale(float xs, float ys, float zs) 
+	void SceneNode::setScale(float xs, float ys, float zs)
 	{
 		scale_ = glm::vec3(xs, ys, zs);
 	}
 
-	void SceneNode::setScale(const glm::vec3& scale) 
+	void SceneNode::setScale(const glm::vec3& scale)
 	{
 		scale_ = scale;
 	}
 
-	glm::mat4 SceneNode::getModelMatrix() const 
+	glm::mat4 SceneNode::getModelMatrix() const
 	{
 		return glm::translate(glm::mat4(1.0f), position_) * glm::toMat4(rotation_) * glm::scale(glm::mat4(1.0f), scale_);
 	}
@@ -250,9 +250,9 @@ namespace KRE
 		// nothing need be done as default
 	}
 
-	std::shared_ptr<SceneGraph> SceneNode::getParentGraph() 
-	{ 
-		auto sg = scene_graph_.lock(); 
+	std::shared_ptr<SceneGraph> SceneNode::getParentGraph()
+	{
+		auto sg = scene_graph_.lock();
 		ASSERT_LOG(sg != nullptr, "Parent scene graph has been deleted.");
 		return sg;
 	}
@@ -274,9 +274,9 @@ namespace KRE
 
 	std::ostream& operator<<(std::ostream& os, const SceneNode& node)
 	{
-		os  << "NODE(" 
+		os  << "NODE("
 			<< node.getNodeName() << " : "
-			<< (node.camera_ ? "1 camera, " : "") 
+			<< (node.camera_ ? "1 camera, " : "")
 			<< node.lights_.size() << " light" << (node.lights_.size() != 1 ? "s" : "") << ", "
 			<< node.objects_.size() << " object" << (node.objects_.size() != 1 ? "s (" : " (");
 		for(auto o : node.objects_) {

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -30,9 +30,9 @@
 
 #include <string>
 
-namespace sound 
+namespace sound
 {
-	struct Manager 
+	struct Manager
 	{
 		Manager();
 		~Manager();
@@ -77,7 +77,7 @@ namespace sound
 
 	void set_panning(float left, float right);
 	void update_panning(const void* obj, const std::string& id, float left, float right);
-	
+
 	// function to play a sound effect over and over in a loop. Will return
 	// a handle to the sound effect.
 	int play_looped(const std::string& file, const void* object=0, float volume=1.0f, float fade_in_time_=0.0f);

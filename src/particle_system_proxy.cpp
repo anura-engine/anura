@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -104,7 +104,7 @@ namespace graphics
 				if(ifiles.empty()) {
 					module::get_files_in_dir("images/particles/", &ifiles, nullptr);
 					auto end_itor = std::remove_if(ifiles.begin(), ifiles.end(), [](std::string fname) {
-	
+
 						auto end = fname.end();
 						while(end != fname.begin() && *end != '.') {
 							--end;
@@ -157,7 +157,7 @@ namespace graphics
 
 	void ParticleSystemContainerProxy::surrenderReferences(GarbageCollector* collector)
 	{
-		
+
 	}
 
 	class ParticleSystemProxy : public game_logic::FormulaCallable
@@ -201,7 +201,7 @@ namespace graphics
 		DEFINE_FIELD(scale_time, "decimal")
 			auto psystem = obj.particle_system_container_->getParticleSystem();
 			return variant(psystem->getScaleTime());
-			
+
 		DEFINE_SET_FIELD
 			auto psystem = obj.particle_system_container_->getParticleSystem();
 			psystem->setScaleTime(value.as_float());
@@ -210,7 +210,7 @@ namespace graphics
 			auto psystem = obj.particle_system_container_->getParticleSystem();
 			glm::vec3 dim = psystem->getScaleDimensions();
 			return vec3_to_variant(dim);
-			
+
 		DEFINE_SET_FIELD
 			auto psystem = obj.particle_system_container_->getParticleSystem();
 			psystem->setScaleDimensions(variant_to_vec3(value));
@@ -219,7 +219,7 @@ namespace graphics
 			return obj.getActiveEmitter().getEmissionRate()->write();
 		DEFINE_SET_FIELD
 			obj.getActiveEmitter().setEmissionRate(value);
-	
+
 		DEFINE_FIELD(circle_radius, "any")
 			auto e = dynamic_cast<const KRE::Particles::CircleEmitter*>(&obj.getActiveEmitter());
 			if(e != nullptr) {
@@ -281,12 +281,12 @@ namespace graphics
 
 	DEFINE_SET_FIELD
 		obj.obj_->current.position = obj.obj_->initial.position = variant_to_vec3(value);
-	
+
 	DEFINE_FIELD(emission_rate, "any")
 		return variant();
 	DEFINE_SET_FIELD
 		obj.obj_->setEmissionRate(value);
-	
+
 	DEFINE_FIELD(orientation_follows_direction, "bool")
 		return variant::from_bool(obj.obj_->doesOrientationFollowDirection());
 	DEFINE_SET_FIELD

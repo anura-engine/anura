@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -55,12 +55,12 @@
 
 const std::string template_directory = "data/object_templates/";
 
-namespace gui 
+namespace gui
 {
 	class ItemEditDialog : public Dialog
 	{
 	public:
-		ItemEditDialog(int x, int y, int w, int h, const std::string&name, variant items) 
+		ItemEditDialog(int x, int y, int w, int h, const std::string&name, variant items)
 			: Dialog(x,y,w,h), items_(items), display_name_(name), allow_functions_(false),
 			row_count_(0)
 		{
@@ -100,7 +100,7 @@ namespace gui
 	};
 }
 
-namespace 
+namespace
 {
 	int slider_transform(float d)
 	{
@@ -175,7 +175,7 @@ namespace
 	}
 }
 
-namespace editor_dialogs 
+namespace editor_dialogs
 {
 	using std::placeholders::_1;
 	using std::placeholders::_2;
@@ -309,11 +309,11 @@ namespace editor_dialogs
 	{
 		auto wnd = KRE::WindowManager::getMainWindow();
 		gui::FileChooserDialog dir_dlg(
-			static_cast<int>(wnd->width() * 0.2f), 
-			static_cast<int>(wnd->height() * 0.2f), 
-			static_cast<int>(wnd->width() * 0.6f), 
+			static_cast<int>(wnd->width() * 0.2f),
+			static_cast<int>(wnd->height() * 0.2f),
+			static_cast<int>(wnd->width() * 0.6f),
 			static_cast<int>(wnd->height() * 0.6f),
-			gui::filter_list(), 
+			gui::filter_list(),
 			true, current_object_save_path_);
 		dir_dlg.setBackgroundFrame("empty_window");
 		dir_dlg.setDrawBackgroundFn(draw_last_scene);
@@ -347,7 +347,7 @@ namespace editor_dialogs
 			//change_entry->setOnEnterHandler([](){});
 			//g->addCol(WidgetPtr(new label(attr + ": ", KRE::Color::colorWhite(), 14))).addCol(WidgetPtr(change_entry));
 			//return g;
-		} else if(attr == "hitpoints" || attr == "mass" || attr == "friction" 
+		} else if(attr == "hitpoints" || attr == "mass" || attr == "friction"
 			|| attr == "traction" || attr == "traction_in_air") {
 			GridPtr g(new Grid(3));
 			int value = 0;
@@ -363,8 +363,8 @@ namespace editor_dialogs
 			}
 			slider_offset_[attr] = object_template_.has_key(attr) ? object_template_[attr].as_int() : 0;
 
-			SliderPtr slide(new Slider(200, 
-				std::bind((&CustomObjectDialog::changeIntAttributeSlider), this, change_entry, attr, _1), 
+			SliderPtr slide(new Slider(200,
+				std::bind((&CustomObjectDialog::changeIntAttributeSlider), this, change_entry, attr, _1),
 				static_cast<float>(value)));
 			slide->setPosition(0.5f);
 			slide->setDragEnd(std::bind(&CustomObjectDialog::sliderDragEnd, this, change_entry, attr, slide, _1));
@@ -395,8 +395,8 @@ namespace editor_dialogs
 		} else if(attr == "prototype") {
 			//int count = 0;
 			// To make this nicer. Create the buttons before adding them to the grid.
-			// Estimate the maximum number of columns needed (take the minimum size button 
-			// divided into screen width being used.  Then we start adding buttons to the 
+			// Estimate the maximum number of columns needed (take the minimum size button
+			// divided into screen width being used.  Then we start adding buttons to the
 			// grid, if we are about to add a button that would go over the maximum
 			// width then we do a .finishRow() (if needed) and start continue
 			// adding the column to the next row (with .addCol()).
@@ -404,7 +404,7 @@ namespace editor_dialogs
 			int min_size_button = std::numeric_limits<int>::max();
 			if(object_template_.has_key("prototype")) {
 				for(const std::string& s : object_template_["prototype"].as_list_string()) {
-					buttons.push_back(new Button(WidgetPtr(new Label(s, KRE::Color::colorWhite())), 
+					buttons.push_back(new Button(WidgetPtr(new Label(s, KRE::Color::colorWhite())),
 						std::bind(&CustomObjectDialog::removePrototype, this, s)));
 					if(min_size_button > buttons.back()->width()) {
 						min_size_button = buttons.back()->width();
@@ -416,7 +416,7 @@ namespace editor_dialogs
 			int column_estimate = (width() - 100) / min_size_button + 2;
 			GridPtr g(new Grid(column_estimate));
 			LabelPtr attr_label  = new Label(attr + ": ", KRE::Color::colorWhite(), 14);
-			ButtonPtr add_button = new Button(WidgetPtr(new Label("Add...", KRE::Color::colorWhite())), 
+			ButtonPtr add_button = new Button(WidgetPtr(new Label("Add...", KRE::Color::colorWhite())),
 				std::bind(&CustomObjectDialog::changePrototype, this));
 			g->addCol(attr_label).addCol(add_button);
 
@@ -429,7 +429,7 @@ namespace editor_dialogs
 					}
 					rows.push_back(g);
 					g.reset(new Grid(column_estimate));
-				
+
 					current_row_size = 0;
 					buttons_on_current_row = 0;
 				}
@@ -458,7 +458,7 @@ namespace editor_dialogs
 	}
 
 	void CustomObjectDialog::changeIntAttributeSlider(const gui::TextEditorWidgetPtr editor, const std::string& s, float d)
-	{	
+	{
 		dragging_slider_ = true;
 		std::ostringstream ss;
 		int i = slider_transform(d) + slider_offset_[s];
@@ -494,7 +494,7 @@ namespace editor_dialogs
 		}
 		if(template_file_.first.empty() == false) {
 			object_template_ = json::parse_from_file(template_file_.second);
-			ASSERT_LOG(object_template_.is_map(), 
+			ASSERT_LOG(object_template_.is_map(),
 				"OBJECT TEMPLATE READ FROM FILE IS NOT MAP: " << template_file_.second);
 			// ignorning these exceptions till we're finished
 			//assert_recover_scope recover_from_assert;
@@ -519,7 +519,7 @@ namespace editor_dialogs
 		if(object_template_.has_key("prototype")) {
 			std::vector<std::string> v = object_template_["prototype"].as_list_string();
 			std::sort(v.begin(), v.end());
-			std::set_difference(prototypes_.begin(), prototypes_.end(), v.begin(), v.end(), 
+			std::set_difference(prototypes_.begin(), prototypes_.end(), v.begin(), v.end(),
 				std::inserter(choices, choices.end()));
 		} else {
 			choices = prototypes_;
@@ -618,9 +618,9 @@ namespace editor_dialogs
 		f.push_back(gui::filter_pair("Image Files", ".*?\\.(png|jpg|gif|bmp|tif|tiff|tga|webp|xpm|xv|pcx)"));
 		f.push_back(gui::filter_pair("All Files", ".*"));
 		gui::FileChooserDialog open_dlg(
-			static_cast<int>(wnd->width() * 0.1f), 
-			static_cast<int>(wnd->height() * 0.1f), 
-			static_cast<int>(wnd->width() * 0.8f), 
+			static_cast<int>(wnd->width() * 0.1f),
+			static_cast<int>(wnd->height() * 0.1f),
+			static_cast<int>(wnd->width() * 0.8f),
 			static_cast<int>(wnd->height() * 0.8f),
 			f, false, module::map_file("images/"));
 		open_dlg.setBackgroundFrame("empty_window");
@@ -639,7 +639,7 @@ namespace editor_dialogs
 	}
 }
 
-namespace gui 
+namespace gui
 {
 	using std::placeholders::_1;
 	using std::placeholders::_2;

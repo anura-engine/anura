@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -32,7 +32,7 @@
 
 namespace KRE
 {
-	namespace 
+	namespace
 	{
 		template<typename T>
 		T clamp(T value, T minval, T maxval)
@@ -190,10 +190,10 @@ namespace KRE
 			color_table["white"] = Color(255, 255, 255);
 			color_table["whitesmoke"] = Color(245, 245, 245);
 			color_table["yellow"] = Color(255, 255, 0);
-			color_table["yellowgreen"] = Color(154, 205, 50);		
+			color_table["yellowgreen"] = Color(154, 205, 50);
 		}
 
-		color_table_type& get_color_table() 
+		color_table_type& get_color_table()
 		{
 			static color_table_type res;
 			if(res.empty()) {
@@ -242,7 +242,7 @@ namespace KRE
 			return 1.0f;
 		}
 
-		bool convert_hex_digit(char d, int* value) 
+		bool convert_hex_digit(char d, int* value)
 		{
 			if(d >= 'A' && d <= 'F') {
 				*value = d - 'A' + 10;
@@ -277,7 +277,7 @@ namespace KRE
 				return false;
 			}
 			int rh_hex = 0, rl_hex = 0, gh_hex = 0, gl_hex = 0, bh_hex = 0, bl_hex = 0;
-			if(convert_hex_digit(s[0], &rh_hex) && convert_hex_digit(s[1], &rl_hex) 
+			if(convert_hex_digit(s[0], &rh_hex) && convert_hex_digit(s[1], &rl_hex)
 				&& convert_hex_digit(s[2], &gh_hex) && convert_hex_digit(s[3], &gl_hex)
 				&& convert_hex_digit(s[4], &bh_hex) && convert_hex_digit(s[5], &bl_hex)) {
 					int ah_hex = 0xf, al_hex = 0xf;
@@ -365,13 +365,13 @@ namespace KRE
 		rgb hsv_to_rgb(uint8_t h, uint8_t s, uint8_t v)
 		{
 			rgb out;
-			
+
 
 			if(s == 0) {
 				out.r = out.g = out.b = v;
 			} else {
 				const uint8_t region = h / 43;
-				const uint8_t remainder = (h - (region * 43)) * 6; 
+				const uint8_t remainder = (h - (region * 43)) * 6;
 
 				const uint8_t p = (v * (255 - s)) >> 8;
 				const uint8_t q = (v * (255 - ((s * remainder) >> 8))) >> 8;
@@ -583,7 +583,7 @@ namespace KRE
 			case ColorByteOrder::ABGR:
 				icolor_ = glm::u8vec4(ib0, ib1, ib2, ib3);
 				break;
-			default: 
+			default:
 				ASSERT_LOG(false, "Unknown ColorByteOrder value: " << static_cast<int>(order));
 				break;
 		}
@@ -698,7 +698,7 @@ namespace KRE
 		color_[2] *= color_[3];
 		color_[3] = 1.0f;
 	}
-	
+
 	glm::u8vec4 Color::to_hsv() const
 	{
 		hsv outp = rgb_to_hsv(ri(), gi(), bi());

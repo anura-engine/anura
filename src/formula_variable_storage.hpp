@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -63,7 +63,7 @@ namespace game_logic
 		void getInputs(std::vector<FormulaInput>* inputs) const override;
 
 		std::string debug_object_name_;
-	
+
 		std::vector<variant> values_;
 		std::map<std::string, int> strings_to_values_;
 

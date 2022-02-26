@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -52,9 +52,9 @@ void handler_proxy(std::shared_ptr<std::function<void(const std::string&)> > fn,
 		}
 	}
 
-	void internal_client::send_request(const variant& request, 
+	void internal_client::send_request(const variant& request,
 		int session_id,
-		game_logic::MapFormulaCallablePtr callable, 
+		game_logic::MapFormulaCallablePtr callable,
 		std::function<void(const std::string&)> handler)
 	{
 		handler_.reset(new std::function<void(const std::string&)>(handler));

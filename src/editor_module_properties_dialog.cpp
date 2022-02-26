@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -54,27 +54,27 @@ namespace editor_dialogs
 {
 	using std::placeholders::_1;
 
-	namespace 
+	namespace
 	{
-		const unsigned char cube_img[266] = {137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 
-			73, 72, 68, 82, 0, 0, 0, 16, 0, 0, 0, 16, 8, 2, 0, 0, 0, 144, 145, 
-			104, 54, 0, 0, 0, 7, 116, 73, 77, 69, 7, 220, 4, 23, 9, 56, 22, 125, 
-			252, 141, 55, 0, 0, 0, 23, 116, 69, 88, 116, 83, 111, 102, 116, 119, 
-			97, 114, 101, 0, 71, 76, 68, 80, 78, 71, 32, 118, 101, 114, 32, 51, 
-			46, 52, 113, 133, 164, 225, 0, 0, 0, 8, 116, 112, 78, 71, 71, 76, 
+		const unsigned char cube_img[266] = {137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13,
+			73, 72, 68, 82, 0, 0, 0, 16, 0, 0, 0, 16, 8, 2, 0, 0, 0, 144, 145,
+			104, 54, 0, 0, 0, 7, 116, 73, 77, 69, 7, 220, 4, 23, 9, 56, 22, 125,
+			252, 141, 55, 0, 0, 0, 23, 116, 69, 88, 116, 83, 111, 102, 116, 119,
+			97, 114, 101, 0, 71, 76, 68, 80, 78, 71, 32, 118, 101, 114, 32, 51,
+			46, 52, 113, 133, 164, 225, 0, 0, 0, 8, 116, 112, 78, 71, 71, 76,
 			68, 51, 0, 0, 0, 0, 74, 128, 41, 31, 0, 0, 0, 4, 103, 65, 77, 65, 0,
-			0, 177, 143, 11, 252, 97, 5, 0, 0, 0, 6, 98, 75, 71, 68, 0, 255, 0, 
-			255, 0, 255, 160, 189, 167, 147, 0, 0, 0, 101, 73, 68, 65, 84, 120, 
-			156, 221, 210, 209, 17, 128, 32, 12, 3, 208, 174, 232, 32, 30, 35, 
-			116, 177, 78, 226, 50, 202, 89, 225, 66, 83, 208, 111, 115, 252, 53, 
-			143, 175, 72, 217, 55, 126, 210, 146, 156, 210, 234, 209, 194, 76, 
+			0, 177, 143, 11, 252, 97, 5, 0, 0, 0, 6, 98, 75, 71, 68, 0, 255, 0,
+			255, 0, 255, 160, 189, 167, 147, 0, 0, 0, 101, 73, 68, 65, 84, 120,
+			156, 221, 210, 209, 17, 128, 32, 12, 3, 208, 174, 232, 32, 30, 35,
+			116, 177, 78, 226, 50, 202, 89, 225, 66, 83, 208, 111, 115, 252, 53,
+			143, 175, 72, 217, 55, 126, 210, 146, 156, 210, 234, 209, 194, 76,
 			102, 85, 12, 50, 89, 87, 153, 61, 64, 85, 207, 59, 105, 213, 79, 102,
-			54, 0, 79, 96, 189, 234, 73, 0, 50, 172, 190, 128, 154, 250, 189, 81, 
-			254, 5, 216, 48, 136, 243, 10, 12, 65, 156, 6, 143, 175, 131, 213, 
+			54, 0, 79, 96, 189, 234, 73, 0, 50, 172, 190, 128, 154, 250, 189, 81,
+			254, 5, 216, 48, 136, 243, 10, 12, 65, 156, 6, 143, 175, 131, 213,
 			248, 62, 206, 251, 2, 161, 49, 129, 1, 89, 58, 130, 187, 0, 0, 0,
 			0, 73, 69, 78, 68, 174, 66, 96, 130};
 
-		void create_module(const module::modules& mod) 
+		void create_module(const module::modules& mod)
 		{
 			if(!mod.name_.empty()) {
 				std::string mod_path = "./modules/" + mod.name_ + "/";
@@ -119,7 +119,7 @@ namespace editor_dialogs
 					sys::write_file(mod_path + "data/gui/null.cfg", "{\n}");
 					sys::write_file(mod_path + "data/preload.cfg", "{\npreload: [\n],\n}");
 					sys::write_file(mod_path + "data/gui/default.cfg", "{\n}");
-					sys::write_file(mod_path + "data/objects/simple_playable.cfg", 
+					sys::write_file(mod_path + "data/objects/simple_playable.cfg",
 					"{\n"
 					"\tid: \"simple_playable\",\n"
 					"\tis_human: true,\n"
@@ -138,7 +138,7 @@ namespace editor_dialogs
 			}
 		}
 
-		void write_module_properties(const module::modules& mod) 
+		void write_module_properties(const module::modules& mod)
 		{
 			if(!mod.name_.empty()) {
 				std::map<variant,variant> m;
@@ -166,16 +166,16 @@ namespace editor_dialogs
 	}
 
 	EditorModulePropertiesDialog::EditorModulePropertiesDialog(editor& e)
-	  : Dialog(KRE::WindowManager::getMainWindow()->logicalWidth()/2 - 300, KRE::WindowManager::getMainWindow()->logicalHeight()/2 - 220, 600, 440), 
-	  editor_(e), 
+	  : Dialog(KRE::WindowManager::getMainWindow()->logicalWidth()/2 - 300, KRE::WindowManager::getMainWindow()->logicalHeight()/2 - 220, 600, 440),
+	  editor_(e),
 	  new_mod_(true)
 	{
 		init();
 	}
 
 	EditorModulePropertiesDialog::EditorModulePropertiesDialog(editor& e, const std::string& modname)
-		: Dialog(KRE::WindowManager::getMainWindow()->logicalWidth()/2 - 300, KRE::WindowManager::getMainWindow()->logicalHeight()/2 - 220, 600, 440), 
-		editor_(e), 
+		: Dialog(KRE::WindowManager::getMainWindow()->logicalWidth()/2 - 300, KRE::WindowManager::getMainWindow()->logicalHeight()/2 - 220, 600, 440),
+		editor_(e),
 		new_mod_(false)
 	{
 		if(!modname.empty()) {
@@ -275,7 +275,7 @@ namespace editor_dialogs
 		std::vector<std::string> choices;
 		for(const std::string& dir : dirs_) {
 			// only include modules not included already.
-			if(std::find(mod_.included_modules_.begin(), mod_.included_modules_.end(), dir) == mod_.included_modules_.end() 
+			if(std::find(mod_.included_modules_.begin(), mod_.included_modules_.end(), dir) == mod_.included_modules_.end()
 				&& dir != mod_.name_) {
 				grid->addCol(WidgetPtr(new Label(dir, KRE::Color::colorWhite())));
 				choices.push_back(dir);
@@ -319,13 +319,13 @@ namespace editor_dialogs
 		init();
 	}
 
-	const std::string EditorModulePropertiesDialog::onExit() 
+	const std::string EditorModulePropertiesDialog::onExit()
 	{
 		Level::setPlayerVariantType(variant());
 		saveModuleProperties();
 		if(new_mod_) {
 			createNewModule();
-		} 
+		}
 		// Switch to the new_module
 		module::reload(mod_.name_);
 		// Reload level paths
@@ -340,12 +340,12 @@ namespace editor_dialogs
 		return mod_.name_ + ":titlescreen.cfg";
 	}
 
-	void EditorModulePropertiesDialog::createNewModule() 
+	void EditorModulePropertiesDialog::createNewModule()
 	{
 		create_module(mod_);
 	}
 
-	void EditorModulePropertiesDialog::saveModuleProperties() 
+	void EditorModulePropertiesDialog::saveModuleProperties()
 	{
 		write_module_properties(mod_);
 	}

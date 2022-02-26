@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -79,7 +79,7 @@ namespace util
 	}
 
 	bool wildcard_pattern_match(const std::string& pattern, const std::string& str);
-	
+
 	std::string word_wrap(std::string msg, unsigned short columns);
 	std::string word_wrap(std::string msg, unsigned short columns, const std::string& indent);
 	std::string word_wrap(std::string msg, unsigned short columns, const std::string& indent, unsigned short rows, const std::string& trim_msg);

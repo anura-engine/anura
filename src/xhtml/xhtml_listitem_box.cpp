@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,7 +36,7 @@ namespace xhtml
 {
 	using namespace css;
 
-	namespace 
+	namespace
 	{
 		const char32_t marker_disc = 0x2022;
 		const char32_t marker_circle = 0x25e6;
@@ -61,14 +61,14 @@ namespace xhtml
 		addChild(std::make_shared<BlockBox>(parent, node, root));
 	}
 
-	std::string ListItemBox::toString() const 
+	std::string ListItemBox::toString() const
 	{
 		std::ostringstream ss;
 		ss << "ListItemBox: " << getDimensions().content_ << (isFloat() ? " floating" : "");
 		return ss.str();
 	}
 
-	void ListItemBox::handleLayout(LayoutEngine& eng, const Dimensions& containing) 
+	void ListItemBox::handleLayout(LayoutEngine& eng, const Dimensions& containing)
 	{
 		auto lst = getStyleNode()->getListStyleType();
 		switch(lst) {
@@ -129,7 +129,7 @@ namespace xhtml
 				}
 				break;
 			case ListStyleType::NONE:
-			default: 
+			default:
 				marker_.clear();
 				break;
 		}
@@ -196,7 +196,7 @@ namespace xhtml
 		setContentHeight(0);
 	}
 
-	void ListItemBox::handlePostChildLayout(LayoutEngine& eng, BoxPtr child) 
+	void ListItemBox::handlePostChildLayout(LayoutEngine& eng, BoxPtr child)
 	{
 		setContentHeight(getHeight() + child->getHeight() + child->getMBPBottom());
 	}
@@ -206,7 +206,7 @@ namespace xhtml
 		eng.setCursor(point());
 	}
 
-	void ListItemBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const 
+	void ListItemBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
 		// XXX should figure out if there is a cleaner way of doing this.
 		auto y = getLineHeight();

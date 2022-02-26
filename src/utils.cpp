@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,8 +34,8 @@
 #include "sound.hpp"
 #include "variant.hpp"
 
-int truncate_to_char(int value) 
-{ 
+int truncate_to_char(int value)
+{
 	return std::min(std::max(value, 0), 255);
 }
 
@@ -45,7 +45,7 @@ void write_autosave()
 	if(sound::current_music().empty() == false) {
 		node.add_attr(variant("music"), variant(sound::current_music()));
 	}
-	
+
 	sys::write_file(preferences::auto_save_file_path(), node.write_json());
 	sys::write_file(std::string(preferences::auto_save_file_path()) + ".stat", "1");
 }
@@ -56,7 +56,7 @@ void toggle_fullscreen()
 	wnd->setFullscreenMode(wnd->fullscreenMode() == KRE::FullScreenMode::WINDOWED ? KRE::FullScreenMode::FULLSCREEN_WINDOWED : KRE::FullScreenMode::WINDOWED);
 }
 
-std::string get_http_datetime() 
+std::string get_http_datetime()
 {
 	time_t rawtime;
 	char buffer[128];
@@ -78,7 +78,7 @@ std::string get_http_datetime()
 #ifdef _MSC_VER
 const __int64 DELTA_EPOCH_IN_MICROSECS= 11644473600000000;
 
-struct timezone2 
+struct timezone2
 {
   __int32  tz_minuteswest; /* minutes W of Greenwich */
   bool  tz_dsttime;     /* type of dst correction */
@@ -98,7 +98,7 @@ int gettimeofday(struct timeval *tv, struct timezone2 *tz)
 
 		/*converting file time to unix epoch*/
 		tmpres /= 10;  /*convert into microseconds*/
-		tmpres -= DELTA_EPOCH_IN_MICROSECS; 
+		tmpres -= DELTA_EPOCH_IN_MICROSECS;
 		tv->tv_sec = (__int32)(tmpres * 0.000001);
 		tv->tv_usec =(tmpres % 1000000);
 	}
@@ -113,4 +113,4 @@ int gettimeofday(struct timeval *tv, struct timezone2 *tz)
 	}
 	return 0;
 }
-#endif 
+#endif

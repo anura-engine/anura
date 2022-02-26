@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,12 +29,12 @@
 #include "uri.hpp"
 #include "variant.hpp"
 
-namespace game_logic 
+namespace game_logic
 {
 	class FormulaCallable;
 }
 
-namespace preferences 
+namespace preferences
 {
 	enum class ScreenMode {
 		WINDOWED,
@@ -117,10 +117,10 @@ namespace preferences
 	// Control scheme to use on iOS or other touch systems
 	const std::string& control_scheme();
 	void set_control_scheme(const std::string& scheme);
-	
+
 	//whether we are debugging
 	bool debug();
-	
+
 	int frame_time_millis();
 	bool has_alt_frame_time();
 
@@ -143,7 +143,7 @@ namespace preferences
 	bool load_compiled();
 
 	void set_load_compiled(bool value);
-	
+
 	void set_edit_on_start(bool value);
 	bool edit_on_start();
 
@@ -159,7 +159,7 @@ namespace preferences
 	//this is a flag set to true iff we are in a mode where we write
 	//'compiled' tile output.
 	extern bool compiling_tiles;
-	
+
 	bool auto_size_window();
 	int requested_window_width();
 	int requested_window_height();
@@ -170,17 +170,17 @@ namespace preferences
 	ScreenMode get_screen_mode();
 	void set_screen_mode(ScreenMode mode);
 	bool no_fullscreen_ever();
-	
+
 	bool allow_autopause();
 
 	bool screen_rotated();
-	
+
 	bool force_no_npot_textures();
 
 	bool use_16bpp_textures();
 
 	void set_32bpp_textures_if_kb_memory_at_least(int memory_required );
-    
+
 	bool send_stats();
 
 	int force_difficulty();
@@ -196,7 +196,7 @@ namespace preferences
 	bool run_failing_unit_tests();
 
 	bool serialize_bad_objects();
-	
+
 	bool die_on_assert();
 
 	bool type_safety_checks();

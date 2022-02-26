@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -30,11 +30,11 @@
 #include "string_utils.hpp"
 #include "text_editor_widget.hpp"
 
-namespace gui 
+namespace gui
 {
 	using namespace game_logic;
 
-	namespace 
+	namespace
 	{
 		class ExpressionWidget : public gui::Dialog
 		{
@@ -43,10 +43,10 @@ namespace gui
 									   int x, int y, int w, int h, bool focused,
 									   TextEditorWidget* editor,
 									   std::function<void()> onClick)
-			  : Dialog(x, y, w, h), 
-				expression_(expression), 
+			  : Dialog(x, y, w, h),
+				expression_(expression),
 				focused_(focused),
-				editor_(editor), 
+				editor_(editor),
 				on_click_(onClick)
 			{
 				init();

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -46,7 +46,7 @@ namespace voxel
 	const int default_view_distance = 5;
 
 	LogicalWorld::LogicalWorld(const variant& node)
-		:size_x_(0), size_y_(0), size_z_(0), 
+		:size_x_(0), size_y_(0), size_z_(0),
 		scale_x_(node["scale_x"].as_int(1)), scale_y_(node["scale_y"].as_int(1)), scale_z_(node["scale_z"].as_int(1)),
 		chunks_(node)
 	{
@@ -96,13 +96,13 @@ namespace voxel
 			abs(wsp[2]-bmround(wsp[2])) < 0.05f ? int(bmround(wsp[2])) : int(floor(wsp[2])));
 		glm::ivec3 facing = Level::current().camera()->get_facing(wsp);
 		if(facing.x > 0) {
-			--voxel_coord.x; 
+			--voxel_coord.x;
 		}
 		if(facing.y > 0) {
-			--voxel_coord.y; 
+			--voxel_coord.y;
 		}
 		if(facing.z > 0) {
-			--voxel_coord.z; 
+			--voxel_coord.z;
 		}
 		voxel_coord /= glm::ivec3(scale_x_, scale_y_, scale_z_);
 		return voxel_coord;
@@ -111,7 +111,7 @@ namespace voxel
 
 
 	World::World(const variant& node)
-		: view_distance_(node["view_distance"].as_int(default_view_distance)), 
+		: view_distance_(node["view_distance"].as_int(default_view_distance)),
 		seed_(node["seed"].as_int(0))
 	{
 		if(node.has_key("objects")) {
@@ -146,7 +146,7 @@ namespace voxel
 			it->second->setTile(x-fx, y-fy, z-fz, type);
 		}
 	}
-	
+
 	void world::del_tile(int x, int y, int z)
 	{
 		int fx = int(floor(x));
@@ -218,7 +218,7 @@ namespace voxel
 					variant_builder rnd;
 
 					glm::ivec3 worldspace_pos(x * chunk_size, y * chunk_size, z * chunk_size);
-				
+
 					rnd.add("width", chunk_size);
 					rnd.add("height", chunk_size);
 					rnd.add("depth", chunk_size);
@@ -307,7 +307,7 @@ namespace voxel
 			wsp.add("data", chnk.second->write());
 
 			res.add("chunks", wsp.build());
-		}		
+		}
 
 		// XXX
 		//for(auto obj : objects_) {
@@ -415,7 +415,7 @@ namespace voxel
 				vlist[std::make_pair(x,z)] = y+1;
 			}
 		}
-	
+
 		pathfinding::graph_edge_list edges;
 		for(auto p : vertex_list) {
 			const int x = p[0].as_int();
@@ -423,7 +423,7 @@ namespace voxel
 			const int z = p[2].as_int();
 
 			std::vector<variant> current_edges;
-			
+
 			auto it = vlist.find(std::make_pair(x+1,z));
 			if(it != vlist.end() && !is_xedge(x+1) && !isSolid(x+1,it->second,z)) {
 				current_edges.push_back(variant_list_from_position(x+1,it->second,z));
@@ -463,7 +463,7 @@ namespace voxel
 		return pathfinding::directed_graph_ptr(new pathfinding::directed_graph(&vertex_list, &edges));
 	}
 
-	class create_world_callable : public game_logic::FormulaCallable 
+	class create_world_callable : public game_logic::FormulaCallable
 	{
 		variant world_;
 		variant getValue(const std::string& key) const {
@@ -473,7 +473,7 @@ namespace voxel
 			level::current().iso_world().reset(new world(world_));
 		}
 	public:
-		explicit create_world_callable(const variant& world) 
+		explicit create_world_callable(const variant& world)
 			: world_(world)
 		{}
 	};
@@ -550,7 +550,7 @@ namespace voxel
 		for(auto o : obj.objects_) {
 			v.push_back(variant(o.get()));
 		}
-		return variant(&v);	
+		return variant(&v);
 	DEFINE_SET_FIELD_TYPE("[builtin voxel_object|map]")
 		obj.objects_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
@@ -558,7 +558,7 @@ namespace voxel
 				UserVoxelObjectPtr o = value.try_convert<user_voxel_object>();
 				ASSERT_LOG(o != nullptr, "Couldn't convert value to user_voxel_object.");
 				obj.objects_.insert(o.get());
-			} else {				
+			} else {
 				obj.objects_.insert(new user_voxel_object(value[n]));
 			}
 		}

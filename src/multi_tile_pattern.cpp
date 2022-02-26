@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -31,7 +31,7 @@
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
 
-namespace 
+namespace
 {
 	//a pool of regular expressions. This makes sure that two regexes that
 	//are identical will point to the same place, and so we can easily
@@ -84,21 +84,21 @@ void MultiTilePattern::load(variant node, const std::string& tile_id)
 	}
 }
 
-namespace 
+namespace
 {
 	bool compare_match_cell_by_run_length(const MultiTilePattern::MatchCell& a,
-										  const MultiTilePattern::MatchCell& b) 
+										  const MultiTilePattern::MatchCell& b)
 	{
 		return a.run_length > b.run_length;
 	}
 
-	struct raw_cell 
+	struct raw_cell
 	{
 		std::string regex;
 		std::vector<std::string> map_to;
 	};
 
-	int parse_pattern(const std::string& pattern, std::vector<raw_cell>& out) 
+	int parse_pattern(const std::string& pattern, std::vector<raw_cell>& out)
 	{
 
 		std::vector<std::string> lines = util::split(pattern, '\n', 0);
@@ -145,10 +145,10 @@ namespace
 }
 
 MultiTilePattern::MultiTilePattern(variant node, const std::string& tile_id)
-  : default_tile_id_(tile_id), 
-	id_(node["id"].as_string_default()), 
-	width_(-1), 
-	height_(-1), 
+  : default_tile_id_(tile_id),
+	id_(node["id"].as_string_default()),
+	width_(-1),
+	height_(-1),
 	chance_(node["chance"].as_int(100))
 {
 	for(variant alternative_node : node["alternative"].as_list()) {
@@ -272,7 +272,7 @@ MultiTilePattern::MultiTilePattern(variant node, const std::string& tile_id)
 			ASSERT_LOG(obj_node["image"].as_string().empty() == false, "object node has no image\n" << obj_node.write_json() << "\n");
 
 			LevelObjectPtr new_object(new LevelObject(obj_node, default_tile_id_.c_str()));
-	
+
 			objects[value.first.as_string()] = new_object;
 			if(obj_node.has_key("zorder")) {
 				object_zorders[value.first.as_string()] = parse_zorder(obj_node["zorder"]);
@@ -317,12 +317,12 @@ MultiTilePattern::MultiTilePattern(variant node, const std::string& tile_id)
 			}
 
 			MatchCell cell;
-			cell.loc = point(x, y); 
+			cell.loc = point(x, y);
 			cell.run_length = run_length;
 			try_order_.emplace_back(cell);
 		}
 	}
-	
+
 	//try_order_ dictates the order in which patterns will be tried to see
 	//if an MTP matches.
 	//

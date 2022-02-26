@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -97,7 +97,7 @@ namespace KRE
 			virtual const std::vector<double> GetDashStyle() const override;
 			virtual void SetDashOffset(double offset) override;
 			virtual double GetDashOffset() const override;
-				
+
 			virtual void Paint(const double alpha=1.0) override;
 
 			virtual void Fill(const bool preserve=false) override;
@@ -124,7 +124,7 @@ namespace KRE
 			virtual PathPtr NewPath() override;
 			virtual void AddPath(const PathPtr& path) override;
 			virtual void AddSubPath(const PathPtr& path) override;
-		
+
 			virtual void preRender(const WindowPtr& wnd) override;
 
 			void translate(double tx, double ty) override;

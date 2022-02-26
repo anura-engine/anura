@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -35,9 +35,9 @@ namespace tbs
 	public:
 		internal_client(int session=-1);
 		virtual ~internal_client();
-		virtual void send_request(const variant& request, 
+		virtual void send_request(const variant& request,
 			int session_id,
-			game_logic::MapFormulaCallablePtr callable, 
+			game_logic::MapFormulaCallablePtr callable,
 			std::function<void(const std::string&)> handler);
 		void process();
 		int session_id() const { return session_id_; }

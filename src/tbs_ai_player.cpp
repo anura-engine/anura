@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -28,7 +28,7 @@
 #include "tbs_ai_player.hpp"
 #include "tbs_game.hpp"
 
-namespace tbs 
+namespace tbs
 {
 	ai_player* ai_player::create(game& g, int nplayer)
 	{
@@ -36,7 +36,7 @@ namespace tbs
 	}
 
 	ai_player::ai_player(const game& g, int nplayer)
-	  : game_(g), 
+	  : game_(g),
 	  nplayer_(nplayer)
 	{}
 

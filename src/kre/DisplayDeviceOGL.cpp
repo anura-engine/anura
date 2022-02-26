@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -95,7 +95,7 @@ namespace KRE
 			return GL_NONE;
 		}
 
-		GLenum convert_index_type(IndexType it) 
+		GLenum convert_index_type(IndexType it)
 		{
 			switch(it) {
 				case IndexType::INDEX_NONE:		break;
@@ -108,8 +108,8 @@ namespace KRE
 		}
 
 		static const StencilSettings keep_stencil_settings(true,
-			StencilFace::FRONT_AND_BACK, 
-			StencilFunc::EQUAL, 
+			StencilFace::FRONT_AND_BACK,
+			StencilFunc::EQUAL,
 			0xff,
 			0x01,
 			0x00,
@@ -169,7 +169,7 @@ namespace KRE
 		have_render_to_texture_ = extensions_.find("GL_EXT_framebuffer_object") != extensions_.end();
 		npot_textures_ = extensions_.find("GL_ARB_texture_non_power_of_two") != extensions_.end();
 		hardware_uniform_buffers_ = extensions_.find("GL_ARB_uniform_buffer_object") != extensions_.end();
-		
+
 		glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_units_);
 		if((err = glGetError()) != GL_NONE) {
 			LOG_ERROR("Failed query for GL_MAX_TEXTURE_IMAGE_UNITS: 0x" << std::hex << err);
@@ -198,13 +198,13 @@ namespace KRE
 		} else {
 			LOG_INFO("OpenGL version: " << major_version_ << "." << minor_version_);
 		}
-		
+
 		if(max_texture_units_ > 0) {
 			LOG_INFO("Maximum texture units: " << max_texture_units_);
 		} else {
 			LOG_INFO("Maximum texture units: <<unknown>>" );
 		}
-		
+
 		const int max_line_width = 101;
 		std::vector<std::string> lines;
 		for(auto& ext : extensions_) {
@@ -238,8 +238,8 @@ namespace KRE
 
 	void DisplayDeviceOpenGL::clear(ClearFlags clr)
 	{
-		glClear((clr & ClearFlags::COLOR ? GL_COLOR_BUFFER_BIT : 0) 
-			| (clr & ClearFlags::DEPTH ? GL_DEPTH_BUFFER_BIT : 0) 
+		glClear((clr & ClearFlags::COLOR ? GL_COLOR_BUFFER_BIT : 0)
+			| (clr & ClearFlags::DEPTH ? GL_DEPTH_BUFFER_BIT : 0)
 			| (clr & ClearFlags::STENCIL ? GL_STENCIL_BUFFER_BIT : 0));
 	}
 
@@ -348,7 +348,7 @@ namespace KRE
 				/// xxx need to set lights here.
 			}
 		}
-		
+
 		if(r->getRenderTarget()) {
 			r->getRenderTarget()->apply();
 		}
@@ -499,7 +499,7 @@ namespace KRE
 		const int count = fmt == PixelFormat::PF::PIXELFORMAT_YV12 ? 3 : 1;
 		return std::make_shared<OpenGLTexture>(count, width, height, 0, fmt, TextureType::TEXTURE_2D);
 	}
-	
+
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture3D(int width, int height, int depth, PixelFormat::PF fmt)
 	{
 		return std::make_shared<OpenGLTexture>(1, width, height, depth, fmt, TextureType::TEXTURE_3D);
@@ -515,11 +515,11 @@ namespace KRE
 		return std::make_shared<OpenGLTexture>(node, surfaces);
 	}
 
-	RenderTargetPtr DisplayDeviceOpenGL::handleCreateRenderTarget(int width, int height, 
-			int color_plane_count, 
-			bool depth, 
-			bool stencil, 
-			bool use_multi_sampling, 
+	RenderTargetPtr DisplayDeviceOpenGL::handleCreateRenderTarget(int width, int height,
+			int color_plane_count,
+			bool depth,
+			bool stencil,
+			bool use_multi_sampling,
 			int multi_samples)
 	{
 		return std::make_shared<FboOpenGL>(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);
@@ -571,7 +571,7 @@ namespace KRE
 		rect new_vp(x, y, width, height);
 		if(get_current_viewport() != new_vp && width != 0 && height != 0) {
 			get_current_viewport() = new_vp;
-			// N.B. glViewPort has the origin in the bottom-left corner. 
+			// N.B. glViewPort has the origin in the bottom-left corner.
 			glViewport(x, y, width, height);
 		}
 	}
@@ -580,16 +580,16 @@ namespace KRE
 	{
 		if(get_current_viewport() != vp && vp.w() != 0 && vp.h() != 0) {
 			get_current_viewport() = vp;
-			// N.B. glViewPort has the origin in the bottom-left corner. 
+			// N.B. glViewPort has the origin in the bottom-left corner.
 			glViewport(vp.x(), vp.y(), vp.w(), vp.h());
 		}
 	}
 
-	const rect& DisplayDeviceOpenGL::getViewPort() const 
+	const rect& DisplayDeviceOpenGL::getViewPort() const
 	{
 		return get_current_viewport();
 	}
-	
+
 	bool DisplayDeviceOpenGL::doCheckForFeature(DisplayDeviceCapabilties cap)
 	{
 		bool ret_val = false;
@@ -610,7 +610,7 @@ namespace KRE
 		return ret_val;
 	}
 
-	void DisplayDeviceOpenGL::loadShadersFromVariant(const variant& node) 
+	void DisplayDeviceOpenGL::loadShadersFromVariant(const variant& node)
 	{
 		OpenGL::ShaderProgram::loadShadersFromVariant(node);
 	}
@@ -625,8 +625,8 @@ namespace KRE
 		return OpenGL::ShaderProgram::factory(node);
 	}
 
-	ShaderProgramPtr DisplayDeviceOpenGL::createShader(const std::string& name, 
-		const std::vector<ShaderData>& shader_data, 
+	ShaderProgramPtr DisplayDeviceOpenGL::createShader(const std::string& name,
+		const std::vector<ShaderData>& shader_data,
 		const std::vector<ActiveMapping>& uniform_map,
 		const std::vector<ActiveMapping>& attribute_map)
 	{
@@ -761,7 +761,7 @@ namespace KRE
 		}
 		LOG_DEBUG("before copy");
 		uint8_t* cp_data = reinterpret_cast<uint8_t*>(data);
-		
+
 		for(auto it = new_data.begin() + (height-1)*stride; it != new_data.begin(); it -= stride) {
 			std::copy(it, it + stride, cp_data);
 			cp_data += stride;
@@ -781,7 +781,7 @@ namespace KRE
 		return EffectPtr();
 	}
 
-	ShaderProgramPtr DisplayDeviceOpenGL::createGaussianShader(int radius) 
+	ShaderProgramPtr DisplayDeviceOpenGL::createGaussianShader(int radius)
 	{
 		return OpenGL::ShaderProgram::createGaussianShader(radius);
 	}

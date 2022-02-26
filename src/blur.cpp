@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -87,7 +87,7 @@ struct RecursionProtector
 };
 }
 
-void BlurObject::draw(int x, int y) 
+void BlurObject::draw(int x, int y)
 {
 	RecursionProtector protector;
 	if(protector.recursing()) {
@@ -95,7 +95,7 @@ void BlurObject::draw(int x, int y)
 	}
 
 	ASSERT_LOG(obj_.get() != nullptr, "Must set an object before drawing a blur");
-	
+
 	decimal ratio = age_ >= duration_ ? decimal(1) : decimal(age_) / decimal(duration_);
 	if(easing_.is_function()) {
 		std::vector<variant> args;

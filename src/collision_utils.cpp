@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -30,7 +30,7 @@
 #include "rectangle_rotator.hpp"
 #include "solid_map.hpp"
 
-namespace 
+namespace
 {
 	std::map<std::string, int> solid_dimensions;
 	std::vector<std::string> solid_dimension_ids;
@@ -716,7 +716,7 @@ class UserCollisionCallable : public game_logic::FormulaCallable {
 
 	DECLARE_CALLABLE(UserCollisionCallable);
 public:
-	UserCollisionCallable(EntityPtr a, EntityPtr b, const std::string& area_a, const std::string& area_b, int index) 
+	UserCollisionCallable(EntityPtr a, EntityPtr b, const std::string& area_a, const std::string& area_b, int index)
 		: a_(a), b_(b), area_a_(&area_a), area_b_(&area_b), index_(index) {
 	}
 

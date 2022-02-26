@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,7 +36,7 @@ public:
 	explicit PlayerInfo(Entity& e) : entity_(&e), slot_(0)
 	{}
 	PlayerInfo(Entity& e, variant node);
-	
+
 	void objectDestroyed(const std::string& level_id, int item);
 	const std::vector<int>& getObjectsDestroyed(const std::string& level_id) const;
 
@@ -60,7 +60,7 @@ public:
 
 	void readControls(int cycle);
 
-	
+
 	bool hasReverseGlobalVerticalZordering() const { return entity_->hasReverseGlobalVerticalZordering(); }
 
 private:
@@ -68,7 +68,7 @@ private:
 
 	mutable std::map<std::string, std::vector<int> > items_destroyed_;
 	mutable std::map<std::string, std::vector<int> > objects_destroyed_;
-	
+
 	//the number of the player.
 	int slot_;
 

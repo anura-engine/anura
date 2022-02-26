@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -35,7 +35,7 @@ namespace xhtml
 	{
 	}
 
-	std::string RootBox::toString() const 
+	std::string RootBox::toString() const
 	{
 		std::ostringstream ss;
 		ss << "RootBox: " << getDimensions().content_ << (!fixed_boxes_.empty() ? "\n" : "");
@@ -47,7 +47,7 @@ namespace xhtml
 		return ss.str();
 	}
 
-	void RootBox::handleLayout(LayoutEngine& eng, const Dimensions& containing) 
+	void RootBox::handleLayout(LayoutEngine& eng, const Dimensions& containing)
 	{
 		//BlockBox::handleLayout(eng, containing);
 

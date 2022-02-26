@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -46,8 +46,8 @@ namespace KRE
 			}
 			return 0;
 		}
-		
-		std::default_random_engine& get_rng_engine() 
+
+		std::default_random_engine& get_rng_engine()
 		{
 			static std::unique_ptr<std::default_random_engine> res;
 			if(res == nullptr) {
@@ -131,14 +131,14 @@ namespace KRE
 	}
 
 	/*RandomParameter::RandomParameter(const variant& node)
-		: Parameter(PARAMETER_RANDOM), 
+		: Parameter(PARAMETER_RANDOM),
 		min_value_(node["min"].as_decimal(decimal(0.1)).as_float()),
 		max_value_(node["max"].as_decimal(decimal(1.0)).as_float())
 	{
 	}*/
 
 	RandomParameter::RandomParameter(float mnv, float mxv)
-		: Parameter(PARAMETER_RANDOM), 
+		: Parameter(PARAMETER_RANDOM),
 		min_value_(mnv),
 		max_value_(mxv)
 	{
@@ -154,22 +154,22 @@ namespace KRE
 	}
 
 	/*OscillateParameter::OscillateParameter(const variant& node)
-		: Parameter(PARAMETER_OSCILLATE), 
+		: Parameter(PARAMETER_OSCILLATE),
 		frequency_(1.0f), phase_(0.0f), base_(0.0f), amplitude_(1.0f),
 		osc_type_(TYPE_SINE)
 	{
 		if(node.has_key("oscillate_frequency")) {
 			frequency_ = node["oscillate_frequency"].as_decimal().as_float();
-		} 
+		}
 		if(node.has_key("oscillate_phase")) {
 			phase_ = node["oscillate_phase"].as_decimal().as_float();
-		} 
+		}
 		if(node.has_key("oscillate_base")) {
 			base_ = node["oscillate_base"].as_decimal().as_float();
-		} 
+		}
 		if(node.has_key("oscillate_amplitude")) {
 			amplitude_ = node["oscillate_amplitude"].as_decimal().as_float();
-		} 
+		}
 		if(node.has_key("oscillate_type")) {
 			const std::string& type = node["oscillate_type"].as_string();
 			if(type == "sine") {
@@ -179,7 +179,7 @@ namespace KRE
 			} else {
 				ASSERT_LOG(false, "unrecognised oscillate type: " << type);
 			}
-		}             
+		}
 	}*/
 
 	OscillateParameter::OscillateParameter(const std::string& s, float freq, float phase, float base, float amplitude)
@@ -215,15 +215,15 @@ namespace KRE
 	/*CurvedParameter::CurvedParameter(InterpolationType type, const variant& node)
 		: Parameter(PARAMETER_OSCILLATE), curve_type_(type)
 	{
-		ASSERT_LOG(node.has_key("control_point") 
+		ASSERT_LOG(node.has_key("control_point")
 			&& node["control_point"].is_list()
-			&& node["control_point"].num_elements() >= 2, 
+			&& node["control_point"].num_elements() >= 2,
 			"curved parameters must have at least 2 control points.");
 		for(size_t n = 0; n != node["control_point"].num_elements(); ++n) {
-			ASSERT_LOG(node["control_point"][n].is_list() 
+			ASSERT_LOG(node["control_point"][n].is_list()
 				&& node["control_point"][n].num_elements() == 2,
 				"Control points should be list of two elements.");
-			auto p = std::make_pair(node["control_point"][n][0].as_decimal().as_float(), 
+			auto p = std::make_pair(node["control_point"][n][0].as_decimal().as_float(),
 				node["control_point"][n][1].as_decimal().as_float());
 			control_points_.push_back(p);
 		}

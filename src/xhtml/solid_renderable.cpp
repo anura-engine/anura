@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -32,7 +32,7 @@
 
 namespace xhtml
 {
-	SolidRenderable::SolidRenderable() 
+	SolidRenderable::SolidRenderable()
 		: KRE::SceneObject("SolidRenderable"),
 		  color_(std::make_shared<KRE::Color>())
 	{
@@ -101,7 +101,7 @@ namespace xhtml
 		attribs_->addAttributeDesc(AttributeDesc(AttrType::COLOR,  4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
 		as->addAttribute(AttributeBasePtr(attribs_));
 		as->setDrawMode(DrawMode::TRIANGLES);
-		
+
 		addAttributeSet(as);
 	}
 
@@ -138,7 +138,7 @@ namespace xhtml
 		attribs_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
 		as->addAttribute(AttributeBasePtr(attribs_));
 		as->setDrawMode(draw_mode);
-		
+
 		addAttributeSet(as);
 	}
 

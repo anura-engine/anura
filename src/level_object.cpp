@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -51,7 +51,7 @@ PREF_INT(tile_scale, 2, "Scaling of game tiles");
 PREF_INT(tile_size, 16, "Size of game tile edges");
 #define BaseTileSize g_tile_size
 
-namespace 
+namespace
 {
 	typedef std::map<std::string,ConstLevelObjectPtr> tiles_map;
 	tiles_map tiles_cache;
@@ -85,7 +85,7 @@ LevelTile LevelObject::buildTile(variant node)
 	return res;
 }
 
-namespace 
+namespace
 {
 	typedef std::shared_ptr<variant> obj_variant_ptr;
 	typedef std::shared_ptr<const variant> const_obj_variant_ptr;
@@ -153,7 +153,7 @@ void create_compiled_tiles_image()
 					break;
 				}
 			}
-	
+
 
 			if(sheet == tiles_in_sheet.size()) {
 				const int num_sheets = static_cast<int>(1 + i->second / TilesInSheet);
@@ -196,7 +196,7 @@ void create_compiled_tiles_image()
 
 		const int src_x = (tile_pos%width) * BaseTileSize;
 		const int src_y = (tile_pos/width) * BaseTileSize;
-		
+
 		const int dst_x = (itor.second%64) * BaseTileSize;
 		const int dst_y = (itor.second/64) * BaseTileSize;
 
@@ -221,7 +221,7 @@ void create_compiled_tiles_image()
 		obj_variant_ptr node = i.first;
 		if(num_sheets > 1) {
 			int offset = abs(tile_str_to_palette[(*node)["tiles"].as_string()])%num_sheets;
-			
+
 			const static std::string UsesAlphaChannelStr = "uses_alpha_channel";
 			if(i.first->has_key(UsesAlphaChannelStr)) {
 				//try to put all alpha tiles in the first sheet.
@@ -288,12 +288,12 @@ void create_compiled_tiles_image()
 	for(unsigned n = 0; n != sheets.size(); ++n) {
 		std::stringstream str;
 		str << "images/tiles-compiled-" << std::dec << n << ".png";
-		
+
 		sheets[n]->savePng(module::map_file(str.str()));
 	}
 }
 
-namespace 
+namespace
 {
 	uint64_t current_palette_set = 0L;
 	std::set<LevelObject*>& palette_level_objects() {
@@ -332,7 +332,7 @@ void LevelObject::setCurrentPalette(uint64_t palette)
 }
 
 LevelObject::LevelObject(variant node, const char* id)
-  : id_(node["id"].as_string_default()), 
+  : id_(node["id"].as_string_default()),
     info_(node["info"].as_string_default()),
     t_(),
 	all_solid_(node["solid"].is_bool() ? node["solid"].as_bool() : node["solid"].as_string_default() == "yes"),
@@ -438,9 +438,9 @@ LevelObject::LevelObject(variant node, const char* id)
 			}
 		}
 	}
-	
+
 	std::vector<std::string> solid_attr;
-	
+
 	if(!node["solid"].is_bool()) {
 		solid_attr = util::split(node["solid"].as_string_default());
 	}
@@ -460,7 +460,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			solid_ = std::vector<bool>(width()*height(), true);
 		}
 	}
-		
+
 	if(std::find(solid_attr.begin(), solid_attr.end(), "diagonal") != solid_attr.end()) {
 		solid_.resize(width()*height());
 		for(int x = 0; x < width(); ++x) {
@@ -470,7 +470,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			}
 		}
 	}
-	
+
 	if(std::find(solid_attr.begin(), solid_attr.end(), "reverse_diagonal") != solid_attr.end()) {
 		solid_.resize(width()*height());
 		for(int x = 0; x < width(); ++x) {
@@ -480,7 +480,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			}
 		}
 	}
-	
+
 	if(std::find(solid_attr.begin(), solid_attr.end(), "upward_diagonal") != solid_attr.end()) {
 		solid_.resize(width()*height());
 		for(int x = 0; x < width(); ++x) {
@@ -510,7 +510,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			}
 		}
 	}
-	
+
 	if(std::find(solid_attr.begin(), solid_attr.end(), "quarter_diagonal_upper") != solid_attr.end()) {
 		solid_.resize(width()*height());
 		for(int x = 0; x < width(); ++x) {
@@ -520,7 +520,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			}
 		}
 	}
-	
+
 	if(std::find(solid_attr.begin(), solid_attr.end(), "reverse_quarter_diagonal_lower") != solid_attr.end()) {
 		solid_.resize(width()*height());
 		for(int x = 0; x < width(); ++x) {
@@ -530,7 +530,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			}
 		}
 	}
-	
+
 	if(std::find(solid_attr.begin(), solid_attr.end(), "reverse_quarter_diagonal_upper") != solid_attr.end()) {
 		solid_.resize(width()*height());
 		for(int x = 0; x < width(); ++x) {
@@ -540,7 +540,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			}
 		}
 	}
-	
+
 	if(node.has_key("solid_heights")) {
 		//this is a list of heights which represent the solids
 		std::vector<int> heights = node["solid_heights"].as_list_int();
@@ -577,7 +577,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			}
 		}
 	}
-	
+
 	if(preferences::compiling_tiles) {
 		tile_index_ = static_cast<int>(level_object_index.size());
 
@@ -639,7 +639,7 @@ LevelObject::LevelObject(variant node, const char* id)
 //			node_copy = node_copy.add_attr(variant("image"), variant("tiles-compiled.png"));
 			node_copy = node_copy.add_attr(variant("tiles"), variant(tiles_str));
 			tile_str_to_palette[tiles_str] = palette;
-	
+
 			level_object_index.push_back(obj_variant_ptr(new variant(node_copy)));
 			original_level_object_nodes.push_back(const_obj_variant_ptr(new variant(node)));
 		}
@@ -653,7 +653,7 @@ LevelObject::~LevelObject()
 	}
 }
 
-namespace 
+namespace
 {
 	const char base64_chars[65] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.!";
 
@@ -712,7 +712,7 @@ void LevelObject::writeCompiled()
 	}
 }
 
-namespace 
+namespace
 {
 	std::vector<ConstLevelObjectPtr> compiled_tiles;
 
@@ -829,9 +829,9 @@ bool LevelObject::isSolid(int x, int y) const
 	return solid_[index];
 }
 
-namespace 
+namespace
 {
-	int hash_level_object(int x, int y) 
+	int hash_level_object(int x, int y)
 	{
 		x /= 32;
 		y /= 32;
@@ -912,7 +912,7 @@ void LevelObject::setPalette(uint64_t palette)
 			}
 			p >>= 1;
 			++id;
-		}		
+		}
 	}
 }
 

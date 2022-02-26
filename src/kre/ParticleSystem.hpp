@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -85,7 +85,7 @@ namespace KRE
 			rectf area;
 		};
 
-		void init_physics_parameters(PhysicsParameters& pp); 
+		void init_physics_parameters(PhysicsParameters& pp);
 
 		// This structure should be POD (i.e. plain old data)
 		struct Particle
@@ -99,7 +99,7 @@ namespace KRE
 		};
 
 		// General class for emitter objects which encapsulate and exposes physical parameters
-		// Used as a base class for everything that is not 
+		// Used as a base class for everything that is not
 		class EmitObject : public Particle
 		{
 		public:
@@ -251,7 +251,7 @@ namespace KRE
 			void notifyNodeAttached(std::weak_ptr<SceneNode> parent) override;
 
 			ParticleSystemPtr particle_system_;
-			
+
 			ParticleSystemContainer() = delete;
 			ParticleSystemContainer(ParticleSystemContainer const&) = delete;
 		};
@@ -262,7 +262,7 @@ namespace KRE
 
 		glm::vec3 perpendicular(const glm::vec3& v) ;
 		glm::vec3 create_deviating_vector(float angle, const glm::vec3& v, const glm::vec3& up = glm::vec3(0.0f));
-		
+
 		class DebugDrawHelper : public SceneObject
 		{
 		public:

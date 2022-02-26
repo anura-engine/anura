@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,7 +39,7 @@
 #include "reference_counted_object.hpp"
 #include "uuid.hpp"
 
-namespace game_logic 
+namespace game_logic
 {
 	class FormulaCallable;
 	class FormulaExpression;
@@ -49,7 +49,7 @@ class variant_type;
 typedef ffl::IntrusivePtr<const variant_type> variant_type_ptr;
 typedef ffl::IntrusivePtr<const variant_type> const_variant_type_ptr;
 
-struct CallStackEntry 
+struct CallStackEntry
 {
 	const game_logic::FormulaExpression* expression;
 	const game_logic::FormulaCallable* callable;
@@ -63,9 +63,9 @@ std::string get_full_call_stack();
 
 const std::vector<CallStackEntry>& get_expression_call_stack();
 
-struct CallStackManager 
+struct CallStackManager
 {
-	explicit CallStackManager(const game_logic::FormulaExpression* str, const game_logic::FormulaCallable* callable) 
+	explicit CallStackManager(const game_logic::FormulaExpression* str, const game_logic::FormulaCallable* callable)
 	{
 		push_call_stack(str, callable);
 	}
@@ -88,7 +88,7 @@ struct variant_delayed;
 struct variant_weak;
 struct variant_uuid;
 
-struct type_error 
+struct type_error
 {
 	explicit type_error(const std::string& str);
 	std::string message;
@@ -96,7 +96,7 @@ struct type_error
 
 static const int64_t VARIANT_DECIMAL_PRECISION = DECIMAL_PRECISION;
 
-struct VariantFunctionTypeInfo : public reference_counted_object 
+struct VariantFunctionTypeInfo : public reference_counted_object
 {
 	VariantFunctionTypeInfo();
 	std::vector<std::string> arg_names;
@@ -119,7 +119,7 @@ inline void unregisterGlobalVariant(variant* v) {}
 
 typedef ffl::IntrusivePtr<VariantFunctionTypeInfo> VariantFunctionTypeInfoPtr;
 
-class variant 
+class variant
 {
 public:
 

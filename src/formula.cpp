@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -64,7 +64,7 @@ PREF_INT(max_ffl_recursion, 100, "Maximum depth of FFL recursion");
 
 using namespace formula_vm;
 
-namespace 
+namespace
 {
 	PREF_BOOL(ffl_vm_opt_library_lookups, true, "Optimize library lookups in VM");
 	PREF_BOOL(ffl_vm_opt_constant_lookups, true, "Optimize contant lookups in VM");
@@ -79,14 +79,14 @@ namespace
 	bool g_strict_formula_checking = false;
 	bool g_strict_formula_checking_warnings = false;
 
-	std::set<game_logic::Formula*>& all_formulae() 
+	std::set<game_logic::Formula*>& all_formulae()
 	{
 		static std::set<game_logic::Formula*>* instance = new std::set<game_logic::Formula*>;
 		return *instance;
 	}
 }
 
-std::string output_formula_error_info() 
+std::string output_formula_error_info()
 {
 	if(last_executed_formula) {
 		return last_executed_formula->outputDebugInfo();
@@ -155,7 +155,7 @@ namespace game_logic
 		}
 		return result;
 	}
-	
+
 	void FormulaCallable::setValue(const std::string& key, const variant& /*value*/)
 	{
 		LOG_ERROR("cannot set key '" << key << "' on object");
@@ -183,7 +183,7 @@ namespace game_logic
 		throw type_error("Tried to serialize type which cannot be serialized");
 	}
 
-	bool FormulaCallable::executeCommand(const variant &v) 
+	bool FormulaCallable::executeCommand(const variant &v)
 	{
 		if(v.is_null()) {
 			return true;
@@ -242,7 +242,7 @@ namespace game_logic
 		expr_holder_.reset(expr);
 	}
 
-	FormulaPtr FormulaCallable::createFormula(const variant& v) 
+	FormulaPtr FormulaCallable::createFormula(const variant& v)
 	{
 		return FormulaPtr(new Formula(v, 0));
 	}
@@ -254,25 +254,25 @@ namespace game_logic
 			values_[value.first.as_string()] = value.second;
 		}
 	}
-	
-	MapFormulaCallable::MapFormulaCallable(const FormulaCallable* fallback) 
-		: FormulaCallable(false), 
+
+	MapFormulaCallable::MapFormulaCallable(const FormulaCallable* fallback)
+		: FormulaCallable(false),
 		fallback_(fallback)
 	{}
-	
-	MapFormulaCallable::MapFormulaCallable(const std::map<std::string, variant>& values) 
-		: FormulaCallable(false), 
-		fallback_(nullptr), 
+
+	MapFormulaCallable::MapFormulaCallable(const std::map<std::string, variant>& values)
+		: FormulaCallable(false),
+		fallback_(nullptr),
 		values_(values)
 	{}
 
-	void MapFormulaCallable::surrenderReferences(GarbageCollector* collector) 
+	void MapFormulaCallable::surrenderReferences(GarbageCollector* collector)
 	{
 		for(std::pair<const std::string,variant>& p : values_) {
 			collector->surrenderVariant(&p.second);
 		}
 	}
-	
+
 	MapFormulaCallable& MapFormulaCallable::add(const std::string& key, const variant& value)
 	{
 		values_[key] = value;
@@ -283,7 +283,7 @@ namespace game_logic
 	{
 		return values_[key];
 	}
-	
+
 	variant MapFormulaCallable::getValue(const std::string& key) const
 	{
 		std::map<std::string, variant>::const_iterator itor = values_.find(key);
@@ -307,7 +307,7 @@ namespace game_logic
 		}
 		return result.build();
 	}
-	
+
 	void MapFormulaCallable::getInputs(std::vector<FormulaInput>* inputs) const
 	{
 		if(fallback_) {
@@ -317,13 +317,13 @@ namespace game_logic
 			inputs->push_back(FormulaInput(i->first, FORMULA_ACCESS_TYPE::READ_WRITE));
 		}
 	}
-	
+
 	void MapFormulaCallable::setValue(const std::string& key, const variant& value)
 	{
 		values_[key] = value;
 	}
-	
-	namespace 
+
+	namespace
 	{
 		class VMExpression : public FormulaExpression {
 		public:
@@ -385,7 +385,7 @@ namespace game_logic
 		#if defined(USE_LUA)
 		class LuaFnExpression : public FormulaExpression {
 		public:
-			explicit LuaFnExpression(lua::LuaFunctionReference* fn_ref) 
+			explicit LuaFnExpression(lua::LuaFunctionReference* fn_ref)
 				: fn_ref_(fn_ref)
 			{
 			}
@@ -400,7 +400,7 @@ namespace game_logic
 			lua::LuaFunctionReferencePtr fn_ref_;
 		};
 		#endif
-		
+
 		class FunctionListExpression : public FormulaExpression {
 		public:
 			explicit FunctionListExpression(FunctionSymbolTable *symbols)
@@ -421,7 +421,7 @@ namespace game_logic
 				}
 				return variant(&res);
 			}
-	
+
 			FunctionSymbolTable* symbols_;
 		};
 
@@ -488,7 +488,7 @@ namespace game_logic
 
 				return ExpressionPtr();
 			}
-	
+
 			std::vector<ExpressionPtr> items_;
 		};
 
@@ -501,7 +501,7 @@ namespace game_logic
 					generator_names_.push_back(i->first);
 				}
 			}
-	
+
 		private:
 			variant_type_ptr getVariantType() const override {
 				return variant_type::get_list(expr_->queryVariantType());
@@ -560,7 +560,7 @@ namespace game_logic
 						break;
 					}
 				}
-		
+
 				return variant(&result);
 			}
 
@@ -648,7 +648,7 @@ namespace game_logic
 			explicit MapExpression(const std::vector<ExpressionPtr>& items)
 			: FormulaExpression("_map"), items_(items)
 			{}
-	
+
 		private:
 			variant_type_ptr getVariantType() const override {
 				std::map<variant, variant_type_ptr> types;
@@ -724,7 +724,7 @@ namespace game_logic
 					variant value = (*(i+1))->evaluate(variables);
 					res[ key ] = value;
 				}
-		
+
 				variant result(&res);
 				result.set_source_expression(this);
 				return result;
@@ -759,7 +759,7 @@ namespace game_logic
 				}
 				return ExpressionPtr();
 			}
-	
+
 			std::vector<ExpressionPtr> items_;
 		};
 
@@ -793,10 +793,10 @@ namespace game_logic
 			variant execute(const FormulaCallable& variables) const override {
 				const variant res = operand_->evaluate(variables);
 				switch(op_) {
-					case OP::NOT: 
+					case OP::NOT:
 						return res.as_bool() ? variant::from_bool(false) : variant::from_bool(true);
-					case OP::SUB: 
-					default: 
+					case OP::SUB:
+					default:
 						return -res;
 				}
 			}
@@ -836,7 +836,7 @@ namespace game_logic
 			: FormulaExpression("_const_id"), v_(get_constant(id))
 			{
 			}
-	
+
 		private:
 			variant execute(const FormulaCallable& variables) const override {
 				return v_;
@@ -845,7 +845,7 @@ namespace game_logic
 			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(v_.type());
 			}
-	
+
 			variant v_;
 		};
 
@@ -858,7 +858,7 @@ namespace game_logic
 				ASSERT_LOG(entry != nullptr, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id);
 				entry->access_count++;
 			}
-	
+
 			const std::string& id() const { return id_; }
 
 			bool isIdentifier(std::string* ident) const override {
@@ -915,7 +915,7 @@ namespace game_logic
 				id = id_;
 				return variables.queryValue("self");
 			}
-	
+
 			variant execute(const FormulaCallable& variables) const override {
 				Formula::failIfStaticContext();
 				return variables.queryValueBySlot(slot_);
@@ -1014,7 +1014,7 @@ namespace {
 			: FormulaExpression("_id"), id_(id), callable_def_(callable_def)
 			{
 			}
-	
+
 			const std::string& id() const { return id_; }
 
 			bool isIdentifier(std::string* ident) const override {
@@ -1135,7 +1135,7 @@ namespace {
 				id = id_;
 				return variables.queryValue("self");
 			}
-	
+
 			variant execute(const FormulaCallable& variables) const override {
 				variant result = variables.queryValue(id_);
 				if(result.is_null() && function_) {
@@ -1252,7 +1252,7 @@ namespace {
 					}
 				}
 			}
-	
+
 		private:
 			variant execute(const FormulaCallable& variables) const override {
 				variant v(fml_, variables, base_slot_, type_info_, generic_types_, factory_);
@@ -1310,7 +1310,7 @@ namespace {
 			}
 
 			void setNoClosure() { requires_closure_ = false; }
-	
+
 		private:
 			variant execute(const FormulaCallable& variables) const override {
 				if(requires_closure_) {
@@ -1332,7 +1332,7 @@ namespace {
 			}
 
 			bool canCreateVM() const override { return true; }
-			
+
 			ExpressionPtr optimizeToVM() override {
 				formula_vm::VirtualMachine vm;
 				vm.addLoadConstantInstruction(fn_);
@@ -1350,11 +1350,11 @@ namespace {
 			bool requires_closure_;
 
 			variant fn_;
-	
+
 		};
 
 
-		namespace 
+		namespace
 		{
 			int function_recursion_depth = 0;
 
@@ -1382,7 +1382,7 @@ namespace {
 					g_expr_stack.push_back(expr);
 			#endif
 					++function_recursion_depth;
-		
+
 					ASSERT_LOG(function_recursion_depth < g_max_ffl_recursion, "Recursion too deep. Exceeded limit of " << g_max_ffl_recursion << ". Use --max_ffl_recursion to increase this limit, though the most likely cause of this is infinite recursion. Function: " << expr->str() << "\n\ncall Stack: " << get_call_stack() << "\n\n" << get_expression_stack());
 				}
 				~InfiniteRecursionProtector() {
@@ -1483,7 +1483,7 @@ namespace {
 						return variant();
 					}
 				}
-		
+
 				return left(&args);
 			}
 
@@ -1628,7 +1628,7 @@ namespace {
 								}
 
 								lookups.insert(std::pair<int, VirtualMachine::Iterator>(itor.arg(), itor));
-	
+
 								ordered_lookups.emplace_back(itor);
 							}
 						}
@@ -1640,7 +1640,7 @@ namespace {
 							for(auto lookup : ordered_lookups) {
 								auto next_itor = lookup;
 								next_itor.next();
-	
+
 								const int index = lookup.arg() - base_slot;
 								assert(index >= 0 && index < num_args);
 
@@ -1675,7 +1675,7 @@ namespace {
 									vm.addLoadConstantInstruction(*i);
 									++i;
 								}
-	
+
 							}
 
 							vm.addLoadConstantInstruction(variant(fn_var.get_function_closure()));
@@ -1712,7 +1712,7 @@ namespace {
 
 				return ExpressionPtr();
 			}
-	
+
 			ExpressionPtr left_;
 			std::vector<ExpressionPtr> args_;
 			std::vector<ffl::IntrusivePtr<FormulaInterfaceInstanceFactory> > interfaces_;
@@ -1750,20 +1750,20 @@ namespace {
 
 					ASSERT_LOG(!left.is_null(), "CALL OF DOT OPERATOR ON nullptr VALUE: '" << left_->str() << "': " << debugPinpointLocation());
 					ASSERT_LOG(false, "CALL OF DOT OPERATOR ON ILLEGAL VALUE: " << left.write_json() << " PRODUCED BY '" << left_->str() << "': " << debugPinpointLocation());
-			
+
 					return left;
 				}
-		
+
 				return right_->evaluate(*left.as_callable());
 			}
-	
+
 			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
 				variant left = left_->evaluate(variables);
-		
+
 				if(!right_->isIdentifier(&id)) {
 					return right_->evaluateWithMember(*left.as_callable(), id);
 				}
-		
+
 				return left;
 			}
 
@@ -2004,7 +2004,7 @@ namespace {
 				}
 				return ExpressionPtr();
 			}
-	
+
 			ExpressionPtr left_, right_;
 
 			//the definition used to evaluate right_. i.e. the type of the value
@@ -2044,7 +2044,7 @@ namespace {
 					ASSERT_LOG(false, "illegal usage of operator []: called on " << left.to_debug_string() << " value: " << left_->str() << "'\n" << debugPinpointLocation());
 				}
 			}
-	
+
 			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
 				const variant left = left_->evaluate(variables);
 				const variant key = key_->evaluate(variables);
@@ -2113,7 +2113,7 @@ namespace {
 							case 2: vm.addInstruction(formula_vm::OP_INDEX_2); break;
 							default: assert(false);
 						}
-						
+
 					} else {
 						key_->emitVM(vm);
 						if(left_type->is_list_of() || left_type->is_map_of().first) {
@@ -2127,7 +2127,7 @@ namespace {
 				}
 				return ExpressionPtr();
 			}
-	
+
 			ExpressionPtr left_, key_;
 		};
 
@@ -2177,7 +2177,7 @@ namespace {
 				if(end_index > left.num_elements()) {
 					end_index = left.num_elements();
 				}
-		
+
 				if(left.is_list()) {
 					if(left.num_elements() == 0) {
 						std::vector<variant> empty;
@@ -2189,7 +2189,7 @@ namespace {
 						std::vector<variant> empty;
 						return variant(&empty);
 					}
-			
+
 				} else {
 					ASSERT_LOG(false, "illegal usage of operator [:]'\n" << debugPinpointLocation() << " called on object of type " << variant::variant_type_to_string(left.type()));
 				}
@@ -2232,7 +2232,7 @@ namespace {
 				}
 				return ExpressionPtr();
 			}
-	
+
 			ExpressionPtr left_, start_, end_;
 		};
 
@@ -2439,7 +2439,7 @@ namespace {
 				right_->emitVM(vm);
 				vm.addInstruction(op_);
 			}
-	
+
 		private:
 			variant execute(const FormulaCallable& variables) const override {
 				const variant left = left_->evaluate(variables);
@@ -2454,7 +2454,7 @@ namespace {
 									return variant::from_bool(result);
 								}
 							}
-					
+
 							return variant::from_bool(!result);
 						} else if(right.is_map()) {
 							return variant::from_bool(right.has_key(left) ? result : !result);
@@ -2463,46 +2463,46 @@ namespace {
 							return variant();
 						}
 					}
-					case OP_AND: 
+					case OP_AND:
 						return left.as_bool() == false ? left : right;
-					case OP_OR: 
+					case OP_OR:
 						return left.as_bool() ? left : right;
-					case OP_ADD: 
+					case OP_ADD:
 						return left + right;
-					case OP_SUB: 
+					case OP_SUB:
 						return left - right;
-					case OP_MUL: 
+					case OP_MUL:
 						return left * right;
-					case OP_DIV: 
+					case OP_DIV:
 
 						//this is a very unorthodox hack to guard against divide-by-zero errors.  It returns positive or negative infinity instead of asserting, which (hopefully!) works out for most of the physical calculations that are using this.  We tentatively view this behavior as much more preferable to the game apparently crashing for a user.  This is of course not rigorous outside of a videogame setting.
-						if(right == variant(0)) { 
+						if(right == variant(0)) {
 							right = variant(decimal::epsilon());
 						}
 
 						return left / right;
-					case OP_POW: 
+					case OP_POW:
 						return left ^ right;
-					case OP_EQ:  
+					case OP_EQ:
 						return left == right ? variant::from_bool(true) : variant::from_bool(false);
-					case OP_NEQ: 
+					case OP_NEQ:
 						return left != right ? variant::from_bool(true) : variant::from_bool(false);
-					case OP_LTE: 
+					case OP_LTE:
 						return left <= right ? variant::from_bool(true) : variant::from_bool(false);
-					case OP_GTE: 
+					case OP_GTE:
 						return left >= right ? variant::from_bool(true) : variant::from_bool(false);
-					case OP_LT:  
+					case OP_LT:
 						return left < right ? variant::from_bool(true) : variant::from_bool(false);
-					case OP_GT:  
+					case OP_GT:
 						return left > right ? variant::from_bool(true) : variant::from_bool(false);
-					case OP_MOD: 
+					case OP_MOD:
 						return left % right;
 					case OP_DICE:
 					default:
 						return variant(dice_roll(left.as_int(), right.as_int()));
 				}
 			}
-	
+
 			static int dice_roll(int num_rolls, int faces) {
 				int res = 0;
 				while(faces > 0 && num_rolls-- > 0) {
@@ -2721,7 +2721,7 @@ namespace {
 					return variant_type::get_type(variant::VARIANT_TYPE_INT);
 				default:
 					ASSERT_LOG(false, "unknown op type: " << op_);
-			
+
 				}
 
 			}
@@ -2766,7 +2766,7 @@ namespace {
 
 				return ExpressionPtr();
 			}
-	
+
 			OP op_;
 			ExpressionPtr left_, right_;
 		};
@@ -2796,7 +2796,7 @@ namespace {
 			: FormulaExpression("_where"), body_(body), info_(info)
 			{
 			}
-	
+
 		private:
 			ExpressionPtr optimize() const override {
 
@@ -2822,7 +2822,7 @@ namespace {
 
 			ExpressionPtr body_;
 			WhereVariablesInfoPtr info_;
-	
+
 			variant execute(const FormulaCallable& variables) const override {
 				FormulaCallablePtr wrapped_variables(new WhereVariables(variables, info_));
 				return body_->evaluate(*wrapped_variables);
@@ -2872,7 +2872,7 @@ namespace {
 					int loop_end = -1;
 
 					bool can_optimize = true;
-					
+
 					std::vector<formula_vm::VirtualMachine> all_vm;
 					all_vm.reserve(vm_entries.size() + 1);
 					all_vm.emplace_back(vm_body->get_vm());
@@ -2924,7 +2924,7 @@ namespace {
 								}
 
 								lookups.insert(std::pair<int, VirtualMachine::Iterator>(itor.arg(), itor));
-	
+
 								ordered_lookups.emplace_back(itor);
 							}
 						}
@@ -3280,7 +3280,7 @@ namespace {
 					interface_ = interface_factory;
 				}
 			}
-	
+
 		private:
 			variant_type_ptr getVariantType() const override {
 				return type_;
@@ -3288,7 +3288,7 @@ namespace {
 
 			variant_type_ptr type_;
 			ExpressionPtr expression_;
-	
+
 			variant execute(const FormulaCallable& variables) const override {
 				if(interface_) {
 					return interface_->create(expression_->evaluate(variables));
@@ -3334,7 +3334,7 @@ namespace {
 			: FormulaExpression("_type"), type_(type), expression_(expr)
 			{
 			}
-	
+
 		private:
 			variant_type_ptr getVariantType() const override {
 				return type_;
@@ -3342,7 +3342,7 @@ namespace {
 
 			variant_type_ptr type_;
 			ExpressionPtr expression_;
-	
+
 			variant execute(const FormulaCallable& variables) const override {
 				const variant result = expression_->evaluate(variables);
 				ASSERT_LOG(type_->match(result), "TYPE MIS-MATCH: EXPECTED " << type_->to_string() << " BUT FOUND " << result.write_json() << " OF TYPE '" << get_variant_type_from_value(result)->to_string() << "' " << type_->mismatch_reason(result) << " AT " << debugPinpointLocation());
@@ -3417,7 +3417,7 @@ namespace {
 			variant_type_ptr getVariantType() const override {
 				return body_->queryVariantType();
 			}
-	
+
 			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(body_);
@@ -3480,7 +3480,7 @@ namespace {
 			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(variant::VARIANT_TYPE_INT);
 			}
-	
+
 			variant i_;
 		};
 
@@ -3503,7 +3503,7 @@ namespace {
 			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 			}
-	
+
 			variant v_;
 		};
 
@@ -3535,17 +3535,17 @@ namespace {
 						if(j == str.end()) {
 							break;
 						}
-			
+
 						const std::string formula_str(i+BeginSub.size(), j);
 						const auto pos = i - str.begin();
 						str.erase(i, j+1);
-			
+
 						substitution sub;
 						sub.pos = pos;
 						sub.calculation.reset(new Formula(variant(formula_str), symbols));
 						subs_.push_back(sub);
 					}
-		
+
 					std::reverse(subs_.begin(), subs_.end());
 
 					if(translate) {
@@ -3555,7 +3555,7 @@ namespace {
 				} else if (translate) {
 					str = std::string("~") + str + std::string("~");
 				}
-		
+
 				str_ = variant(str);
 			}
 
@@ -3591,7 +3591,7 @@ namespace {
 					return ExpressionPtr();
 				}
 			}
-			
+
 		private:
 			variant execute(const FormulaCallable& variables) const override {
 				if(subs_.empty()) {
@@ -3603,7 +3603,7 @@ namespace {
 						const std::string str = sub.calculation->execute(variables).string_cast();
 						res.insert(sub.pos, str);
 					}
-			
+
 					return variant(res);
 				}
 			}
@@ -3611,12 +3611,12 @@ namespace {
 			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(variant::VARIANT_TYPE_STRING);
 			}
-	
+
 			struct substitution {
 				std::ptrdiff_t pos;
 				ConstFormulaPtr calculation;
 			};
-	
+
 			variant str_;
 			std::vector<substitution> subs_;
 		};
@@ -3659,7 +3659,7 @@ namespace {
 				precedence_map["("]     = n;
 				precedence_map["."]     = n;
 			}
-	
+
 			ASSERT_LOG(precedence_map.count(std::string(t.begin,t.end)), "Unknown precedence for '" << std::string(t.begin,t.end) << "': " << pinpoint_location(formula_str, t.begin, t.end));
 			return precedence_map[std::string(t.begin,t.end)];
 		}
@@ -3678,7 +3678,7 @@ namespace {
 			} else {
 				ASSERT_LOG(false, "Invalid function definition\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 			}
-	
+
 			while((i1->type != FFL_TOKEN_TYPE::RPARENS) && (i1 != i2)) {
 				variant_type_ptr variant_type_info;
 				if(i1+1 != i2 && i1->type != FFL_TOKEN_TYPE::COMMA && (i1+1)->type != FFL_TOKEN_TYPE::COMMA && (i1+1)->type != FFL_TOKEN_TYPE::RPARENS && std::string((i1+1)->begin, (i1+1)->end) != "=") {
@@ -3737,7 +3737,7 @@ namespace {
 				}
 				++i1;
 			}
-	
+
 			if(i1->type != FFL_TOKEN_TYPE::RPARENS) {
 				ASSERT_LOG(false, "Invalid function definition\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 			}
@@ -3776,10 +3776,10 @@ namespace {
 					args.push_back(std::pair<const Token*, const Token*>(beg, i1));
 					beg = i1+1;
 				}
-		
+
 				++i1;
 			}
-	
+
 			if(beg != i1) {
 				args.push_back(std::pair<const Token*, const Token*>(beg, i1));
 			}
@@ -3913,7 +3913,7 @@ namespace {
 					res->push_back(parse_expression(formula_str, beg,i1, symbols, callable_def));
 					beg = i1+1;
 				}
-		
+
 				++i1;
 			}
 
@@ -3972,11 +3972,11 @@ namespace {
 
 		ExpressionPtr parse_expression_internal(const variant& formula_str, const Token* i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=nullptr);
 
-		namespace 
+		namespace
 		{
 			//only allow one static_FormulaCallable to be active at a time.
 			bool static_FormulaCallable_active = false;
-	
+
 			//a special callable which will throw an exception if it's actually called.
 			//we use this to determine if an expression is static -- i.e. doesn't
 			//depend on input, and can be reduced to its result.
@@ -3986,10 +3986,10 @@ namespace {
 			public:
 				static_FormulaCallable() : FormulaCallable(false) {
 				}
-		
+
 				~static_FormulaCallable() {
 				}
-		
+
 				variant getValue(const std::string& key) const override {
 					if(key == "lib") {
 						return variant(get_library_object().get());
@@ -4010,7 +4010,7 @@ namespace {
 					if(static_FormulaCallable_active) {
 						throw non_static_expression_exception();
 					}
-			
+
 					static_FormulaCallable_active = true;
 				}
 
@@ -4087,7 +4087,7 @@ namespace {
 				StaticFormulaCallableGuard static_callable;
 				try {
 					variant res;
-			
+
 					{
 						const static_context ctx;
 						res = result->staticEvaluate(*static_callable.callable());
@@ -4108,7 +4108,7 @@ namespace {
 					ASSERT_LOG(false, "Error parsing formula: " << e.msg << "\n" << original->debugPinpointLocation());
 				}
 			}
-	
+
 			if(result) {
 				result->copyDebugInfoFrom(*original);
 
@@ -4195,7 +4195,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 
 				++i1;
 			}
-	
+
 			std::vector<std::string> args, types;
 			std::vector<variant> default_args;
 			std::vector<variant_type_ptr> variant_types;
@@ -4228,7 +4228,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 
 				function_var.setDebugInfo(info);
 			}
-	
+
 			std::shared_ptr<RecursiveFunctionSymbolTable> recursive_symbols(new RecursiveFunctionSymbolTable(formula_name.empty() ? "recurse" : formula_name, args, default_args, symbols, formula_name.empty() ? callable_def : nullptr, variant_types));
 
 			//create a definition of the callable representing
@@ -4297,7 +4297,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 
 			ConstFormulaPtr fml(new Formula(function_var, recursive_symbols.get(), args_definition_ptr));
 			recursive_symbols->resolveRecursiveCalls(fml);
-	
+
 			if(formula_name.empty()) {
 				bool uses_closure = false;
 
@@ -4398,7 +4398,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 		ExpressionPtr parse_expression_internal(const variant& formula_str, const Token* i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize)
 		{
 			ASSERT_LOG(i1 != i2, "Empty expression in formula\n" << pinpoint_location(formula_str, (i1-1)->end));
-	
+
 			if(i1->type == FFL_TOKEN_TYPE::KEYWORD && i1+1 != i2 && i1+2 == i2 && i1->str() == "enum") {
 				ASSERT_LOG((i1+1)->type == FFL_TOKEN_TYPE::IDENTIFIER, "Expected identifier after enum\n" << pinpoint_location(formula_str, i1->begin, i1->end));
 				return ExpressionPtr(new VariantExpression(variant::create_enum((i1+1)->str())));
@@ -4420,7 +4420,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 					return parse_expression(formula_str, (i1+1), i2, symbols, callable_def, can_optimize);
 				}
 			}
-	
+
 			int parens = 0;
 			const Token* op = nullptr;
 			const Token* fn_call = nullptr;
@@ -4429,7 +4429,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 				if(fn_call && i+1 == i2 && i->type != FFL_TOKEN_TYPE::RPARENS) {
 					fn_call = nullptr;
 				}
-		
+
 				if(i->type == FFL_TOKEN_TYPE::LPARENS || i->type == FFL_TOKEN_TYPE::LSQUARE || i->type == FFL_TOKEN_TYPE::LBRACKET) {
 					if(i->type == FFL_TOKEN_TYPE::LPARENS && parens == 0 && i != i1) {
 						fn_call = i;
@@ -4437,11 +4437,11 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 						//the square bracket itself is an operator
 						op = i;
 					}
-			
+
 					++parens;
 				} else if(i->type == FFL_TOKEN_TYPE::RPARENS || i->type == FFL_TOKEN_TYPE::RSQUARE || i->type == FFL_TOKEN_TYPE::RBRACKET) {
 					--parens;
-			
+
 					if(parens == 0 && i+1 != i2) {
 						fn_call = nullptr;
 					}
@@ -4462,13 +4462,13 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 					}
 				}
 			}
-	
+
 			if(op != nullptr && (op->type == FFL_TOKEN_TYPE::LSQUARE)) {
 				//the square bracket operator is handled below, just set the op
 				//to nullptr and it'll be handled.
 				op = nullptr;
 			}
-	
+
 			if(op == nullptr) {
 				if(i1->type == FFL_TOKEN_TYPE::LPARENS && (i2-1)->type == FFL_TOKEN_TYPE::RPARENS) {
 					//   This condition will prevent ` ( def ( ) -> int 32993 ) ( ) `
@@ -4477,7 +4477,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 					if (i2 - 2 >= i1 && (i2 - 2)->type != FFL_TOKEN_TYPE::LPARENS) {
 						return parse_expression(formula_str, i1+1,i2-1,symbols, callable_def, can_optimize);
 					}
-				} else if( (i2-1)->type == FFL_TOKEN_TYPE::RSQUARE) { //check if there is [ ] : either a list definition, or a operator 
+				} else if( (i2-1)->type == FFL_TOKEN_TYPE::RSQUARE) { //check if there is [ ] : either a list definition, or a operator
 					const Token* tok = i2-2;
 					int square_parens = 0;
 					while ( (tok->type != FFL_TOKEN_TYPE::LSQUARE || square_parens) && tok != i1) {
@@ -4487,7 +4487,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 							square_parens--;
 						}
 						--tok;
-					}	
+					}
 
 					if (tok->type == FFL_TOKEN_TYPE::LSQUARE) {
 						if (tok == i1) {
@@ -4602,9 +4602,9 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 										colon_tok = tok2;
 									}
 								}
-								--tok2;	
+								--tok2;
 							}
-					
+
 							if(colon_tok != nullptr){
 								ExpressionPtr start, end;
 								if(tok+1 < colon_tok) {
@@ -4618,7 +4618,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 								//it's a slice.  execute operator [ : ]
 								return ExpressionPtr(new SliceSquareBracketExpression(
 																					parse_expression(formula_str, i1,tok,symbols, callable_def, can_optimize), start, end));
-							}else{	
+							}else{
 								//execute operator [ ]
 								return ExpressionPtr(new SquareBracketExpression(
 																					parse_expression(formula_str, i1,tok,symbols, callable_def, can_optimize),
@@ -4681,7 +4681,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 							++nright;
 						}
 					}
-			
+
 					if(nleft == nright) {
 						const std::string function_name(i1->begin, i1->end);
 						std::vector<ExpressionPtr> args;
@@ -4692,7 +4692,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 						}
 					}
 				}
-		
+
 				if(!fn_call) {
 					if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && (i1+1)->type == FFL_TOKEN_TYPE::LPARENS) {
 						const Token* match = i1+2;
@@ -4711,7 +4711,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 
 						if(match != i2) {
 							++match;
-							ASSERT_LT(match, i2); 
+							ASSERT_LT(match, i2);
 
 							ASSERT_LOG(false, "unexpected tokens after function call\n" << pinpoint_location(formula_str, match->begin, (i2-1)->end));
 						} else {
@@ -4724,7 +4724,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 					assert(false); //should never reach here.
 				}
 			}
-	
+
 			if(fn_call && (op == nullptr ||
 			   operator_precedence(*op, formula_str) >= operator_precedence(*fn_call, formula_str))) {
 				op = fn_call;
@@ -4770,7 +4770,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 				} else {
 
 					ExpressionPtr left;
-					
+
 					std::vector<ExpressionPtr> list;
 					if(i1 != op) {
 						left = ExpressionPtr(parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize));
@@ -4781,7 +4781,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 					return ExpressionPtr(new CommandSequenceExpression(left, right));
 				}
 			}
-	
+
 			if(op == i1) {
 				if(op+1 == i2) {
 					LOG_WARN("No expression for operator '" << std::string(op->begin,op->end) << "' to operate on");
@@ -4798,7 +4798,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 				ExpressionPtr left = parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize);
 				return ExpressionPtr(new InstantiateGenericExpression(formula_str, left, op+1, i2-1));
 			}
-	
+
 			int consume_backwards = 0;
 			std::string op_name(op->begin,op->end);
 
@@ -4846,7 +4846,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 				ExpressionPtr left(parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize));
 				return ExpressionPtr(new IsExpression(type, left));
 			}
-	
+
 			if(op_name == "(") {
 				if(i2 - op < 2) {
 					ASSERT_LOG(false, "MISSING PARENS IN FORMULA\n" << pinpoint_location(formula_str, op->begin, op->end));
@@ -4854,17 +4854,17 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 
 				std::vector<ExpressionPtr> args;
 				parse_args(formula_str,nullptr,op+1, i2-1, &args, symbols, callable_def, can_optimize);
-		
+
 				return ExpressionPtr(new FunctionCallExpression(parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize), args));
 			}
-	
+
 			if(op_name == ".") {
 				ExpressionPtr left(parse_expression(formula_str, i1,op,symbols, callable_def, can_optimize));
 				ConstFormulaCallableDefinitionPtr type_definition = left->getTypeDefinition();
 				ExpressionPtr right(parse_expression(formula_str, op+1,i2,nullptr, type_definition, can_optimize));
 				return ExpressionPtr(new DotExpression(left, right, type_definition));
 			}
-	
+
 			if(op_name == "where") {
 				const int base_slots = callable_def ? callable_def->getNumSlots() : 0;
 				WhereVariablesInfoPtr where_info(new WhereVariablesInfo(base_slots));
@@ -4952,7 +4952,7 @@ FormulaPtr Formula::createOptionalFormula(const variant& val, FunctionSymbolTabl
 	if(val.is_null() || (val.is_string() && val.as_string().empty())) {
 		return FormulaPtr();
 	}
-	
+
 	if(lang == FORMULA_LANGUAGE::FFL) {
 		return FormulaPtr(new Formula(val, symbols, callableDefinition));
 	} else {
@@ -4968,7 +4968,7 @@ Formula::Formula()
 {}
 
 Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callableDefinition)
-	: str_(val), 
+	: str_(val),
 	def_(callableDefinition)
 {
 	using namespace formula_tokenizer;
@@ -5206,7 +5206,7 @@ void Formula::checkBracketsMatch(const std::vector<Token>& tokens) const
 			error_line.resize(78);
 			std::fill(error_line.end()-3, error_line.end(), '.');
 		}
-		
+
 
 		std::string location;
 		const variant::debug_info* dbg_info = str_.get_debug_info();
@@ -5239,7 +5239,7 @@ std::string Formula::outputDebugInfo() const
 	std::ostringstream s;
 	s << "FORMULA: " << (str_.get_debug_info() ? str_.get_debug_info()->message() : "(UNKNOWN LOCATION): ");
 	//TODO: add debug info from str_ variant here.
-	
+
 	s << str_.as_string() << "\n";
 	return s.str();
 }
@@ -5331,7 +5331,7 @@ variant Formula::execute(const FormulaCallable& variables) const
 variant Formula::execute() const
 {
 	last_executed_formula = this;
-	
+
 	MapFormulaCallable* null_callable = new MapFormulaCallable;
 	variant ref(null_callable);
 	return execute(*null_callable);
@@ -5395,8 +5395,8 @@ UNIT_TEST(formula_slice) {
 	CHECK(Formula(variant("myList[0:2] where myList = [1,2,3,4,5,6]")).execute() == Formula(variant("[1,2]")).execute(), "test failed");
 	CHECK(Formula(variant("myList[1:4] where myList = [0,2,4,6,8,10,12,14]")).execute() == Formula(variant("[2,4,6]")).execute(), "test failed");
 }
-	
-	
+
+
 UNIT_TEST(formula_in) {
 	CHECK(Formula(variant("1 in [4,5,6]")).execute() == variant::from_bool(false), "test failed");
 	CHECK(Formula(variant("5 in [4,5,6]")).execute() == variant::from_bool(true), "test failed");

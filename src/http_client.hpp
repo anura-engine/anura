@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -83,7 +83,7 @@ private:
 		game_logic::MapFormulaCallablePtr callable;
 
 		boost::array<char, 65536> buf;
-		
+
 		int expected_len;
 
 		std::function<void()> retry_fn;
@@ -113,7 +113,7 @@ private:
 	enum RESOLUTION_STATE { RESOLUTION_NOT_STARTED,
 	                        RESOLUTION_IN_PROGRESS,
 							RESOLUTION_DONE };
-	
+
 	RESOLUTION_STATE resolution_state_;
 
 	std::shared_ptr<tcp::resolver> resolver_;

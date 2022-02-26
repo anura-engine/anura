@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -76,8 +76,8 @@ void web_server::handlePost(socket_ptr socket, variant doc, const http::environm
 }
 
 
-void web_server::handleGet(socket_ptr socket, 
-	const std::string& url, 
+void web_server::handleGet(socket_ptr socket,
+	const std::string& url,
 	const std::map<std::string, std::string>& args)
 {
 	std::map<std::string, std::string>::const_iterator raw_it = args.find("raw_stats");
@@ -86,7 +86,7 @@ void web_server::handleGet(socket_ptr socket,
 		send_msg(socket, "text/json", msg.write_json(true, variant::JSON_COMPLIANT), "");
 		return;
 	}
-	
+
 	std::map<std::string, std::string>::const_iterator it = args.find("type");
 	if(it != args.end() && it->second == "status") {
 		std::map<variant,variant> m;
@@ -109,7 +109,7 @@ void web_server::handleGet(socket_ptr socket,
 
 	}
 
-	variant value = get_stats(args.count("version") ? args.find("version")->second : "", 
+	variant value = get_stats(args.count("version") ? args.find("version")->second : "",
 		args.count("module") ? args.find("module")->second : "",
 		args.count("module_version") ? args.find("module_version")->second : "",
 		args.count("level") ? args.find("level")->second : "");

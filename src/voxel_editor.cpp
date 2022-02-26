@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -219,7 +219,7 @@ void expand_flood(std::set<VoxelPos, VoxelPosLess>& flood, const Voxel& vox, con
 			}
 		}
 	}
-	
+
 	if(found) {
 		expand_flood(flood, vox, map);
 	}
@@ -491,7 +491,7 @@ void iso_renderer::handleProcess()
 	render_fbo();
 }
 
-namespace 
+namespace
 {
 	std::string facing_name(const glm::ivec3& facing)
 	{
@@ -526,13 +526,13 @@ glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 		abs(world_coords[2]-bmround(world_coords[2])) < 0.05f ? int(bmround(world_coords[2])) : int(floor(world_coords[2])));
 	*facing = camera_->get_facing(world_coords);
 	if(facing->x > 0) {
-		--voxel_coord.x; 
+		--voxel_coord.x;
 	}
 	if(facing->y > 0) {
-		--voxel_coord.y; 
+		--voxel_coord.y;
 	}
 	if(facing->z > 0) {
-		--voxel_coord.z; 
+		--voxel_coord.z;
 	}
 	return voxel_coord;
 }
@@ -572,7 +572,7 @@ bool iso_renderer::handleEvent(const SDL_Event& event, bool claimed)
 
 			calculate_camera();
 		}
-		
+
 		break;
 	}
 
@@ -620,14 +620,14 @@ bool iso_renderer::handleEvent(const SDL_Event& event, bool claimed)
 			if(motion.yrel) {
 				camera_vangle_ += motion.yrel*0.02;
 			}
-			
+
 			calculate_camera();
 		}
 
 		if(motion.x >= x() && motion.y >= y() &&
 		   motion.x <= x() + width() && motion.y <= y() + height()) {
 			focused_ = true;
-						
+
 			glm::ivec3 facing;
 			glm::ivec3 voxel_coord = position_to_cube(motion.x-x(), motion.y-y(), &facing);
 
@@ -694,7 +694,7 @@ void iso_renderer::init()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	
+
 		glBindTexture(GL_TEXTURE_2D, final_texture_id_[1] );
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -864,7 +864,7 @@ void iso_renderer::render_fbo()
 	varray.clear();
 	carray.clear();
 	narray.clear();
-	
+
 	for(const VoxelPair& p : get_editor().voxels()) {
 		const VoxelPos& pos = p.first;
 
@@ -986,9 +986,9 @@ void iso_renderer::render_fbo()
 			varray.push_back(pos[n%3]+vertex[n]);
 			narray.push_back(normal[n]);
 			if(n%3 == 0) {
-				carray.push_back(color.r()); 
-				carray.push_back(color.g()); 
-				carray.push_back(color.b()); 
+				carray.push_back(color.r());
+				carray.push_back(color.g());
+				carray.push_back(color.b());
 				carray.push_back(color.a());
 			}
 		}
@@ -1213,7 +1213,7 @@ int perspective_renderer::touching_selection_border(int mousex, int mousey) cons
 			return 1;
 		}
 	}
-	
+
 	return -1;
 }
 
@@ -2371,7 +2371,7 @@ UTILITY(voxel_editor)
 
 		sys::write_file(fname, write_model(model).write_json());
 	}
-	
+
 	ffl::IntrusivePtr<voxel_editor> editor(new voxel_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
 	editor->showModal();
 }

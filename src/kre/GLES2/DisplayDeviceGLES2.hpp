@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -64,8 +64,8 @@ namespace KRE
 		ShaderProgramPtr getShaderProgram(const std::string& name) override;
 		ShaderProgramPtr getShaderProgram(const variant& node) override;
 		ShaderProgramPtr getDefaultShader() override;
-		ShaderProgramPtr createShader(const std::string& name, 
-			const std::vector<ShaderData>& shader_data, 
+		ShaderProgramPtr createShader(const std::string& name,
+			const std::vector<ShaderData>& shader_data,
 			const std::vector<ActiveMapping>& uniform_map,
 			const std::vector<ActiveMapping>& attribute_map) override;
 		ShaderProgramPtr createGaussianShader(int radius) override;
@@ -87,11 +87,11 @@ namespace KRE
 		AttributeSetPtr handleCreateAttributeSet(bool indexed, bool instanced) override;
 		HardwareAttributePtr handleCreateAttribute(AttributeBase* parent) override;
 
-		RenderTargetPtr handleCreateRenderTarget(int width, int height, 
-			int color_plane_count, 
-			bool depth, 
-			bool stencil, 
-			bool use_multi_sampling, 
+		RenderTargetPtr handleCreateRenderTarget(int width, int height,
+			int color_plane_count,
+			bool depth,
+			bool stencil,
+			bool use_multi_sampling,
 			int multi_samples) override;
 		RenderTargetPtr handleCreateRenderTarget(const variant& node) override;
 		void doBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch) override;

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,7 +29,7 @@ namespace xhtml
 {
 	using namespace css;
 
-	namespace 	
+	namespace
 	{
 		const int max_properties = static_cast<int>(Property::MAX_PROPERTIES);
 
@@ -67,9 +67,9 @@ namespace xhtml
 
 		bool is_font_property(Property p)
 		{
-			return p == Property::FONT_FAMILY 
-				|| p == Property::FONT_SIZE 
-				|| p == Property::FONT_WEIGHT 
+			return p == Property::FONT_FAMILY
+				|| p == Property::FONT_SIZE
+				|| p == Property::FONT_WEIGHT
 				|| p == Property::FONT_STYLE;
 		}
 	}
@@ -109,7 +109,7 @@ namespace xhtml
 		res.resize(max_properties);
 		for(int ndx = 0; ndx != max_properties; ++ndx) {
 			res[ndx] = get_stack_array()[ndx].top();
-		}	
+		}
 		return res;
 	}
 
@@ -142,7 +142,7 @@ namespace xhtml
 			} else if(!style->isInherited()) {
 				// Is the property isn't marked as being inherited, we handle it here.
 				if(style != get_stack_array()[n].top()) {
-					update_list.emplace_back(n);				
+					update_list.emplace_back(n);
 					get_stack_array()[n].emplace(style);
 					// XXX get_stack_array()[n]->calculateComputedValues();
 					if(is_font_property(p)) {

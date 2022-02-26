@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,17 +36,17 @@ namespace KRE
 		Frustum();
 		virtual ~Frustum();
 		explicit Frustum(const glm::mat4& perspective, const glm::mat4& view);
-		
+
 		void updateMatrices(const glm::mat4& perspective, const glm::mat4& view);
 
 		bool isPointInside(const glm::vec3& pt) const;
 		bool isCircleInside(const glm::vec3& pt, float radius) const;
 		bool isCubeInside(const glm::vec3& pt, float xlen, float ylen, float zlen) const;
-		
+
 		int doesCircleIntersect(const glm::vec3& pt, float radius) const;
 		int doesCubeIntersect(const glm::vec3& pt, float xlen, float ylen, float zlen) const;
 	private:
-		enum 
+		enum
 		{
 			NEAR_PLANE,
 			RIGHT_PLANE,

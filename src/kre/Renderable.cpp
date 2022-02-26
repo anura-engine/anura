@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -53,7 +53,7 @@ namespace KRE
 	}
 
 	Renderable::Renderable(size_t order)
-		: order_(order), 
+		: order_(order),
 		  position_(0.0f),
 		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		  scale_(1.0f),
@@ -217,45 +217,45 @@ namespace KRE
 		derived_scale_ = s;
 	}
 
-	void Renderable::setPosition(const glm::vec3& position) 
+	void Renderable::setPosition(const glm::vec3& position)
 	{
 		position_ = position;
 	}
 
-	void Renderable::setPosition(float x, float y, float z) 
+	void Renderable::setPosition(float x, float y, float z)
 	{
 		position_ = glm::vec3(x, y, z);
 	}
 
-	void Renderable::setPosition(int x, int y, int z) 
+	void Renderable::setPosition(int x, int y, int z)
 	{
 		position_ = glm::vec3(float(x), float(y), float(z));
 	}
 
-	void Renderable::setRotation(float angle, const glm::vec3& axis) 
+	void Renderable::setRotation(float angle, const glm::vec3& axis)
 	{
 		rotation_ = glm::angleAxis(glm::radians(angle), axis);
 	}
 
-	void Renderable::setRotation(const glm::quat& rot) 
+	void Renderable::setRotation(const glm::quat& rot)
 	{
 		rotation_ = rot;
 	}
 
-	void Renderable::setScale(float xs, float ys, float zs) 
+	void Renderable::setScale(float xs, float ys, float zs)
 	{
 		scale_ = glm::vec3(xs, ys, zs);
 	}
 
-	void Renderable::setScale(const glm::vec3& scale) 
+	void Renderable::setScale(const glm::vec3& scale)
 	{
 		scale_ = scale;
 	}
 
-	glm::mat4 Renderable::getModelMatrix() const 
+	glm::mat4 Renderable::getModelMatrix() const
 	{
-		return glm::translate(glm::mat4(1.0f), position_ + derived_position_) 
-			* glm::toMat4(derived_rotation_ * rotation_) 
+		return glm::translate(glm::mat4(1.0f), position_ + derived_position_)
+			* glm::toMat4(derived_rotation_ * rotation_)
 			* glm::scale(glm::mat4(1.0f), scale_ * derived_scale_);
 	}
 
@@ -279,7 +279,7 @@ namespace KRE
 	{
 		render_target_ = rt;
 	}
-	
+
 	void Renderable::clearAttributeSets()
 	{
 		attributes_.clear();

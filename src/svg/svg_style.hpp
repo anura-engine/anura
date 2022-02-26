@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -54,7 +54,7 @@ namespace KRE
 		class attribute_manager
 		{
 		public:
-			attribute_manager(const base_attrib* attrib, render_context& ctx) 
+			attribute_manager(const base_attrib* attrib, render_context& ctx)
 				: attrib_(attrib), ctx_(ctx) {
 				attrib_->apply(ctx_);
 			}
@@ -73,7 +73,7 @@ namespace KRE
 			ITALIC,
 			OBLIQUE,
 		};
-		
+
 		enum class FontVariant {
 			UNSET,
 			INHERIT,
@@ -422,7 +422,7 @@ namespace KRE
 			ACCUMULATE,
 			NEW,
 		};
-		
+
 		class filter_effect_attribs : public base_attrib
 		{
 		public:
@@ -500,7 +500,7 @@ namespace KRE
 			sRGBA,
 			linearRGBA,
 		};
-		
+
 		enum class RenderingAttrib {
 			UNSET,
 			INHERIT,
@@ -552,7 +552,7 @@ namespace KRE
 			// default 1
 			StrokeWidthAttrib stroke_width_;
 			double stroke_width_value_;
-			// default butt	
+			// default butt
 			LineCapAttrib stroke_linecap_;
 			// default miter
 			LineJoinAttrib stroke_linejoin_;

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -25,7 +25,7 @@
 #include "Color.hpp"
 #include "widget.hpp"
 
-namespace gui 
+namespace gui
 {
 	//a widget which draws a border around another widget it holds as its child.
 	class BorderWidget : public Widget

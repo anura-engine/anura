@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -23,7 +23,7 @@
 
 #ifndef _USE_MATH_DEFINES
 #	define _USE_MATH_DEFINES	1
-#endif 
+#endif
 
 #include "SDL_image.h"
 #include "SDL_pixels.h"
@@ -38,7 +38,7 @@ enum {
 	SDL_PIXELFORMAT_XRGB8888_ =
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_XRGB,
                                SDL_PACKEDLAYOUT_8888, 32, 4),
-	SDL_PIXELFORMAT_R8 = 
+	SDL_PIXELFORMAT_R8 =
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED8, SDL_PACKEDORDER_NONE,
                                SDL_PACKEDLAYOUT_NONE, 8, 1),
 };
@@ -47,7 +47,7 @@ namespace KRE
 {
 	namespace
 	{
-		bool can_create_surfaces = Surface::registerSurfaceCreator("sdl", 
+		bool can_create_surfaces = Surface::registerSurfaceCreator("sdl",
 			SurfaceSDL::createFromFile,
 			SurfaceSDL::createFromPixels,
 			SurfaceSDL::createFromMask,
@@ -113,12 +113,12 @@ namespace KRE
 		};
 	}
 
-	SurfaceSDL::SurfaceSDL(int width, 
-		int height, 
-		int bpp, 
-		uint32_t rmask, 
-		uint32_t gmask, 
-		uint32_t bmask, 
+	SurfaceSDL::SurfaceSDL(int width,
+		int height,
+		int bpp,
+		uint32_t rmask,
+		uint32_t gmask,
+		uint32_t bmask,
 		uint32_t amask)
 		: surface_(nullptr),
 		  has_data_(false),
@@ -126,20 +126,20 @@ namespace KRE
 	{
 		surface_ = SDL_CreateRGBSurface(0, width, height, bpp, rmask, gmask, bmask, amask);
 		ASSERT_LOG(surface_ != nullptr, "Error creating surface: " << width << "x" << height << "x" << bpp << ": " << SDL_GetError());
-		
+
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
 		createPalette();
 	}
 
-	SurfaceSDL::SurfaceSDL(int width, 
-		int height, 
-		int bpp, 
+	SurfaceSDL::SurfaceSDL(int width,
+		int height,
+		int bpp,
 		int row_pitch,
-		uint32_t rmask, 
-		uint32_t gmask, 
-		uint32_t bmask, 
-		uint32_t amask, 
+		uint32_t rmask,
+		uint32_t gmask,
+		uint32_t bmask,
+		uint32_t amask,
 		const void* pixels)
 		: surface_(nullptr),
 		  has_data_(true),
@@ -174,7 +174,7 @@ namespace KRE
 			ss << "Failed to load image file: '" << filename << "' : " << IMG_GetError();
 			throw ImageLoadError(ss.str());
 		}
-		
+
 		surface_ = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA8888, 0);
 		if(surface_ == nullptr) {
 			std::stringstream ss;
@@ -229,26 +229,26 @@ namespace KRE
 		}
 	}
 
-	SurfacePtr SurfaceSDL::createFromPixels(int width, 
-		int height, 
-		int bpp, 
-		int row_pitch, 
-		uint32_t rmask, 
-		uint32_t gmask, 
-		uint32_t bmask, 
-		uint32_t amask, 
+	SurfacePtr SurfaceSDL::createFromPixels(int width,
+		int height,
+		int bpp,
+		int row_pitch,
+		uint32_t rmask,
+		uint32_t gmask,
+		uint32_t bmask,
+		uint32_t amask,
 		const void* pixels)
 	{
-		auto s = std::make_shared<SurfaceSDL>(width, height, bpp, row_pitch, rmask, gmask, bmask, amask, pixels);		
+		auto s = std::make_shared<SurfaceSDL>(width, height, bpp, row_pitch, rmask, gmask, bmask, amask, pixels);
 		return s->runGlobalAlphaFilter();
 	}
 
-	SurfacePtr SurfaceSDL::createFromMask(int width, 
-		int height, 
-		int bpp, 
-		uint32_t rmask, 
-		uint32_t gmask, 
-		uint32_t bmask, 
+	SurfacePtr SurfaceSDL::createFromMask(int width,
+		int height,
+		int bpp,
+		uint32_t rmask,
+		uint32_t gmask,
+		uint32_t bmask,
 		uint32_t amask)
 	{
 		auto s = std::make_shared<SurfaceSDL>(width, height, bpp, rmask, gmask, bmask, amask);
@@ -276,7 +276,7 @@ namespace KRE
 			if(filter_fn(r, g, b)) {
 				r = g = b = a = 0;
 			}
-		});	
+		});
 	}
 
 	void SurfaceSDL::createPalette()
@@ -355,7 +355,7 @@ namespace KRE
 		return rect(sr.x, sr.y, sr.w, sr.h);
 	}
 
-	void SurfaceSDL::lock() 
+	void SurfaceSDL::lock()
 	{
 		ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 		if(SDL_MUSTLOCK(surface_)) {
@@ -364,7 +364,7 @@ namespace KRE
 		}
 	}
 
-	void SurfaceSDL::unlock() 
+	void SurfaceSDL::unlock()
 	{
 		ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 		if(SDL_MUSTLOCK(surface_)) {
@@ -372,10 +372,10 @@ namespace KRE
 		}
 	}
 
-	void SurfaceSDL::writePixels(int bpp, 
-		uint32_t rmask, 
-		uint32_t gmask, 
-		uint32_t bmask, 
+	void SurfaceSDL::writePixels(int bpp,
+		uint32_t rmask,
+		uint32_t gmask,
+		uint32_t bmask,
 		uint32_t amask,
 		const void* pixels)
 	{
@@ -390,17 +390,17 @@ namespace KRE
 		setPixelFormat(PixelFormatPtr(new SDLPixelFormat(surface_->format->format)));
 	}
 
-	void SurfaceSDL::writePixels(const void* pixels, int size) 
+	void SurfaceSDL::writePixels(const void* pixels, int size)
 	{
 		ASSERT_LOG(surface_->pixels != nullptr, "Internal surface had no allocated pixel data.");
-		ASSERT_LOG(surface_->pitch * surface_->h == size, 
+		ASSERT_LOG(surface_->pitch * surface_->h == size,
 			"Size of the surface didn't match the passed-in size. " << (surface_->pitch * surface_->h) << " != " << size);
 		SDL_LockSurface(surface_);
 		memcpy(surface_->pixels, pixels, size);
 		SDL_UnlockSurface(surface_);
 	}
 
-	void SurfaceSDL::setBlendMode(Surface::BlendMode bm) 
+	void SurfaceSDL::setBlendMode(Surface::BlendMode bm)
 	{
 		SDL_BlendMode sdl_bm = SDL_BLENDMODE_NONE;
 		switch(bm) {
@@ -413,7 +413,7 @@ namespace KRE
 		SDL_SetSurfaceBlendMode(surface_, sdl_bm);
 	}
 
-	Surface::BlendMode SurfaceSDL::getBlendMode() const 
+	Surface::BlendMode SurfaceSDL::getBlendMode() const
 	{
 		SDL_BlendMode sdl_bm = SDL_BLENDMODE_NONE;
 		SDL_GetSurfaceBlendMode(surface_, &sdl_bm);
@@ -436,7 +436,7 @@ namespace KRE
 
 	//////////////////////////////////////////////////////////////////////////
 	// SDLPixelFormat
-	namespace 
+	namespace
 	{
 		uint8_t count_bits_set(uint32_t v)
 		{
@@ -458,188 +458,188 @@ namespace KRE
 		SDL_FreeFormat(pf_);
 	}
 
-	uint8_t SDLPixelFormat::bitsPerPixel() const 
+	uint8_t SDLPixelFormat::bitsPerPixel() const
 	{
 		return pf_->BitsPerPixel;
 	}
 
-	uint8_t SDLPixelFormat::bytesPerPixel() const 
+	uint8_t SDLPixelFormat::bytesPerPixel() const
 	{
 		return pf_->BytesPerPixel;
 	}
 
-	bool SDLPixelFormat::isYuvPlanar() const 
+	bool SDLPixelFormat::isYuvPlanar() const
 	{
 		return pf_->format == SDL_PIXELFORMAT_YV12 || pf_->format == SDL_PIXELFORMAT_IYUV;
 	}
 
-	bool SDLPixelFormat::isYuvPacked() const 
+	bool SDLPixelFormat::isYuvPacked() const
 	{
-		return pf_->format == SDL_PIXELFORMAT_YUY2 
+		return pf_->format == SDL_PIXELFORMAT_YUY2
 			|| pf_->format == SDL_PIXELFORMAT_UYVY
 			|| pf_->format == SDL_PIXELFORMAT_YVYU;
 	}
 
-	bool SDLPixelFormat::isYuvHeightReversed() const 
+	bool SDLPixelFormat::isYuvHeightReversed() const
 	{
 		return false;
 	}
 
-	bool SDLPixelFormat::isInterlaced() const 
+	bool SDLPixelFormat::isInterlaced() const
 	{
 		return false;
 	}
-		
-	bool SDLPixelFormat::isRGB() const 
+
+	bool SDLPixelFormat::isRGB() const
 	{
 		return !SDL_ISPIXELFORMAT_FOURCC(pf_->format);
 	}
 
-	bool SDLPixelFormat::hasRedChannel() const 
+	bool SDLPixelFormat::hasRedChannel() const
 	{
 		return isRGB() && pf_->Rmask != 0;
 	}
 
-	bool SDLPixelFormat::hasGreenChannel() const 
+	bool SDLPixelFormat::hasGreenChannel() const
 	{
 		return isRGB() && pf_->Gmask != 0;
 	}
 
-	bool SDLPixelFormat::hasBlueChannel() const 
+	bool SDLPixelFormat::hasBlueChannel() const
 	{
 		return isRGB() && pf_->Bmask != 0;
 	}
 
-	bool SDLPixelFormat::hasAlphaChannel() const 
+	bool SDLPixelFormat::hasAlphaChannel() const
 	{
 		return isRGB() && pf_->Amask != 0;
 	}
 
-	bool SDLPixelFormat::hasLuminance() const 
+	bool SDLPixelFormat::hasLuminance() const
 	{
 		return isRGB() && pf_->Rmask != 0;
 	}
 
-	uint32_t SDLPixelFormat::getRedMask() const 
+	uint32_t SDLPixelFormat::getRedMask() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for RedMask of non-RGB surface.");
 		return pf_->Rmask;
 	}
 
-	uint32_t SDLPixelFormat::getGreenMask() const 
+	uint32_t SDLPixelFormat::getGreenMask() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for GreenMask of non-RGB surface.");
 		return pf_->Gmask;
 	}
 
-	uint32_t SDLPixelFormat::getBlueMask() const 
+	uint32_t SDLPixelFormat::getBlueMask() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for BlueMask of non-RGB surface.");
 		return pf_->Bmask;
 	}
 
-	uint32_t SDLPixelFormat::getAlphaMask() const 
+	uint32_t SDLPixelFormat::getAlphaMask() const
 	{
 		return pf_->Amask;
 	}
 
-	uint32_t SDLPixelFormat::getLuminanceMask() const 
+	uint32_t SDLPixelFormat::getLuminanceMask() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for LuminanceMask of non-RGB surface.");
 		return pf_->Rmask;
 	}
 
-	uint8_t SDLPixelFormat::getRedBits() const 
+	uint8_t SDLPixelFormat::getRedBits() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for RedBits() of non-RGB surface.");
 		return count_bits_set(pf_->Rmask);
 	}
 
-	uint8_t SDLPixelFormat::getGreenBits() const 
+	uint8_t SDLPixelFormat::getGreenBits() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for GreenBits() of non-RGB surface.");
 		return count_bits_set(pf_->Gmask);
 	}
 
-	uint8_t SDLPixelFormat::getBlueBits() const 
+	uint8_t SDLPixelFormat::getBlueBits() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for BlueBits() of non-RGB surface.");
 		return count_bits_set(pf_->Bmask);
 	}
 
-	uint8_t SDLPixelFormat::getAlphaBits() const 
+	uint8_t SDLPixelFormat::getAlphaBits() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for AlphaBits() of non-RGB surface.");
 		return count_bits_set(pf_->Amask);
 	}
 
-	uint8_t SDLPixelFormat::getLuminanceBits() const 
+	uint8_t SDLPixelFormat::getLuminanceBits() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for LuminanceBits() of non-RGB surface.");
 		return count_bits_set(pf_->Rmask);
 	}
 
-	uint32_t SDLPixelFormat::getRedShift() const 
+	uint32_t SDLPixelFormat::getRedShift() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for RedShift() of non-RGB surface.");
 		return pf_->Rshift;
 	}
 
-	uint32_t SDLPixelFormat::getGreenShift() const 
+	uint32_t SDLPixelFormat::getGreenShift() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for GreenShift() of non-RGB surface.");
 		return pf_->Gshift;
 	}
 
-	uint32_t SDLPixelFormat::getBlueShift() const 
+	uint32_t SDLPixelFormat::getBlueShift() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for BlueShift() of non-RGB surface.");
 		return pf_->Bshift;
 	}
 
-	uint32_t SDLPixelFormat::getAlphaShift() const 
+	uint32_t SDLPixelFormat::getAlphaShift() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for AlphaShift() of non-RGB surface.");
 		return pf_->Ashift;
 	}
 
-	uint32_t SDLPixelFormat::getLuminanceShift() const 
+	uint32_t SDLPixelFormat::getLuminanceShift() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for LuminanceShift() of non-RGB surface.");
 		return pf_->Rshift;
 	}
 
-	uint32_t SDLPixelFormat::getRedLoss() const 
+	uint32_t SDLPixelFormat::getRedLoss() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for RedLoss() of non-RGB surface.");
 		return pf_->Rloss;
 	}
 
-	uint32_t SDLPixelFormat::getGreenLoss() const 
+	uint32_t SDLPixelFormat::getGreenLoss() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for GreenLoss() of non-RGB surface.");
 		return pf_->Gloss;
 	}
 
-	uint32_t SDLPixelFormat::getBlueLoss() const 
+	uint32_t SDLPixelFormat::getBlueLoss() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for BlueLoss() of non-RGB surface.");
 		return pf_->Bloss;
 	}
 
-	uint32_t SDLPixelFormat::getAlphaLoss() const 
+	uint32_t SDLPixelFormat::getAlphaLoss() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for AlphaLoss() of non-RGB surface.");
 		return pf_->Aloss;
 	}
 
-	uint32_t SDLPixelFormat::getLuminanceLoss() const 
+	uint32_t SDLPixelFormat::getLuminanceLoss() const
 	{
 		ASSERT_LOG(isRGB(), "Asked for LuminanceLoss() of non-RGB surface.");
 		return pf_->Rloss;
 	}
 
-	bool SDLPixelFormat::hasPalette() const 
+	bool SDLPixelFormat::hasPalette() const
 	{
 		return pf_->palette != nullptr;
 	}
@@ -879,7 +879,7 @@ namespace KRE
             case PixelFormat::PF::PIXELFORMAT_IYUV:
             case PixelFormat::PF::PIXELFORMAT_YUY2:
             case PixelFormat::PF::PIXELFORMAT_UYVY:
-            case PixelFormat::PF::PIXELFORMAT_YVYU:				
+            case PixelFormat::PF::PIXELFORMAT_YVYU:
 			default:
 				ASSERT_LOG(false, "unsupported pixel format value for conversion.");
 		}
@@ -939,7 +939,7 @@ namespace KRE
 				break;
 			}
 
-            case PixelFormat::PF::PIXELFORMAT_INDEX1LSB: 
+            case PixelFormat::PF::PIXELFORMAT_INDEX1LSB:
             case PixelFormat::PF::PIXELFORMAT_INDEX1MSB:
             case PixelFormat::PF::PIXELFORMAT_INDEX4LSB:
             case PixelFormat::PF::PIXELFORMAT_INDEX4MSB:
@@ -950,7 +950,7 @@ namespace KRE
             case PixelFormat::PF::PIXELFORMAT_IYUV:
             case PixelFormat::PF::PIXELFORMAT_YUY2:
             case PixelFormat::PF::PIXELFORMAT_UYVY:
-            case PixelFormat::PF::PIXELFORMAT_YVYU:				
+            case PixelFormat::PF::PIXELFORMAT_YVYU:
 			default:
 				ASSERT_LOG(false, "unsupported pixel format value for conversion.");
 		}
@@ -993,7 +993,7 @@ namespace KRE
 		return filter;
 	}
 
-	void SurfaceSDL::blit(SurfacePtr src, const rect& src_rect) 
+	void SurfaceSDL::blit(SurfacePtr src, const rect& src_rect)
 	{
 		auto src_ptr = std::dynamic_pointer_cast<SurfaceSDL>(src);
 		ASSERT_LOG(src_ptr != nullptr, "Source pointer was wrong type is not SurfaceSDL");
@@ -1001,7 +1001,7 @@ namespace KRE
 		SDL_BlitSurface(src_ptr->surface_, &sr, surface_, nullptr);
 	}
 
-	void SurfaceSDL::blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect) 
+	void SurfaceSDL::blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect)
 	{
 		auto src_ptr = std::dynamic_pointer_cast<SurfaceSDL>(src);
 		ASSERT_LOG(src_ptr != nullptr, "Source pointer was wrong type is not SurfaceSDL");
@@ -1010,7 +1010,7 @@ namespace KRE
 		SDL_BlitSurface(src_ptr->surface_, &sr, surface_, &dr);
 	}
 
-	void SurfaceSDL::blitToScaled(SurfacePtr src, const rect& src_rect, const rect& dst_rect) 
+	void SurfaceSDL::blitToScaled(SurfacePtr src, const rect& src_rect, const rect& dst_rect)
 	{
 		auto src_ptr = std::dynamic_pointer_cast<SurfaceSDL>(src);
 		ASSERT_LOG(src_ptr != nullptr, "Source pointer was wrong type is not SurfaceSDL");
@@ -1019,7 +1019,7 @@ namespace KRE
 		SDL_BlitScaled(src_ptr->surface_, &sr, surface_, &dr);
 	}
 
-	void SurfaceSDL::blitTo(SurfacePtr src, const rect& dst_rect) 
+	void SurfaceSDL::blitTo(SurfacePtr src, const rect& dst_rect)
 	{
 		auto src_ptr = std::dynamic_pointer_cast<SurfaceSDL>(src);
 		ASSERT_LOG(src_ptr != nullptr, "Source pointer was wrong type is not SurfaceSDL");

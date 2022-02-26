@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -182,9 +182,9 @@ namespace KRE
 
 	Color ColorTransform::applyWhite() const
 	{
-		return Color(mul_rgba_[0] + add_rgba_[0], 
-			mul_rgba_[1] + add_rgba_[1], 
-			mul_rgba_[2] + add_rgba_[2], 
+		return Color(mul_rgba_[0] + add_rgba_[0],
+			mul_rgba_[1] + add_rgba_[1],
+			mul_rgba_[2] + add_rgba_[2],
 			mul_rgba_[3] + add_rgba_[3]);
 	}
 
@@ -272,13 +272,13 @@ namespace KRE
 
 	bool operator==(const ColorTransform& a, const ColorTransform& b)
 	{
-		return std::abs(a.addRedf()-b.addRedf())<FLT_EPSILON 
-			&& std::abs(a.addGreenf()-b.addGreenf())<FLT_EPSILON 
-			&& std::abs(a.addBluef()-b.addBluef())<FLT_EPSILON 
-			&& std::abs(a.addAlphaf()-b.addAlphaf())<FLT_EPSILON 
-			&& std::abs(a.mulRed()-b.mulRed())<FLT_EPSILON 
-			&& std::abs(a.mulGreen()-b.mulGreen())<FLT_EPSILON 
-			&& std::abs(a.mulBlue()-b.mulBlue())<FLT_EPSILON 
+		return std::abs(a.addRedf()-b.addRedf())<FLT_EPSILON
+			&& std::abs(a.addGreenf()-b.addGreenf())<FLT_EPSILON
+			&& std::abs(a.addBluef()-b.addBluef())<FLT_EPSILON
+			&& std::abs(a.addAlphaf()-b.addAlphaf())<FLT_EPSILON
+			&& std::abs(a.mulRed()-b.mulRed())<FLT_EPSILON
+			&& std::abs(a.mulGreen()-b.mulGreen())<FLT_EPSILON
+			&& std::abs(a.mulBlue()-b.mulBlue())<FLT_EPSILON
 			&& std::abs(a.mulAlpha()-b.mulAlpha())<FLT_EPSILON ;
 	}
 

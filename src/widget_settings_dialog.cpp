@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,7 +39,7 @@
 
 namespace gui
 {
-	WidgetSettingsDialog::WidgetSettingsDialog(int x, int y, int w, int h, WidgetPtr ptr) 
+	WidgetSettingsDialog::WidgetSettingsDialog(int x, int y, int w, int h, WidgetPtr ptr)
 		: Dialog(x,y,w,h), widget_(ptr), text_size_(14)
 	{
 		ASSERT_LOG(ptr != nullptr, "WidgetSettingsDialog::WidgetSettingsDialog: widget_ == nullptr");
@@ -50,21 +50,21 @@ namespace gui
 	{
 	}
 
-	void WidgetSettingsDialog::setFont(const std::string& fn) 
-	{ 
-		font_name_ = fn; 
+	void WidgetSettingsDialog::setFont(const std::string& fn)
+	{
+		font_name_ = fn;
 		init();
 	}
-	void WidgetSettingsDialog::setTextSize(int ts) 
-	{ 
-		text_size_ = ts; 
+	void WidgetSettingsDialog::setTextSize(int ts)
+	{
+		text_size_ = ts;
 		init();
 	}
 
 	void WidgetSettingsDialog::init()
 	{
 		setClearBgAmount(255);
-	
+
 		GridPtr g = GridPtr(new Grid(2));
 		g->setMaxHeight(height()-50);
 		g->addCol(new Label("ID:", text_size_, font_name_));
@@ -74,23 +74,23 @@ namespace gui
 		g->addCol(id_edit);
 
 		g->addCol(new Label("", getTextSize(), font()))
-			.addCol(new Checkbox(WidgetPtr(new Label("Enabled", text_size_, font_name_)), 
-			!widget_->disabled(), 
-			[&](bool checked){widget_->enable(!checked);}, 
+			.addCol(new Checkbox(WidgetPtr(new Label("Enabled", text_size_, font_name_)),
+			!widget_->disabled(),
+			[&](bool checked){widget_->enable(!checked);},
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->addCol(new Label("Disabled Opacity:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](float f){this->widget_->setDisabledOpacity(static_cast<int>(f*255.0f));}, 
+			.addCol(new Slider(120, [&](float f){this->widget_->setDisabledOpacity(static_cast<int>(f*255.0f));},
 			this->widget_->disabledOpacity()/255.0f, 1));
 
 		g->addCol(new Label("", getTextSize(), font()))
-			.addCol(new Checkbox(WidgetPtr(new Label("Visible", text_size_, font_name_)), 
-			!widget_->visible(), 
-			[&](bool checked){}, 
+			.addCol(new Checkbox(WidgetPtr(new Label("Visible", text_size_, font_name_)),
+			!widget_->visible(),
+			[&](bool checked){},
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->addCol(new Label("Alpha:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](float f){widget_->setAlpha(static_cast<int>(f*255.0f));}, 
+			.addCol(new Slider(120, [&](float f){widget_->setAlpha(static_cast<int>(f*255.0f));},
 			this->widget_->getAlpha()/255.0f, 1));
 
 		std::vector<std::string> sections = FramedGuiElement::getElements();
@@ -98,7 +98,7 @@ namespace gui
 		DropdownWidgetPtr frame_set(new DropdownWidget(sections, 150, 28, DropdownType::LIST));
 		frame_set->setFontSize(14);
 		frame_set->setDropdownHeight(height());
-		
+
 		auto it = std::find(sections.begin(), sections.end(), widget_->frameSetName());
 		frame_set->setSelection(it == sections.end() ? 0 : it-sections.begin());
 		frame_set->setOnSelectHandler([&](int n, const std::string& s){
@@ -113,16 +113,16 @@ namespace gui
 		g->addCol(frame_set);
 
 		g->addCol(new Label("", getTextSize(), font()))
-			.addCol(new Checkbox(WidgetPtr(new Label("Double frame size", text_size_, font_name_)), 
-			widget_->getFrameResolution() != 0, 
-			[&](bool checked){widget_->setFrameResolution(checked ? 1 : 0);}, 
+			.addCol(new Checkbox(WidgetPtr(new Label("Double frame size", text_size_, font_name_)),
+			widget_->getFrameResolution() != 0,
+			[&](bool checked){widget_->setFrameResolution(checked ? 1 : 0);},
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->addCol(new Label("pad width:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](float f){widget_->setPadding(static_cast<int>(f*100.0f), widget_->getPadHeight());}, 
+			.addCol(new Slider(120, [&](float f){widget_->setPadding(static_cast<int>(f*100.0f), widget_->getPadHeight());},
 			widget_->getPadWidth()/100.0f, 1));
 		g->addCol(new Label("pad height:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](float f){widget_->setPadding(widget_->getPadWidth(), static_cast<int>(f*100.0f));}, 
+			.addCol(new Slider(120, [&](float f){widget_->setPadding(widget_->getPadWidth(), static_cast<int>(f*100.0f));},
 			widget_->getPadHeight()/100.0f, 1));
 
 		TextEditorWidgetPtr tooltip_edit = new TextEditorWidget(150, 30);
@@ -131,9 +131,9 @@ namespace gui
 		g->addCol(new Label("Tooltip:", text_size_, font_name_))
 			.addCol(tooltip_edit);
 		g->addCol(new Label("Tooltip Height:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](float f){widget_->setTooltipFontSize(static_cast<int>(f*72.0f+6.0f));}, 
+			.addCol(new Slider(120, [&](float f){widget_->setTooltipFontSize(static_cast<int>(f*72.0f+6.0f));},
 			(widget_->tooltipFontSize()-6.0f)/72.0f, 1));
-		
+
 		std::vector<std::string> fonts = KRE::Font::getAvailableFonts();
 		fonts.insert(fonts.begin(), "");
 		DropdownWidgetPtr font_list(new DropdownWidget(fonts, 150, 28, DropdownType::LIST));
@@ -167,33 +167,33 @@ namespace gui
 		}));
 
 		g->addCol(new Label("Tooltip Delay:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](float f){widget_->setTooltipDelay(static_cast<int>(f*5000.0f));}, 
+			.addCol(new Slider(120, [&](float f){widget_->setTooltipDelay(static_cast<int>(f*5000.0f));},
 			widget_->getTooltipDelay()/5000.0f, 1));
 
 		g->addCol(new Label("", getTextSize(), font()))
-			.addCol(new Checkbox(WidgetPtr(new Label("Claim Mouse Events", text_size_, font_name_)), 
-			claimMouseEvents(), 
-			[&](bool checked){widget_->setClaimMouseEvents(checked);}, 
+			.addCol(new Checkbox(WidgetPtr(new Label("Claim Mouse Events", text_size_, font_name_)),
+			claimMouseEvents(),
+			[&](bool checked){widget_->setClaimMouseEvents(checked);},
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->addCol(new Label("", getTextSize(), font()))
-			.addCol(new Checkbox(WidgetPtr(new Label("Draw with Object shader", text_size_, font_name_)), 
-			drawWithObjectShader(), 
-			[&](bool checked){widget_->setDrawWithObjectShader(checked);}, 
+			.addCol(new Checkbox(WidgetPtr(new Label("Draw with Object shader", text_size_, font_name_)),
+			drawWithObjectShader(),
+			[&](bool checked){widget_->setDrawWithObjectShader(checked);},
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->addCol(new Label("Width:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](float f){widget_->setDim(int(f*width()), widget_->height());}, 
+			.addCol(new Slider(120, [&](float f){widget_->setDim(int(f*width()), widget_->height());},
 			widget_->width()/static_cast<float>(width()), 1));
 		g->addCol(new Label("Height:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](float f){widget_->setDim(widget_->width(), int(f*height()));}, 
+			.addCol(new Slider(120, [&](float f){widget_->setDim(widget_->width(), int(f*height()));},
 			widget_->height()/static_cast<float>(height()), 1));
 
 		g->addCol(new Label("X:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](float f){widget_->setLoc(int(f*width()), widget_->y());}, 
+			.addCol(new Slider(120, [&](float f){widget_->setLoc(int(f*width()), widget_->y());},
 			widget_->x()/static_cast<float>(width()), 1));
 		g->addCol(new Label("Y:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](float f){widget_->setLoc(widget_->x(), int(f*height()));}, 
+			.addCol(new Slider(120, [&](float f){widget_->setLoc(widget_->x(), int(f*height()));},
 			widget_->y()/static_cast<float>(height()), 1));
 
 		Grid* zg = new Grid(3);

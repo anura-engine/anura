@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,7 +34,7 @@
 #include "slider.hpp"
 #include "text_editor_widget.hpp"
 
-namespace editor_dialogs 
+namespace editor_dialogs
 {
 	class CustomObjectDialog : public gui::Dialog
 	{
@@ -56,7 +56,7 @@ namespace editor_dialogs
 		void idChangeFocus(bool);
 
 		void onSetPath();
-	
+
 		void onEditAnimations();
 		void onEditItems(const std::string& name, const std::string& attr, bool allow_functions);
 

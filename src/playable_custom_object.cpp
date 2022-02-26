@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -42,7 +42,7 @@
 #endif
 
 
-namespace 
+namespace
 {
 	std::set<gui::Widget*>& get_key_handling_widgets()
 	{
@@ -52,25 +52,25 @@ namespace
 }
 
 PlayableCustomObject::PlayableCustomObject(const CustomObject& obj)
-	: CustomObject(obj), 
-	  player_info_(*this), 
-	  difficulty_(0), 
+	: CustomObject(obj),
+	  player_info_(*this),
+	  difficulty_(0),
  	  vertical_look_(0),
-      underwater_ctrl_x_(0), 
-	  underwater_ctrl_y_(0), 
+      underwater_ctrl_x_(0),
+	  underwater_ctrl_y_(0),
 	  underwater_controls_(false),
 	  can_interact_(0)
 {
 }
 
 PlayableCustomObject::PlayableCustomObject(const PlayableCustomObject& obj)
-	: CustomObject(obj), 
+	: CustomObject(obj),
 	  player_info_(obj.player_info_),
       difficulty_(obj.difficulty_),
-      save_condition_(obj.save_condition_), 
+      save_condition_(obj.save_condition_),
 	  vertical_look_(0),
-      underwater_ctrl_x_(0), 
-	  underwater_ctrl_y_(0), 
+      underwater_ctrl_x_(0),
+	  underwater_ctrl_y_(0),
 	  underwater_controls_(false),
 	  can_interact_(0)
 {
@@ -78,11 +78,11 @@ PlayableCustomObject::PlayableCustomObject(const PlayableCustomObject& obj)
 }
 
 PlayableCustomObject::PlayableCustomObject(variant node)
-	: CustomObject(node), 
+	: CustomObject(node),
 	  player_info_(*this, node),
       difficulty_(node["difficulty"].as_int(0)),
-      vertical_look_(0), 
-	  underwater_ctrl_x_(0), 
+      vertical_look_(0),
+	  underwater_ctrl_x_(0),
 	  underwater_ctrl_y_(0),
 	  underwater_controls_(node["underwater_controls"].as_bool(false)),
 	  can_interact_(0)
@@ -184,7 +184,7 @@ void PlayableCustomObject::process(Level& lvl)
 		readControls(lvl.cycle());
 
 		// XX Need to abstract this to read controls and mappings from global game file.
-		static const std::string keys[] = { "up", "down", "left", "right", "attack", "jump", "tongue" };	
+		static const std::string keys[] = { "up", "down", "left", "right", "attack", "jump", "tongue" };
 		for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
 			if(controls[n] != controlStatus(static_cast<controls::CONTROL_ITEM>(n))) {
 				if(controls[n]) {
@@ -200,7 +200,7 @@ void PlayableCustomObject::process(Level& lvl)
 
 }
 
-namespace 
+namespace
 {
 	static const char* ctrl[] = { "ctrl_up", "ctrl_down", "ctrl_left", "ctrl_right", "ctrl_attack", "ctrl_jump", "ctrl_tongue" };
 }
@@ -208,7 +208,7 @@ namespace
 variant PlayableCustomObject::getValue(const std::string& key) const
 {
 	if(key.substr(0, 11) == "difficulty_") {
-		return variant(difficulty::from_string(key.substr(11)));		
+		return variant(difficulty::from_string(key.substr(11)));
 	} else if(key == "difficulty") {
 		return getValueBySlot(CUSTOM_OBJECT_PLAYER_DIFFICULTY);
 	} else if(key == "can_interact") {
@@ -388,26 +388,26 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 	}
 	case CUSTOM_OBJECT_PLAYER_CONTROL_LOCK: {
         std::vector<variant> result;
-        
+
         const unsigned char* locked_control_frame = controls::get_local_control_lock();
-        
+
         if (locked_control_frame == nullptr) {
             return variant();
         }
-        
+
         for(int i = 0; i < 8; ++i){
             if((*locked_control_frame & (0x01 << i)) ){
-                
+
                 result.push_back( variant(ctrl[i]) );
             } else {
                 //this key isn't pressed
-            }            
+            }
         }
-       
+
         return variant(&result);
-       
+
     }
-        
+
 	}
 
 	ASSERT_LOG(false, "unknown slot in get_player_value_by_slot: " << slot);
@@ -487,7 +487,7 @@ void PlayableCustomObject::surrenderReferences(GarbageCollector* collector)
 void PlayableCustomObject::registerKeyboardOverrideWidget(gui::Widget* widget)
 {
 	LOG_DEBUG("adding widget: " << widget);
-	get_key_handling_widgets().emplace(widget);	
+	get_key_handling_widgets().emplace(widget);
 }
 
 void PlayableCustomObject::unregisterKeyboardOverrideWidget(gui::Widget* widget)

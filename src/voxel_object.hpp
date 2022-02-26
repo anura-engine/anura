@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -49,9 +49,9 @@ namespace voxel
 		virtual void process(Level& lvl);
 		bool handle_sdl_event(const SDL_Event& event, bool claimed);
 
-		const glm::vec3& translation() const { return translation_; } 
-		const glm::vec3& rotation() const { return rotation_; } 
-		const glm::vec3& scale() const { return scale_; } 
+		const glm::vec3& translation() const { return translation_; }
+		const glm::vec3& rotation() const { return rotation_; }
+		const glm::vec3& scale() const { return scale_; }
 
 		float x() const { return translation_.x; }
 		float y() const { return translation_.y; }
@@ -107,7 +107,7 @@ namespace voxel
 		voxel_model_ptr model_;
 
 		typedef std::set<gui::WidgetPtr, gui::WidgetSortZOrder> widget_list;
-		widget_list widgets_;	
+		widget_list widgets_;
 
 		bool is_mouseover_;
 

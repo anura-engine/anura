@@ -97,7 +97,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 				result = right.has_key(left);
 			} else {
 				ASSERT_LOG(false, "ILLEGAL OPERAND TO 'in': " << right.write_json() << " AT " << debugPinpointLocation(p, stack));
-				
+
 			}
 
 			if(*p == OP_NOT_IN) {
@@ -214,7 +214,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			variant& left = stack[stack.size()-2];
 			variant& right = stack[stack.size()-1];
 			//this is a very unorthodox hack to guard against divide-by-zero errors.  It returns positive or negative infinity instead of asserting, which (hopefully!) works out for most of the physical calculations that are using this.  We tentatively view this behavior as much more preferable to the game apparently crashing for a user.  This is of course not rigorous outside of a videogame setting.
-			if(right == variant(0)) { 
+			if(right == variant(0)) {
 				right = variant(decimal::epsilon());
 			}
 
@@ -1022,7 +1022,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			stack.push_back(symbol_stack[static_cast<int>(*p)]);
 			break;
 		}
-			
+
 		}
 	}
 }
@@ -1174,7 +1174,7 @@ void VirtualMachine::append(const VirtualMachine& other)
 				instructions_.push_back(constants_.size() + other.instructions_[i]);
 			}
 		} else {
-		
+
 			bool need_skip = false;
 			for(auto in : g_arg_instructions) {
 				if(in == instructions_.back()) {
@@ -1219,13 +1219,13 @@ const char* getOpName(VirtualMachine::InstructionType op) {
 		  DEF_OP(OP_LOOKUP)
 
 		  DEF_OP(OP_LOOKUP_STR)
-		  
+
 		  DEF_OP(OP_INDEX)
 
 		  DEF_OP(OP_INDEX_0)
 		  DEF_OP(OP_INDEX_1)
 		  DEF_OP(OP_INDEX_2)
-		  
+
 		  DEF_OP(OP_INDEX_STR)
 
 		  DEF_OP(OP_CONSTANT)
@@ -1245,7 +1245,7 @@ const char* getOpName(VirtualMachine::InstructionType op) {
 		  DEF_OP(OP_ASSERT)
 
 		  DEF_OP(OP_PUSH_SCOPE)
-		  
+
 		  DEF_OP(OP_POP_SCOPE)
 
 		  DEF_OP(OP_BREAK)
@@ -1297,8 +1297,8 @@ const char* getOpName(VirtualMachine::InstructionType op) {
 		  DEF_OP(OP_POP_SYMBOL_STACK)
 
 		  DEF_OP(OP_LOOKUP_SYMBOL_STACK)
-		  
-		  
+
+
 		  DEF_OP(OP_POW) DEF_OP(OP_DICE)
 		  default:
 		  	return "UNKNOWN";

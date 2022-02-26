@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -108,11 +108,11 @@ namespace KRE
 				glStencilFunc(convert_func(settings.func()), settings.ref(), settings.ref_mask());
 				glStencilMask(settings.mask());
 			} else {
-				glStencilOpSeparate(convert_face(settings.face()), 
+				glStencilOpSeparate(convert_face(settings.face()),
 					convert_stencil_op(settings.sfail()),
 					convert_stencil_op(settings.dpfail()),
 					convert_stencil_op(settings.dppass()));
-				glStencilFuncSeparate(convert_face(settings.face()), 
+				glStencilFuncSeparate(convert_face(settings.face()),
 					convert_func(settings.func()),
 					settings.ref(),
 					settings.ref_mask());

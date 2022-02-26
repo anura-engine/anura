@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -54,8 +54,8 @@ namespace graphics
 		};
 
 		RectPrimitive::RectPrimitive(const variant& v)
-			: DrawPrimitive(v), 
-			  area_(v["area"]), 
+			: DrawPrimitive(v),
+			  area_(v["area"]),
 			  color_(v["color"])
 		{
 			init();
@@ -271,7 +271,7 @@ namespace graphics
 			ab->addAttribute(tex_);
 
 			ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
-			addAttributeSet(ab);	
+			addAttributeSet(ab);
 		}
 
 		void ArrowPrimitive::preRender(const KRE::WindowPtr& wnd)
@@ -325,7 +325,7 @@ namespace graphics
 			for(unsigned n = 0; n < path.size()-1; ++n) {
 				const glm::vec2& p = path[n];
 
-				const glm::vec2 unit_direction = glm::normalize(path[n+1] - p);		
+				const glm::vec2 unit_direction = glm::normalize(path[n+1] - p);
 				const glm::vec2 normal_direction_left(-unit_direction.y, unit_direction.x);
 				const glm::vec2 normal_direction_right(unit_direction.y, -unit_direction.x);
 
@@ -358,7 +358,7 @@ namespace graphics
 				}
 				carray_.emplace_back(col);
 				carray_.emplace_back(col);
-				
+
 				++n;
 			}
 		}
@@ -495,22 +495,22 @@ namespace graphics
 
 			// XXX need to adjust these to be centered.
 			varray_.clear();
-			varray_.emplace_back(b1_.x, b1_.y, b1_.z); varray_.emplace_back(b2_.x, b1_.y, b1_.z); 
-			varray_.emplace_back(b1_.x, b1_.y, b1_.z); varray_.emplace_back(b1_.x, b2_.y, b1_.z); 
-			varray_.emplace_back(b1_.x, b1_.y, b1_.z); varray_.emplace_back(b1_.x, b1_.y, b2_.z); 
+			varray_.emplace_back(b1_.x, b1_.y, b1_.z); varray_.emplace_back(b2_.x, b1_.y, b1_.z);
+			varray_.emplace_back(b1_.x, b1_.y, b1_.z); varray_.emplace_back(b1_.x, b2_.y, b1_.z);
+			varray_.emplace_back(b1_.x, b1_.y, b1_.z); varray_.emplace_back(b1_.x, b1_.y, b2_.z);
 
-			varray_.emplace_back(b2_.x, b2_.y, b2_.z); varray_.emplace_back(b2_.x, b2_.y, b1_.z); 
-			varray_.emplace_back(b2_.x, b2_.y, b2_.z); varray_.emplace_back(b1_.x, b2_.y, b2_.z); 
-			varray_.emplace_back(b2_.x, b2_.y, b2_.z); varray_.emplace_back(b2_.x, b1_.y, b2_.z); 
+			varray_.emplace_back(b2_.x, b2_.y, b2_.z); varray_.emplace_back(b2_.x, b2_.y, b1_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b2_.z); varray_.emplace_back(b1_.x, b2_.y, b2_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b2_.z); varray_.emplace_back(b2_.x, b1_.y, b2_.z);
 
-			varray_.emplace_back(b1_.x, b2_.y, b2_.z); varray_.emplace_back(b1_.x, b2_.y, b1_.z); 
-			varray_.emplace_back(b1_.x, b2_.y, b2_.z); varray_.emplace_back(b1_.x, b1_.y, b2_.z); 
+			varray_.emplace_back(b1_.x, b2_.y, b2_.z); varray_.emplace_back(b1_.x, b2_.y, b1_.z);
+			varray_.emplace_back(b1_.x, b2_.y, b2_.z); varray_.emplace_back(b1_.x, b1_.y, b2_.z);
 
-			varray_.emplace_back(b2_.x, b2_.y, b1_.z); varray_.emplace_back(b1_.x, b2_.y, b1_.z); 
-			varray_.emplace_back(b2_.x, b2_.y, b1_.z); varray_.emplace_back(b2_.x, b1_.y, b1_.z); 
+			varray_.emplace_back(b2_.x, b2_.y, b1_.z); varray_.emplace_back(b1_.x, b2_.y, b1_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b1_.z); varray_.emplace_back(b2_.x, b1_.y, b1_.z);
 
-			varray_.emplace_back(b2_.x, b1_.y, b2_.z); varray_.emplace_back(b1_.x, b1_.y, b2_.z); 
-			varray_.emplace_back(b2_.x, b1_.y, b2_.z); varray_.emplace_back(b2_.x, b1_.y, b1_.z); 
+			varray_.emplace_back(b2_.x, b1_.y, b2_.z); varray_.emplace_back(b1_.x, b1_.y, b2_.z);
+			varray_.emplace_back(b2_.x, b1_.y, b2_.z); varray_.emplace_back(b2_.x, b1_.y, b1_.z);
 
 			using namespace KRE;
 			auto ab = DisplayDevice::createAttributeSet(false, false, false);
@@ -665,7 +665,7 @@ namespace graphics
 		KRE::Color color_;
 
 		std::vector<glm::vec3> varray_;
-	
+
 		BoxPrimitive();
 		BoxPrimitive(const BoxPrimitive&);
 	};
@@ -913,7 +913,7 @@ namespace graphics
 		}
 	}
 
-	void DrawPrimitive::preRender(const KRE::WindowPtr& wm) 
+	void DrawPrimitive::preRender(const KRE::WindowPtr& wm)
 	{
 		if(dirty_) {
 			dirty_ = false;

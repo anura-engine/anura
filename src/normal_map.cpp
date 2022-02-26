@@ -2,7 +2,7 @@
 #if 0
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -110,7 +110,7 @@ namespace
 			out.r = out.g = out.b = v;
 		} else {
 			region = h / 43;
-			remainder = (h - (region * 43)) * 6; 
+			remainder = (h - (region * 43)) * 6;
 
 			p = (v * (255 - s)) >> 8;
 			q = (v * (255 - ((s * remainder) >> 8))) >> 8;
@@ -175,10 +175,10 @@ namespace
 		/*for(int m = 1; m != s->h-1; ++m) {
 			for(int n = 1; n != s->w-1; ++n) {
 				int ndx = m*s->w + n;
-				vert[ndx] = clamp_u8(gs_ary[(m-1)*s->w+n-1]*1 + gs_ary[(m-1)*s->w+n]*2 + gs_ary[(m-1)*s->w+n+1]*1 
+				vert[ndx] = clamp_u8(gs_ary[(m-1)*s->w+n-1]*1 + gs_ary[(m-1)*s->w+n]*2 + gs_ary[(m-1)*s->w+n+1]*1
 					- gs_ary[(m+1)*s->w+n-1]*1 - gs_ary[(m+1)*s->w+n]*2 - gs_ary[(m+1)*s->w+n+1]*1);
-				horz[ndx] = clamp_u8(gs_ary[(m-1)*s->w+n-1]*1 - gs_ary[(m-1)*s->w+n+1]*1 
-					+ gs_ary[(m)*s->w+n-1]*2 - gs_ary[(m)*s->w+n+1]*2 
+				horz[ndx] = clamp_u8(gs_ary[(m-1)*s->w+n-1]*1 - gs_ary[(m-1)*s->w+n+1]*1
+					+ gs_ary[(m)*s->w+n-1]*2 - gs_ary[(m)*s->w+n+1]*2
 					+ gs_ary[(m+1)*s->w+n-1]*1 - gs_ary[(m+1)*s->w+n+1]*1);
 			}
 		}*/
@@ -189,10 +189,10 @@ namespace
 				int ndx = m*s->w + n;
 				//vert[ndx] = clamp_u8(gs_ary[(m-1)*s->w+n-1]*2 + gs_ary[ndx]*-1 + gs_ary[(m+1)*s->w+n+1]*-1);
 				//horz[ndx] = clamp_u8(gs_ary[(m-1)*s->w+n+1]*2 + gs_ary[ndx]*-1 + gs_ary[(m+1)*s->w+n-1]*-1);
-				vert[ndx] = clamp_u8(gs_ary[(m-1)*s->w+n-1]*-1 + gs_ary[(m-1)*s->w+n]*-1 + gs_ary[(m-1)*s->w+n+1]*-1 
+				vert[ndx] = clamp_u8(gs_ary[(m-1)*s->w+n-1]*-1 + gs_ary[(m-1)*s->w+n]*-1 + gs_ary[(m-1)*s->w+n+1]*-1
 					- gs_ary[(m+1)*s->w+n-1]*1 - gs_ary[(m+1)*s->w+n]*1 - gs_ary[(m+1)*s->w+n+1]*1 + bias);
-				horz[ndx] = clamp_u8(gs_ary[(m-1)*s->w+n-1]*-1 + gs_ary[(m-1)*s->w+n+1]*1 
-					+ gs_ary[(m)*s->w+n-1]*-1 + gs_ary[(m)*s->w+n+1]*1 
+				horz[ndx] = clamp_u8(gs_ary[(m-1)*s->w+n-1]*-1 + gs_ary[(m-1)*s->w+n+1]*1
+					+ gs_ary[(m)*s->w+n-1]*-1 + gs_ary[(m)*s->w+n+1]*1
 					+ gs_ary[(m+1)*s->w+n-1]*-1 + gs_ary[(m+1)*s->w+n+1]*1 + bias);
 			}
 		}
@@ -258,17 +258,17 @@ namespace
 	// bias is added to all pixels in the output.
 	// divisor is the factor to divide the computing pixel value by.
 	// for pixels outside of the input range
-	//     if clamp == false: use default_color 
+	//     if clamp == false: use default_color
     //	   else: use closest pixel value
 	// if preserve_alpha: don't saturate the alpha value.
-	graphics::surface convolution_filter(const graphics::surface& surf, 
-		const std::vector<std::vector<double>>& matrix, 
-		int mx, 
-		int my, 
-		double divisor, 
-		double bias, 
-		bool preserve_alpha, 
-		const graphics::color& default_color, 
+	graphics::surface convolution_filter(const graphics::surface& surf,
+		const std::vector<std::vector<double>>& matrix,
+		int mx,
+		int my,
+		double divisor,
+		double bias,
+		bool preserve_alpha,
+		const graphics::color& default_color,
 		bool clamp)
 	{
 		graphics::surface res = surf.clone();
@@ -289,13 +289,13 @@ namespace
 						int quadrant = 0;
 						if(n+xoffs < 0) {
 							quadrant |= 1;
-						} 
+						}
 						if(n+xoffs >= res->w) {
 							quadrant |= 2;
-						} 
-						if(m+yoffs < 0) { 
+						}
+						if(m+yoffs < 0) {
 							quadrant |= 4;
-						} 
+						}
 						if(m+yoffs >= res->h) {
 							quadrant |= 8;
 						}
@@ -373,8 +373,8 @@ namespace
 		return res;
 	}
 
-	graphics::surface extract_alpha_mask(const graphics::surface& s, 
-		const graphics::color& shadow_color, 
+	graphics::surface extract_alpha_mask(const graphics::surface& s,
+		const graphics::color& shadow_color,
 		const graphics::color& non_shadow_color)
 	{
 		graphics::surface mask = s.clone();
@@ -396,15 +396,15 @@ namespace
 		return mask;
 	}
 
-	graphics::surface drop_shadow_filter(const graphics::surface& s, 
-		const graphics::color& shadow_color, 
-		int blur_x, 
-		int blur_y, 
-		double angle, 
-		double distance, 
+	graphics::surface drop_shadow_filter(const graphics::surface& s,
+		const graphics::color& shadow_color,
+		int blur_x,
+		int blur_y,
+		double angle,
+		double distance,
 		double strength,
 		bool inner_shadow,
-		bool knockout, 
+		bool knockout,
 		int passes)
 	{
 		// 1) clone the new surface and create a mask with a color value of black if there is alpha != 255
@@ -430,7 +430,7 @@ namespace
 				pixels[2] = shadow_color.b();
 			}
 			pixels += 4;
-			spixels += 4;		
+			spixels += 4;
 		}
 
 		// move the image by angle/distance
@@ -453,7 +453,7 @@ namespace
 		matrix[0][0] = cos(angle + 3.0*delta_r);
 		matrix[0][1] = cos(angle + 2.0*delta_r);
 		matrix[0][2] = cos(angle + delta_r);
-		
+
 		matrix[1][0] = cos(delta_r + 4.0*delta_r);
 		matrix[1][1] = 0;
 		matrix[1][2] = cos(angle);
@@ -478,7 +478,7 @@ namespace
 		matrix[0][0] = cos(angle + delta_r);
 		matrix[0][1] = cos(angle + 2.0*delta_r);
 		matrix[0][2] = cos(angle + 3.0*delta_r);
-		
+
 		matrix[1][0] = cos(angle + delta_r);
 		matrix[1][1] = 0;
 		matrix[1][2] = cos(angle + 4.0*delta_r);
@@ -521,7 +521,7 @@ namespace
 
 	struct manager
 	{
-		manager(gles2::program_ptr shader) 
+		manager(gles2::program_ptr shader)
 		{
 			glGetIntegerv(GL_CURRENT_PROGRAM, &old_program);
 			glUseProgram(shader->get());
@@ -537,7 +537,7 @@ namespace
 	class ImageWidget_lighted : public gui::ImageWidget
 	{
 	public:
-		explicit ImageWidget_lighted(graphics::texture tex, graphics::texture tex_normal, int w, int h) 
+		explicit ImageWidget_lighted(graphics::texture tex, graphics::texture tex_normal, int w, int h)
 			: ImageWidget(tex, w, h), tex_normal_(tex_normal) {
 			shader_ = gles2::shader_program::get_global("texture_2d_lighted")->shader();
 			u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
@@ -550,7 +550,7 @@ namespace
 			lighting_.reset(new graphics::lighting(shader_));
 			lighting_->set_light_position(0, glm::vec3(0.5f, 0.5f, 0.07f));
 			lighting_->set_ambient_color(0, glm::vec3(1.0f, 1.0f, 1.0f));
-			lighting_->set_light_color(0, glm::vec3(1.0f, 0.8f, 0.8f));			
+			lighting_->set_light_color(0, glm::vec3(1.0f, 0.8f, 0.8f));
 			lighting_->set_ambient_intensity(0, 0.2f);
 			lighting_->enable_light_source(0, true);
 
@@ -625,7 +625,7 @@ namespace
 			glPopMatrix();
 		}
 
-		virtual bool handleEvent(const SDL_Event& event, bool claimed) { 
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) {
 			if(event.type == SDL_MOUSEMOTION) {
 				const SDL_MouseMotionEvent& e = event.motion;
 				if(inWidget(e.x, e.y) && lighting_) {
@@ -633,13 +633,13 @@ namespace
 					claimed = true;
 				}
 			}
-			return claimed; 
+			return claimed;
 		}
 	private:
 		graphics::texture tex_normal_;
 		//GLfloat varray_[8];
 		gles2::program_ptr shader_;
-		
+
 		GLuint u_resolution_;
 
 		GLuint u_mvp_matrix_;

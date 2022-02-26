@@ -60,7 +60,7 @@ static int LUAF_unboxboolean(lua_State *L)
 
 static int LUAF_onerror(lua_State *L)
 {
-	
+
 	const char* str = 0;
 	if(lua_gettop(L) != 0)
 	{

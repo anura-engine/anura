@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -106,7 +106,7 @@ namespace KRE
 	}
 
 	BlendMode::BlendMode(const variant& node)
-		: src_(BlendModeConstants::BM_SRC_ALPHA), 
+		: src_(BlendModeConstants::BM_SRC_ALPHA),
 		  dst_(BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA)
 	{
 		set(node);
@@ -142,13 +142,13 @@ namespace KRE
 		}
 	}
 
-	void BlendMode::set(const variant& node) 
+	void BlendMode::set(const variant& node)
 	{
 		if(node.is_string()) {
 			const std::string& blend = node.as_string();
 			set_from_string(blend);
 		} else if(node.is_list() && node.num_elements() >= 2) {
-			ASSERT_LOG(node[0].is_string() && node[1].is_string(), 
+			ASSERT_LOG(node[0].is_string() && node[1].is_string(),
 				"BlendMode: Blend mode must be specified by a list of two strings.");
 			set(parse_blend_string(node[0].as_string()), parse_blend_string(node[1].as_string()));
 		} else {
@@ -169,7 +169,7 @@ namespace KRE
 		}
 		return blend_mode_to_string(src_) + " " + blend_mode_to_string(dst_);
 	}
-	
+
 	variant BlendMode::write() const
 	{
 		if(src_ == BlendModeConstants::BM_ONE && dst_ == BlendModeConstants::BM_ONE) {
@@ -221,15 +221,15 @@ namespace KRE
 	{
 	}
 
-	namespace 
+	namespace
 	{
-		BlendEquationConstants convert_string_to_equation(const std::string& s) 
+		BlendEquationConstants convert_string_to_equation(const std::string& s)
 		{
 			if(s == "add" || s == "ADD") {
 				return BlendEquationConstants::BE_ADD;
 			} else if(s == "subtract" || s == "SUBTRACT") {
 				return BlendEquationConstants::BE_SUBTRACT;
-			} else if(s == "reverse_subtract" || s == "REVERSE_SUBTRACT" 
+			} else if(s == "reverse_subtract" || s == "REVERSE_SUBTRACT"
 				|| s == "rsubtract" || s == " RSUBSTRACT" || s == "reverseSubtract") {
 				return BlendEquationConstants::BE_REVERSE_SUBTRACT;
 			} else if(s == "min" || s == "MIN") {
@@ -250,7 +250,7 @@ namespace KRE
 		if(node.is_map()) {
 			if(node.has_key("rgba")) {
 				rgb_ = alpha_ = convert_string_to_equation(node["rgba"].as_string());
-			} 
+			}
 			if(node.has_key("rgb")) {
 				rgb_ = convert_string_to_equation(node["rgb"].as_string());
 			}
@@ -292,12 +292,12 @@ namespace KRE
 		alpha_ = rgba_eq;
 	}
 
-	BlendEquationConstants BlendEquation::getRgbEquation() const 
+	BlendEquationConstants BlendEquation::getRgbEquation() const
 	{
 		return rgb_;
 	}
 
-	BlendEquationConstants BlendEquation::getAlphaEquation() const 
+	BlendEquationConstants BlendEquation::getAlphaEquation() const
 	{
 		return alpha_;
 	}

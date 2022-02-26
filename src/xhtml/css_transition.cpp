@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -32,7 +32,7 @@ namespace css
 {
 	namespace
 	{
-		inline bool flt_equal(const float t, const float value) 
+		inline bool flt_equal(const float t, const float value)
 		{
 			return std::abs(t - value) < FLT_EPSILON;
 		}
@@ -84,7 +84,7 @@ namespace css
 			if(flt_equal(t, 1.0f)) {
 				return 1.0f;
 			}
-			
+
 			return recurse_cubic_bezier(t, p0, p1, p2, p3);
 		}
 
@@ -106,7 +106,7 @@ namespace css
 			return (step > nintervals ? nintervals : step) * step_incr;
 		}
 
-		float mix(float a, float s, float e) 
+		float mix(float a, float s, float e)
 		{
 			return (1.0f - a) * s + a * e;
 		}
@@ -185,7 +185,7 @@ namespace css
 		mix_color_->setBlue(mix(outp, start_color_.b(), end_color_.b()));
 		mix_color_->setAlpha(mix(outp, start_color_.a(), end_color_.a()));
 	}
-	
+
 	LengthTransition::LengthTransition(const TimingFunction& fn, float duration, float delay)
 		: Transition(fn, duration, delay),
 		  start_(),
@@ -258,10 +258,10 @@ namespace css
 	{
 	}
 
-	void FilterTransition::setStartFilter(const std::shared_ptr<FilterStyle>& start) 
-	{ 
-		start_ = start; 
-	
+	void FilterTransition::setStartFilter(const std::shared_ptr<FilterStyle>& start)
+	{
+		start_ = start;
+
 		ASSERT_LOG(start_ != nullptr, "start filter list was invalid.");
 		// assume that start and end are set up correctly
 		mix_filter_->clearFilters();
@@ -270,7 +270,7 @@ namespace css
 		}
 	}
 
-	std::string FilterTransition::handleToString() const 
+	std::string FilterTransition::handleToString() const
 	{
 		std::stringstream ss;
 		ss  << "FilterTransition: StartFilter: " << start_->toString(Property::FILTER)
@@ -280,7 +280,7 @@ namespace css
 		return ss.str();
 	}
 
-	void FilterTransition::handleProcess(float dt, float outp) 
+	void FilterTransition::handleProcess(float dt, float outp)
 	{
 		auto sf = start_->getFilters();
 		auto ef = end_->getFilters();
@@ -289,7 +289,7 @@ namespace css
 		// XXX actually we need to find a similar filter in each list -- oh well
 		auto mit = mf.begin();
 		for(auto sit = sf.cbegin(), eit = ef.cbegin();
-			sit != sf.cend() && eit != ef.cend(); 
+			sit != sf.cend() && eit != ef.cend();
 			++sit, ++eit, ++mit)  {
 			// Are they the same type.
 			if((*sit)->id() == (*eit)->id()) {
@@ -328,8 +328,8 @@ namespace css
 	void TransformTransition::setStart(const std::shared_ptr<TransformStyle>& start)
 	{
 		ASSERT_LOG(start != nullptr, "start transform list was invalid.");
-		
-		start_ = start; 
+
+		start_ = start;
 		// since there are no shared_ptr and everything will be copied we can just copy start in this case.
 		mix_ = std::make_shared<TransformStyle>(*start_);
 	}
@@ -352,12 +352,12 @@ namespace css
 		// XXX here we should apply the rules for matching transitions up
 		auto mit = mix_->getTransforms().begin();
 		for(auto sit = st.cbegin(), eit = et.cbegin();
-			sit != st.cend() && eit != et.cend(); 
+			sit != st.cend() && eit != et.cend();
 			++sit, ++eit, ++mit)  {
 			// Are they the same type.
 			if(sit->id() == eit->id()) {
 				switch(sit->id()) {
-					case TransformId::NONE: 
+					case TransformId::NONE:
 						return;
 					case TransformId::MATRIX_2D: {
 						// todo
@@ -390,7 +390,7 @@ namespace css
 	}
 }
 
-UNIT_TEST(cubic_bezier) 
+UNIT_TEST(cubic_bezier)
 {
 	for(float x = 0.0f; x <= 1.0f; x += 0.1f) {
 		profile::manager pman("css::evaluate_cubic_bezier");

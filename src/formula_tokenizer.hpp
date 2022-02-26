@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,30 +33,30 @@ namespace formula_tokenizer
 {
 	typedef std::string::const_iterator iterator;
 
-	enum class FFL_TOKEN_TYPE { 
-		OPERATOR, 
+	enum class FFL_TOKEN_TYPE {
+		OPERATOR,
 		STRING_LITERAL,
 		CONST_IDENTIFIER,
-		IDENTIFIER, 
-		INTEGER, 
+		IDENTIFIER,
+		INTEGER,
 		DECIMAL,
-		LPARENS, 
+		LPARENS,
 		RPARENS,
-		LSQUARE, 
-		RSQUARE, 
-		LBRACKET, 
+		LSQUARE,
+		RSQUARE,
+		LBRACKET,
 		RBRACKET,
-		LDUBANGLE, 
+		LDUBANGLE,
 		RDUBANGLE,
-		COMMA, 
-		SEMICOLON, 
-		COLON, 
-		WHITESPACE, 
+		COMMA,
+		SEMICOLON,
+		COLON,
+		WHITESPACE,
 		KEYWORD,
-		COMMENT, 
-		POINTER, 
+		COMMENT,
+		POINTER,
 		LEFT_POINTER,
-		PIPE, 
+		PIPE,
 		ELLIPSIS,
 		INVALID
 	};
@@ -65,7 +65,7 @@ namespace formula_tokenizer
 		return static_cast<FFL_TOKEN_TYPE>(static_cast<int>(type)-n);
 	}
 
-	struct Token 
+	struct Token
 	{
 		FFL_TOKEN_TYPE type;
 		iterator begin, end;
@@ -76,14 +76,14 @@ namespace formula_tokenizer
 
 	Token get_token(iterator& i1, iterator i2);
 
-	struct TokenError 
+	struct TokenError
 	{
 		TokenError(const std::string& m);
 		std::string msg;
 	};
 
 	//A special interface for searching for and matching tokens.
-	class TokenMatcher 
+	class TokenMatcher
 	{
 	public:
 		TokenMatcher();

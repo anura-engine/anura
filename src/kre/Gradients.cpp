@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -79,7 +79,7 @@ namespace KRE
 				attribs_->addAttributeDesc(AttributeDesc(AttrType::COLOR,  4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
 				as->addAttribute(AttributeBasePtr(attribs_));
 				as->setDrawMode(DrawMode::TRIANGLES);
-		
+
 				addAttributeSet(as);
 			}
 			void update(std::vector<KRE::vertex_color>* coords)
@@ -105,13 +105,13 @@ namespace KRE
 		//auto clip_mask = std::make_shared<SimpleClipShape>();
 		//clip_mask->setRotation(angle_, z_axis);
 		//gr->setClipSettings(get_stencil_mask_settings(), clip_mask);
-		
+
 		std::vector<KRE::vertex_color> vc;
 		vc.reserve(6 * number_strips);
 
 		// assume a box size from 0 -> 1, 0 -> 1
 		for(int strip = 0; strip < number_strips; ++strip) {
-			
+
 			const float vx1 = -0.5f;
 			const float vy1 = color_stops_[strip].length - 0.5f;
 			const float vx2 = 0.5f;
@@ -125,7 +125,7 @@ namespace KRE
 			vc.emplace_back(glm::vec2(vx2, vy2), color_stops_[strip + 1].color.as_u8vec4());
 			vc.emplace_back(glm::vec2(vx2, vy1), color_stops_[strip].color.as_u8vec4());
 		}
-		
+
 		gr->update(&vc);
 
 		return gr;
@@ -135,7 +135,7 @@ namespace KRE
 	{
 		const float w = static_cast<float>(width);
 		const float h = static_cast<float>(height);
-		
+
 		const float sa = std::abs(std::sin(-angle_ / 180.0f * static_cast<float>(M_PI)));
 		const float ca = std::abs(std::cos(-angle_ / 180.0f * static_cast<float>(M_PI)));
 		//const float length = std::min(ca < FLT_EPSILON ? FLT_MAX : width / ca, sa < FLT_EPSILON ? FLT_MAX : height / sa);

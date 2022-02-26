@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -298,7 +298,7 @@ namespace KRE
 		static const Color& colorWhite() { static Color res(255, 255, 255); return res; }
 		static const Color& colorWhitesmoke() { static Color res(245, 245, 245); return res; }
 		static const Color& colorYellow() { static Color res(255, 255, 0); return res; }
-		static const Color& colorYellowgreen() { static Color res(154, 205, 50); return res; }		
+		static const Color& colorYellowgreen() { static Color res(154, 205, 50); return res; }
 
 		// XXX We should have a ColorCallable, in a seperate file, then move these two into the ColorCallable.
 		static std::string getSetFieldType() { return "string"

@@ -23,8 +23,8 @@ static bool start = true;
 namespace noise
 {
 	namespace
-	{		
-		int get_random(uint32_t seed) 
+	{
+		int get_random(uint32_t seed)
 		{
 			static boost::random::mt19937 rng(seed == 0 ? uint32_t(std::time(0)) : seed);
 			static boost::random::uniform_int_distribution<> dist(0, 65535);

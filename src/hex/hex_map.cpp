@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,7 +36,7 @@
 
 namespace hex
 {
-	namespace 
+	namespace
 	{
 		const std::vector<point> even_q_odd_col{ point(0,-1), point(1,-1), point(1,0), point(0,1), point(-1,0), point(-1,-1) };
 		const std::vector<point> even_q_even_col{ point(0,-1), point(1,0), point(1,1), point(0,1), point(-1,1), point(-1,0) };
@@ -216,7 +216,7 @@ namespace hex
 		return &tiles_[index];
 	}
 
-	const HexObject* HexMap::getTileAt(const point& p) const 
+	const HexObject* HexMap::getTileAt(const point& p) const
 	{
 		return getTileAt(p.x, p.y);
 	}
@@ -317,11 +317,11 @@ namespace hex
 
 			std::string full_type, type_str, mod_str;
 			std::string player_pos = obj.parse_type_string(name, &full_type, &type_str, &mod_str);
-			
+
 			auto tile = get_tile_from_type(type_str);
 
 			const int index = y * obj.getWidth() + x;
-			ASSERT_LOG(index >= 0 && index < static_cast<int>(obj.tiles_.size()), 
+			ASSERT_LOG(index >= 0 && index < static_cast<int>(obj.tiles_.size()),
 				"Index out of bounds." << index << " >= " << obj.tiles_.size());
 
 			ffl::IntrusivePtr<HexMap> map_ref = &const_cast<HexMap&>(obj);
@@ -356,13 +356,13 @@ namespace hex
 	{
 	}
 
-	const HexObject* HexObject::getTileAt(int x, int y) const 
-	{ 
+	const HexObject* HexObject::getTileAt(int x, int y) const
+	{
 		ASSERT_LOG(parent_ != nullptr, "Parent HexMap was null.");
-		return parent_->getTileAt(x, y); 
+		return parent_->getTileAt(x, y);
 	}
 
-	const HexObject* HexObject::getTileAt(const point& p) const 
+	const HexObject* HexObject::getTileAt(const point& p) const
 	{
 		ASSERT_LOG(parent_ != nullptr, "Parent HexMap was null.");
 		return parent_->getTileAt(p);

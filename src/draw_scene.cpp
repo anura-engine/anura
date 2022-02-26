@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -53,14 +53,14 @@
 
 #include "tooltip.hpp"
 
-namespace 
+namespace
 {
 	int g_flash_disable = 0;
 
 	std::vector<rect> current_debug_rects;
 	int current_debug_rects_valid_cycle = -1;
 
-	std::string& scene_title() 
+	std::string& scene_title()
 	{
 		static std::string title;
 		return title;
@@ -69,13 +69,13 @@ namespace
 	AchievementPtr current_achievement;
 	int current_achievement_duration = 0;
 
-	struct screen_flash 
+	struct screen_flash
 	{
 		KRE::ColorTransform color, delta;
 		int duration;
 	};
 
-	std::vector<screen_flash>& flashes() 
+	std::vector<screen_flash>& flashes()
 	{
 		static std::vector<screen_flash> obj;
 		return obj;
@@ -86,7 +86,7 @@ namespace
 	screen_position last_position;
 }
 
-bool isAchievementDisplayed() 
+bool isAchievementDisplayed()
 {
 	return current_achievement && current_achievement_duration > 0;
 }
@@ -114,12 +114,12 @@ void screen_color_flash(const KRE::ColorTransform& color, const KRE::ColorTransf
 	}
 }
 
-void draw_last_scene() 
+void draw_last_scene()
 {
 	draw_scene(Level::current(), last_draw_position());
 }
 
-void set_scene_title(const std::string& msg, int duration) 
+void set_scene_title(const std::string& msg, int duration)
 {
 	//explicitly translate all level titles
 	scene_title() = (msg.size() > 0) ? _(msg) : msg;
@@ -132,7 +132,7 @@ void set_displayed_Achievement(AchievementPtr a)
 	current_achievement_duration = 250;
 }
 
-void draw_scene(const Level& lvl, screen_position& pos, const Entity* focus, bool doDraw) 
+void draw_scene(const Level& lvl, screen_position& pos, const Entity* focus, bool doDraw)
 {
 	const bool draw_ready = update_camera_position(lvl, pos, focus, doDraw);
 	if(draw_ready) {
@@ -140,7 +140,7 @@ void draw_scene(const Level& lvl, screen_position& pos, const Entity* focus, boo
 	}
 }
 
-bool update_camera_position(const Level& lvl, screen_position& pos, const Entity* focus, bool doDraw) 
+bool update_camera_position(const Level& lvl, screen_position& pos, const Entity* focus, bool doDraw)
 {
 	if(focus == nullptr && lvl.player()) {
 		focus = &lvl.player()->getEntity();
@@ -149,7 +149,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 	//flag which gets set to false if we abort drawing, due to the
 	//screen position being initialized now.
 	const bool draw_level = doDraw && pos.init;
-	
+
 	const int screen_width = graphics::GameScreen::get().getVirtualWidth();
 	const int screen_height = graphics::GameScreen::get().getVirtualHeight();
 
@@ -165,13 +165,13 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 		} else {
 			pos.zoom += zoom_speed;
 		}
-        
-        //if we've set the zoom inside the very first cycle of a level (i.e. using on_start_level), then we're doing some kind of cutscene which has the camera start zoomed out.  We want the camera to immediately start in this state, not "progress to this state gradually from the normal zoom". 
+
+        //if we've set the zoom inside the very first cycle of a level (i.e. using on_start_level), then we're doing some kind of cutscene which has the camera start zoomed out.  We want the camera to immediately start in this state, not "progress to this state gradually from the normal zoom".
         if(lvl.instant_zoom_level_set() || lvl.cycle() == 1){
             pos.zoom = target_zoom;
         }
 
-		// If the camera is automatically moved along by the level (e.g. a 
+		// If the camera is automatically moved along by the level (e.g. a
 		// hurtling through the sky level) do that here.
 		pos.x_pos += lvl.auto_move_camera_x()*100;
 		pos.y_pos += lvl.auto_move_camera_y()*100;
@@ -188,7 +188,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 		//find the boundary values for the camera position based on the size
 		//of the level. These boundaries keep the camera from ever going out
 		//of the bounds of the level.
-		
+
 		const float inverse_zoom_level = 1.0f / pos.zoom;
 
 		//we look a certain number of frames ahead -- assuming the focus
@@ -234,8 +234,8 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 				}
 
 				const int border_size = 20;
-				if(v.size() == 1 
-					|| (right - left < static_cast<int>(screen_width / target_zoom) - border_size 
+				if(v.size() == 1
+					|| (right - left < static_cast<int>(screen_width / target_zoom) - border_size
 					&& bottom - top < static_cast<int>(screen_height / target_zoom) - border_size)) {
 					break;
 				}
@@ -288,19 +288,19 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 			pos.x_pos += xdiff;
 			pos.y_pos += ydiff;
 		}
-		
-		
+
+
 		//shake decay is handled automatically; just by giving it an offset and velocity,
 		//it will automatically return to equilibrium
-		
-		//shake speed		
+
+		//shake speed
 		pos.x_pos += (pos.shake_x_offset);
 		pos.y_pos += (pos.shake_y_offset);
-		
+
 		//shake velocity
 		pos.shake_x_offset += pos.shake_x_vel;
 		pos.shake_y_offset += pos.shake_y_vel;
-			
+
 		//shake acceleration
 		if((std::abs(pos.shake_x_vel) < 50) && (std::abs(pos.shake_x_offset) < 50)){
 			//prematurely end the oscillation if it's in the asymptote
@@ -312,7 +312,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 			//the value that "velocity" is divided by, is (the inverse of) 'b', aka "oscillation damping",
 			//which causes the spring to come to rest.
 			//These values are very sensitive, and tweaking them wrongly will cause the spring to 'explode',
-			//and increase its motion out of game-bounds. 
+			//and increase its motion out of game-bounds.
 			if(pos.shake_x_offset > 0) {
 				pos.shake_x_vel -= 1 * pos.shake_x_offset/3 + pos.shake_x_vel/15;
 			} else if(pos.shake_x_offset < 0) {
@@ -334,7 +334,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 
 		const int minmax_x_adjust = static_cast<int>(screen_width*(1.0f - inverse_zoom_level)*0.5f);
 		const int minmax_y_adjust = static_cast<int>(screen_height*(1.0f - inverse_zoom_level)*0.5f);
-	
+
 		int min_x = (lvl.boundaries().x() - minmax_x_adjust) * 100;
 		int min_y = (lvl.boundaries().y() - minmax_y_adjust) * 100;
 		int max_x = (lvl.boundaries().x2() - minmax_x_adjust - static_cast<int>(screen_width * inverse_zoom_level)) * 100;
@@ -362,7 +362,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 	return draw_level;
 }
 
-void render_scene(Level& lvl, const screen_position& pos) 
+void render_scene(Level& lvl, const screen_position& pos)
 {
 	auto& gs = graphics::GameScreen::get();
 
@@ -372,7 +372,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 	const bool need_rt = gs.getVirtualWidth() != gs.getWidth() || gs.getVirtualHeight() != gs.getHeight();
 
 	static KRE::RenderTargetPtr rt;
-	
+
 	if(need_rt && (!rt || rt->width() != screen_width || rt->height() != screen_height)) {
 		rt = (KRE::RenderTarget::create(screen_width, screen_height, 1, false, false));
 		rt->setBlendState(false);
@@ -406,7 +406,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 		const double angle = sin(0.5f*static_cast<float>(M_PI*pos.flip_rotate)/1000.0f);
 		const int pixels = static_cast<int>((graphics::GameScreen::get().getVirtualWidth()/2)*angle);
-		
+
 		//then squish all future drawing inwards
 		wnd->setViewPort(pixels, 0, graphics::GameScreen::get().getVirtualWidth() - pixels*2, graphics::GameScreen::get().getVirtualHeight());
 		*/
@@ -471,7 +471,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 			++i;
 		}
 	}
-	
+
 	//draw borders around the screen if the screen is bigger than the level.
 	if(pos.x_border > 0) {
 		canvas->drawSolidRect(rect(0, 0, pos.x_border, screen_height), KRE::Color::colorBlack());
@@ -504,7 +504,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 		f->draw(screen_width/2 - r.w()/2 + 2, screen_height/2 - r.h()/2 + 2, scene_title(), 2, KRE::Color(0.f, 0.f, 0.f, 0.5f*alpha));
 		f->draw(screen_width/2 - r.w()/2, screen_height/2 - r.h()/2, scene_title(), 2, KRE::Color(1.f,1.f,1.f,alpha));
 	}
-	
+
 	if(current_achievement && current_achievement_duration > 0) {
 		--current_achievement_duration;
 
@@ -523,7 +523,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 		  main_font->dimensions(name).w()),
 		  main_font->dimensions(description).w()
 		  ) + 8;
-		
+
 		const int xpos = wnd->width() - 16 - left->width() - right->width() - width;
 		const int ypos = 16;
 
@@ -540,14 +540,14 @@ void render_scene(Level& lvl, const screen_position& pos)
 		KRE::Canvas::ColorManager cm2(KRE::Color(0.0f, 1.0f, 0.0f, alpha));
 		main_font->draw(xpos + left->width(), ypos + 48, description);
 	}
-	
+
 	if(pos.flip_rotate) {
 		ASSERT_LOG(false, "fix flip_rotate");
 		/*
 		const double angle = sin(0.5*3.141592653589*GLfloat(pos.flip_rotate)/1000.0);
 		const int pixels = (preferences::actual_screen_width()/2)*angle;
-		
-		
+
+
 		//first draw black over the sections of the screen which aren't to be drawn to
 		GLshort varray1[8] = {0,0,  GLshort(pixels),0,  GLshort(pixels),GLshort(preferences::actual_screen_height()),   0, GLshort(preferences::actual_screen_height())};
 		GLshort varray2[8] = {GLshort(preferences::actual_screen_width() - pixels),0,  GLshort(preferences::actual_screen_width()),0,  GLshort(preferences::actual_screen_width()), GLshort(preferences::actual_screen_height()),  GLshort(preferences::actual_screen_width() - pixels), GLshort(preferences::actual_screen_height())};
@@ -563,8 +563,8 @@ void render_scene(Level& lvl, const screen_position& pos)
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 #else
 		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);		
-		
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
 		//glViewport(0, 0, fb->w, fb->h);
 		glViewport(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
 		glVertexPointer(2, GL_SHORT, 0, &varray1);
@@ -585,7 +585,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 	}
 }
 
-namespace 
+namespace
 {
 	boost::shared_ptr<performance_data> current_perf_data;
 }
@@ -670,12 +670,12 @@ void draw_fps(const Level& lvl, const performance_data& data)
 		canvas->blitTexture(t, 0, 10, y);
 		y += t->surfaceHeight() + 5;
 		if(!nets.str().empty()) {
-			t = KRE::Font::getInstance()->renderText(nets.str(), KRE::Color::colorWhite(), font_size, false, module::get_default_font()); 
+			t = KRE::Font::getInstance()->renderText(nets.str(), KRE::Color::colorWhite(), font_size, false, module::get_default_font());
 			canvas->blitTexture(t, 0, 10, y);
 			y += t->surfaceHeight() + 5;
 		}
 		if(!data.profiling_info.empty()) {
-			t = KRE::Font::getInstance()->renderText(data.profiling_info, KRE::Color::colorWhite(), font_size, false, module::get_default_font()); 
+			t = KRE::Font::getInstance()->renderText(data.profiling_info, KRE::Color::colorWhite(), font_size, false, module::get_default_font());
 			canvas->blitTexture(t, 0, 10, y);
 		}
 	}

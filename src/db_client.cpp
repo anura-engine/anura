@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -79,7 +79,7 @@ BEGIN_DEFINE_FN(get, "(string) ->any")
 	}
 
 	return result;
-		
+
 END_DEFINE_FN
 END_DEFINE_CALLABLE(DbClient)
 
@@ -100,7 +100,7 @@ namespace
 			} else if(sys::file_exists(fname_)) {
 				doc_ = json::parse(sys::read_file(fname_), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			}
-			
+
 			if(!doc_.is_map()) {
 				std::map<variant,variant> m;
 				doc_ = variant(&m);
@@ -160,7 +160,7 @@ namespace
 
 #ifndef USE_DBCLIENT
 
-DbClientPtr DbClient::create(const char* prefix) 
+DbClientPtr DbClient::create(const char* prefix)
 {
 	if(prefix == nullptr) {
 		prefix = g_db_key_prefix.c_str();
@@ -175,7 +175,7 @@ DbClientPtr DbClient::create(const char* prefix)
 
 #include <libcouchbase/couchbase.h>
 
-namespace 
+namespace
 {
 	PREF_STRING(couchbase_host, "localhost", "");
 	PREF_STRING(couchbase_user, "", "");
@@ -320,7 +320,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 
 		cmd.v.v0.key = key.c_str();
 		cmd.v.v0.nkey = key.size();
-		
+
 		const lcb_remove_cmd_t* commands[1];
 		commands[0] = &cmd;
 
@@ -427,7 +427,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 		}
 
 		ASSERT_LOG(err == LCB_SUCCESS, "Error in store callback: " << lcb_strerror(nullptr, err));
-	
+
 		if(cookie) {
 			if(info->on_done) {
 				info->on_done();
@@ -539,7 +539,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 
 }
 
-DbClientPtr DbClient::create(const char* prefix) 
+DbClientPtr DbClient::create(const char* prefix)
 {
 	if(prefix == nullptr) {
 		prefix = g_db_key_prefix.c_str();

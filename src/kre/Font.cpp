@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -111,7 +111,7 @@ namespace KRE
 			return res;
 		}
 
-		struct CacheKey 
+		struct CacheKey
 		{
 			std::string text;
 			Color color;
@@ -122,7 +122,7 @@ namespace KRE
 				return text < k.text || (text == k.text && color < k.color)
 					|| (text == k.text && color == k.color && font_size < k.font_size)
 					|| (text == k.text && color == k.color && font_size == k.font_size && font_name < k.font_name);
-		}	
+		}
 		};
 
 		typedef std::map<CacheKey, TexturePtr> RenderCache;
@@ -159,7 +159,7 @@ namespace KRE
 		ASSERT_LOG(!get_font_device_registry().empty(), "No display device drivers registered.");
 		if(!hint.empty()) {
 			auto it = get_font_device_registry().find(hint);
-			if(it == get_font_device_registry().end()) {			
+			if(it == get_font_device_registry().end()) {
 				LOG_WARN("Requested display driver '" << hint << "' not found, using default: " << get_font_device_registry().begin()->first);
 				return get_font_device_registry().begin()->second();
 			}

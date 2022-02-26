@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -43,13 +43,13 @@
 #include "uri.hpp"
 #include "variant_utils.hpp"
 
-namespace module 
+namespace module
 {
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 	using std::placeholders::_3;
 
-	namespace 
+	namespace
 	{
 		PREF_STRING(module_server, "theargentlark.com", "server to use to get modules from");
 		PREF_STRING(module_port, "23455", "server port to get modules from");
@@ -269,7 +269,7 @@ namespace module
 
 	std::string make_module_id(const std::string& name) {
 		// convert string with path to module:filename syntax
-		// e.g. vgi:wip/test1x.cfg -> vgi:test1x.cfg; test1.cfg -> vgi:test1.cfg 
+		// e.g. vgi:wip/test1x.cfg -> vgi:test1x.cfg; test1.cfg -> vgi:test1.cfg
 		// (assuming vgi is default module loaded).
 		std::string conv_name;
 		std::string nn = name;
@@ -328,7 +328,7 @@ namespace module
 		if(name.size() > 4 && name.substr(name.size()-4) == ".cfg") {
 			name = name.substr(0, name.size()-4);
 		}
-	
+
 		for(const std::string& path : module_dirs()) {
 			std::string fname = path + "/" + name + "/module.cfg";
 			LOG_INFO("LOOKING IN '" << fname << "': " << sys::file_exists(fname));
@@ -471,7 +471,7 @@ namespace module
 				const variant& br = v["build_requirements"];
 				if(br.is_string()) {
 					auto it = preferences::get_build_options().find(br.as_string());
-					ASSERT_LOG(it != preferences::get_build_options().end(), 
+					ASSERT_LOG(it != preferences::get_build_options().end(),
 						"Unsatisfied build requirement: " << br.as_string());
 				} else if(br.is_list()) {
 					std::vector<std::string> failed_reqs;
@@ -590,7 +590,7 @@ namespace module
 		// Write a file to a relative path inside a module. rel_path includes the file name.
 		// e.g. module::write_file("", "data/object/experimental/bat.cfg", data);
 		// If the current module was xxx, then the file would get written to the path
-		// ./modules/xxx/data/object/experimental/bat.cfg	
+		// ./modules/xxx/data/object/experimental/bat.cfg
 		if(loaded_paths().empty()) {
 			path = rel_path;
 		} else {
@@ -651,7 +651,7 @@ namespace module
 		ASSERT_LOG(sys::dir_exists(path), "COULD NOT FIND PATH: " << path);
 
 		variant config;
-	
+
 		if(sys::file_exists(path + "/module.cfg")) {
 			config = json::parse(sys::read_file(path + "/module.cfg"));
 		}
@@ -875,7 +875,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string response;
 
 		http_client client(server, port);
-		client.send_request("POST /replicate_module", msg, 
+		client.send_request("POST /replicate_module", msg,
 							std::bind(finish_upload, _1, &done, &response),
 							std::bind(error_upload, _1, &error),
 							std::bind(upload_progress, _1, _2, _3));
@@ -950,7 +950,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			bool error = false;
 
 			http_client client(server, port);
-			client.send_request("POST /upload_module", msg, 
+			client.send_request("POST /upload_module", msg,
 								std::bind(finish_upload, _1, &done, &response),
 								std::bind(error_upload, _1, &error),
 								std::bind(upload_progress, _1, _2, _3));
@@ -986,7 +986,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			bool error = false;
 
 			http_client client(server, port);
-			client.send_request("POST /upload_module", msg, 
+			client.send_request("POST /upload_module", msg,
 								std::bind(finish_upload, _1, &done, &response),
 								std::bind(error_upload, _1, &error),
 								std::bind(upload_progress, _1, _2, _3));
@@ -1058,7 +1058,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string* response = nullptr;
 
 		http_client client(server, port);
-		client.send_request("POST /upload_module", msg, 
+		client.send_request("POST /upload_module", msg,
 							std::bind(finish_upload, _1, &done, response),
 							std::bind(error_upload, _1, &done),
 							std::bind(upload_progress, _1, _2, _3));
@@ -1069,7 +1069,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		}
 	}
 
-	namespace 
+	namespace
 	{
 		bool valid_path_chars(char c)
 		{
@@ -1167,7 +1167,7 @@ static const int ModuleProtocolVersion = 1;
 
 			std::string doc;
 			const std::string url = "GET /module_version/" + module_id;
-			client_->send_request(url, doc, 
+			client_->send_request(url, doc,
 							  std::bind(&client::on_response, this, _1),
 							  std::bind(&client::on_error, this, _1, url, ""),
 							  std::bind(&client::on_progress, this, _1, _2, _3));
@@ -1186,7 +1186,7 @@ static const int ModuleProtocolVersion = 1;
 		LOG_INFO("Requesting module '" << module_id << "'");
 
 		const std::string url = "GET /module_data/" + module_id;
-		client_->send_request(url, "", 
+		client_->send_request(url, "",
 							  std::bind(&client::on_response, this, _1),
 							  std::bind(&client::on_error, this, _1, url, ""),
 							  std::bind(&client::on_progress, this, _1, _2, _3));
@@ -1278,7 +1278,7 @@ static const int ModuleProtocolVersion = 1;
 			} else {
 				return variant();
 			}
-		} 
+		}
 	}
 
 	void client::complete_install()
@@ -1539,7 +1539,7 @@ static const int ModuleProtocolVersion = 1;
 				}
 
 			}
-			
+
 			if(cached || p.second["data"].is_null() == false) {
 				isHighPriorityChunk(p.first, p.second);
 				onChunkReceived(p.second);
@@ -1594,7 +1594,7 @@ static const int ModuleProtocolVersion = 1;
 
 				const std::string url = g_module_chunk_query + chunk["md5"].as_string();
 				const std::string doc = module_chunk_query_is_get() ? "" : request.build().write_json();
-				client->send_request(url, doc, 
+				client->send_request(url, doc,
 							  std::bind(&client::on_chunk_response, this, url, chunk, client, _1),
 							  std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, client),
 							  std::bind(&client::on_chunk_progress, this, url, _1, _2, _3)
@@ -1761,7 +1761,7 @@ static const int ModuleProtocolVersion = 1;
 				}
 
 				variant info = manifest[path];
-			
+
 				bool found = false;
 				for(auto dir : module_dirs()) {
 					std::string src_path = dir + "/" + module_id_ + "/" + path.as_string();
@@ -1910,7 +1910,7 @@ static const int ModuleProtocolVersion = 1;
 		std::string* response = nullptr;
 
 		http_client client(server, port);
-		client.send_request("POST /stats", msg, 
+		client.send_request("POST /stats", msg,
 							std::bind(finish_upload, _1, &done, response),
 							std::bind(error_upload, _1, &done),
 							std::bind(upload_progress, _1, _2, _3));
@@ -1946,7 +1946,7 @@ static const int ModuleProtocolVersion = 1;
 		std::string response;
 
 		http_client client(server, port);
-		client.send_request("GET /get_summary", "", 
+		client.send_request("GET /get_summary", "",
 							std::bind(finish_upload, _1, &done, &response),
 							std::bind(error_upload, _1, &done),
 							std::bind(upload_progress, _1, _2, _3));
@@ -1978,7 +1978,7 @@ static const int ModuleProtocolVersion = 1;
 		std::string response;
 
 		http_client client(server, port);
-		client.send_request("POST /query_module_version", msg, 
+		client.send_request("POST /query_module_version", msg,
 							std::bind(finish_upload, _1, &done, &response),
 							std::bind(error_upload, _1, &done),
 							std::bind(upload_progress, _1, _2, _3));
@@ -2012,7 +2012,7 @@ static const int ModuleProtocolVersion = 1;
 		std::string response;
 
 		http_client client(server, port);
-		client.send_request("POST /set_module_label", msg, 
+		client.send_request("POST /set_module_label", msg,
 							std::bind(finish_upload, _1, &done, &response),
 							std::bind(error_upload, _1, &done),
 							std::bind(upload_progress, _1, _2, _3));

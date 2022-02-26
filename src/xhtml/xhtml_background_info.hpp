@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,7 +34,7 @@ namespace xhtml
 	struct BgBoxShadow
 	{
 		BgBoxShadow();
-		explicit BgBoxShadow(FixedPoint x, FixedPoint y, FixedPoint blur, FixedPoint spread, bool ins, const KRE::ColorPtr& col); 
+		explicit BgBoxShadow(FixedPoint x, FixedPoint y, FixedPoint blur, FixedPoint spread, bool ins, const KRE::ColorPtr& col);
 		FixedPoint x_offset;
 		FixedPoint y_offset;
 		FixedPoint blur_radius;

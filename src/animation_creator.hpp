@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,19 +38,19 @@
 #include "text_editor_widget.hpp"
 #include "variant.hpp"
 
-namespace gui 
+namespace gui
 {
 	class AnimationCreatorDialog : public Dialog
 	{
 	public:
 		AnimationCreatorDialog(int x, int y, int w, int h, const variant& anims=variant());
-		virtual ~AnimationCreatorDialog() 
+		virtual ~AnimationCreatorDialog()
 		{}
 		variant getAnimations() { return variant(&anims_); }
 		void process();
 	protected:
 		void init();
-	
+
 		void setDestination();
 		void selectAnimation(int index);
 		void setOption();

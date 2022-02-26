@@ -10,14 +10,14 @@ namespace geometry
     {
     public:
         spline3d() : recalc_(true) {}
-        spline3d(const std::vector<glm::detail::tvec3<T>>& cps) 
-            : points_(cps), 
-              recalc_(false), 
+        spline3d(const std::vector<glm::detail::tvec3<T>>& cps)
+            : points_(cps),
+              recalc_(false),
 			  coeffs_(T(2), T(-3), T(0), T(1), T(-2), T(3), T(0), T(0), T(1), T(-2), T(1), T(0), T(1), T(-1), T(0), T(0))
         {
             recalculate_tangents();
         }
-        void add_point(const glm::detail::tvec3<T>& pt) 
+        void add_point(const glm::detail::tvec3<T>& pt)
         {
             points_.emplace_back(pt);
             if(recalc_) {
@@ -31,7 +31,7 @@ namespace geometry
                 return;
             }
             tangents_.resize(points_.size());
-            
+
             for(size_t n = 0; n != points_.size(); ++n) {
                 // Catmull-Rom approach
                 if(n == 0) {
@@ -83,7 +83,7 @@ namespace geometry
 			auto ret = powers * coeffs_ * m;
             return glm::detail::tvec3<T>(ret.x, ret.y, ret.z);
         }
-        
+
         bool recalc_;
         const glm::detail::tmat4x4<T> coeffs_;
         std::vector<glm::detail::tvec3<T>> points_;

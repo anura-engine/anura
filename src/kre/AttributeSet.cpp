@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -84,7 +84,7 @@ namespace KRE
 		draw_mode_ = dm;
 	}
 
-	void AttributeSet::updateIndicies(const std::vector<uint8_t>& value) 
+	void AttributeSet::updateIndicies(const std::vector<uint8_t>& value)
 	{
 		index_type_ = IndexType::INDEX_UCHAR;
 		index8_ = value;
@@ -92,7 +92,7 @@ namespace KRE
 		handleIndexUpdate();
 	}
 
-	void AttributeSet::updateIndicies(const std::vector<uint16_t>& value) 
+	void AttributeSet::updateIndicies(const std::vector<uint16_t>& value)
 	{
 		index_type_ = IndexType::INDEX_USHORT;
 		index16_ = value;
@@ -100,7 +100,7 @@ namespace KRE
 		handleIndexUpdate();
 	}
 
-	void AttributeSet::updateIndicies(const std::vector<uint32_t>& value) 
+	void AttributeSet::updateIndicies(const std::vector<uint32_t>& value)
 	{
 		index_type_ = IndexType::INDEX_ULONG;
 		index32_ = value;
@@ -129,7 +129,7 @@ namespace KRE
 		handleIndexUpdate();
 	}
 
-	void AttributeSet::addAttribute(const AttributeBasePtr& attrib) 
+	void AttributeSet::addAttribute(const AttributeBasePtr& attrib)
 	{
 		attributes_.emplace_back(attrib);
 		auto hwbuffer = DisplayDevice::createAttributeBuffer(isHardwareBacked(), attrib.get());
@@ -138,7 +138,7 @@ namespace KRE
 	}
 
 
-	AttributeDesc::AttributeDesc(AttrType type, 
+	AttributeDesc::AttributeDesc(AttrType type,
 		unsigned num_elements,
 		AttrFormat var_type,
 		bool normalise,
@@ -164,7 +164,7 @@ namespace KRE
 		}
 	}
 
-	AttributeDesc::AttributeDesc(const std::string& type_name, 
+	AttributeDesc::AttributeDesc(const std::string& type_name,
 		unsigned num_elements,
 		AttrFormat var_type,
 		bool normalise,
@@ -183,7 +183,7 @@ namespace KRE
 	{
 	}
 
-	AttributeBase::AttributeBase(const AttributeBase& a)  
+	AttributeBase::AttributeBase(const AttributeBase& a)
 		: access_freq_(a.access_freq_),
 		  access_type_(a.access_type_),
 		  offs_(a.offs_),
@@ -204,8 +204,8 @@ namespace KRE
 		return parent;
 	}
 
-	GenericAttribute::GenericAttribute(AccessFreqHint freq, AccessTypeHint type) 
-		:  AttributeBase(freq, type) 
+	GenericAttribute::GenericAttribute(AccessFreqHint freq, AccessTypeHint type)
+		:  AttributeBase(freq, type)
 	{
 	}
 

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2016 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -63,7 +63,7 @@ enum OP {
 		  // PUSH: 1
 		  // ARGS: NONE
 		  OP_LOOKUP_STR,
-		  
+
 		  //Binary operator which indexes a map or list.
 		  // POP: 2
 		  // PUSH: 1
@@ -73,7 +73,7 @@ enum OP {
 		  OP_INDEX_0,
 		  OP_INDEX_1,
 		  OP_INDEX_2,
-		  
+
 		  //Binary operator which indexes a map, list, or callable by string.
 		  // POP: 2
 		  // PUSH: 1
@@ -130,7 +130,7 @@ enum OP {
 		  // PUSH: 0
 		  // ARGS: NONE
 		  OP_PUSH_SCOPE,
-		  
+
 		  //Pops top symbol scope
 		  // POP: 0
 		  // PUSH: 0
@@ -278,7 +278,7 @@ enum OP {
 		  OP_LOOKUP_SYMBOL_STACK,
 
 		  OP_CALL_BUILTIN_DYNAMIC,
-		  
+
 		  OP_POW='^', OP_DICE='d',
 
 		  };

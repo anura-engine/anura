@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -26,11 +26,11 @@
 
 #include "Color.hpp"
 
-namespace gui 
+namespace gui
 {
 	struct TooltipItem
 	{
-		explicit TooltipItem(const std::string& s, int fs=18, const KRE::Color& color=KRE::Color::colorYellow(), const std::string& font="") 
+		explicit TooltipItem(const std::string& s, int fs=18, const KRE::Color& color=KRE::Color::colorYellow(), const std::string& font="")
 			: font_size(fs), text(s), font_color(color), font_name(font)
 		{}
 		std::string text;

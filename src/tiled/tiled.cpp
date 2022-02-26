@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -166,7 +166,7 @@ namespace tiled
 	}
 
 	rect TileSet::getImageRect(int local_id) const
-	{		
+	{
 		// XXX we need to check use of margin and spacing for correctness
 		//
 		const int tiles_per_row = image_width_ / tile_width_;
@@ -240,7 +240,7 @@ namespace tiled
 				return c.ri() == r && c.gi() == g && c.bi() == b;
 			});
 		}
-		KRE::SurfacePtr surf = KRE::Surface::create(image->w, image->h, bpp, image->pitch, rmask, gmask, bmask, amask, image->pixels);		
+		KRE::SurfacePtr surf = KRE::Surface::create(image->w, image->h, bpp, image->pitch, rmask, gmask, bmask, amask, image->pixels);
 		SDL_FreeSurface(image);
 		if(has_transparent_color_set_) {
 			KRE::Surface::setAlphaFilter(old_filter);
@@ -258,7 +258,7 @@ namespace tiled
 	{
 		terrain_[0] = terrain_[1] = terrain_[2] = terrain_[3] = -1;
 	}
-	
+
 	void TileDefinition::addImage(const TileImage& image)
 	{
 		texture_ = image.getTexture();
@@ -358,7 +358,7 @@ namespace tiled
 					y = yend;
 				}
 			}
-			
+
 			if(xstart == limit_x && ystart == limit_y) {
 				break;
 			}

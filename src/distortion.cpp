@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -23,10 +23,10 @@
 
 #include "distortion.hpp"
 
-namespace raster_effects 
+namespace raster_effects
 {
 	RasterDistortion::RasterDistortion(const rect& r)
-		: area_(r), 
+		: area_(r),
 		cycle_(0)
 	{
 	}
@@ -62,12 +62,12 @@ namespace raster_effects
 		*x = *x + 8.0f*sin((offset_ + *x)/20.0f) - 5.0f*sin((offset_/4 + *x * 3)/20.0f);
 	}
 
-	int WaterDistortion::getGranularityX() const 
+	int WaterDistortion::getGranularityX() const
 	{
 		return 20;
 	}
 
-	int WaterDistortion::getGranularityY() const 
+	int WaterDistortion::getGranularityY() const
 	{
 		return 10000;
 	}
@@ -81,14 +81,14 @@ namespace raster_effects
 
 	RadialDistortion::RadialDistortion(int x, int y, int radius, int intensity)
 		: RasterDistortion(rect(x - radius, y - radius, radius*2, radius*2)),
-		x_(x), 
-		y_(y), 
-		radius_(static_cast<float>(radius)), 
+		x_(x),
+		y_(y),
+		radius_(static_cast<float>(radius)),
 		intensity_(static_cast<float>(intensity))
 	{
 	}
 
-	void RadialDistortion::distortPoint(float* x, float* y) const 
+	void RadialDistortion::distortPoint(float* x, float* y) const
 	{
 		if(*x == x_ && *y == y_) {
 			return;
@@ -106,15 +106,15 @@ namespace raster_effects
 
 		const float distort = sin(distance + getCycle()*0.2f)*intensity_*((radius_ - distance)/radius_);
 		*x += unit_vector_x*distort;
-		*y += unit_vector_y*distort;	
+		*y += unit_vector_y*distort;
 	}
 
-	int RadialDistortion::getGranularityX() const 
+	int RadialDistortion::getGranularityX() const
 	{
 		return 10;
 	}
 
-	int RadialDistortion::getGranularityY() const 
+	int RadialDistortion::getGranularityY() const
 	{
 		return 10;
 	}

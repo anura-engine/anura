@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,7 +38,7 @@ namespace KRE
 		typedef std::shared_ptr<paint> paint_ptr;
 
 		// Basically the concrete values that are set and stacked.
-		class font_attribs_set 
+		class font_attribs_set
 		{
 		public:
 			font_attribs_set() {}
@@ -80,7 +80,7 @@ namespace KRE
 			}
 
 			cairo_t* cairo() { return cairo_; }
-			
+
 			void fill_color_push(const paint_ptr& p) {
 				fill_color_stack_.emplace(p);
 			}

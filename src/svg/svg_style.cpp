@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -831,7 +831,7 @@ namespace KRE
 					break;
 				default: break;
 			}
-			
+
 			if(path_ == FuncIriValue::FUNC_IRI && path_resolved_ != nullptr) {
 				path_resolved_->clip(ctx);
 			}
@@ -1324,7 +1324,7 @@ namespace KRE
 			{
 				case LineCapAttrib::UNSET:		/* do nothing */ break;
 				case LineCapAttrib::INHERIT:	/* do nothing */ break;
-				case LineCapAttrib::BUTT:	
+				case LineCapAttrib::BUTT:
 					cairo_set_line_cap(ctx.cairo(), CAIRO_LINE_CAP_BUTT);
 					break;
 				case LineCapAttrib::ROUND:

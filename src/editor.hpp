@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,12 +39,12 @@
 static const int EDITOR_MENUBAR_HEIGHT = 40;
 static const int EDITOR_SIDEBAR_WIDTH = 220;
 
-namespace gui 
+namespace gui
 {
 	class Dialog;
 }
 
-namespace editor_dialogs 
+namespace editor_dialogs
 {
 	class CharacterEditorDialog;
 	class EditorLayersDialog;
@@ -139,7 +139,7 @@ public:
 
 		const EntityPtr& preview_object() const;
 		const ffl::IntrusivePtr<const Frame>& preview_frame() const;
-	
+
 	private:
 		mutable EntityPtr preview_object_;
 		mutable ffl::IntrusivePtr<const Frame> preview_frame_;
@@ -162,15 +162,15 @@ public:
 	int get_object() const { return cur_object_; }
 	void setObject(int index);
 
-	enum EDIT_TOOL { 
-		TOOL_ADD_RECT, 
-		TOOL_SELECT_RECT, 
-		TOOL_MAGIC_WAND, 
-		TOOL_PENCIL, 
-		TOOL_PICKER, 
-		TOOL_ADD_OBJECT, 
-		TOOL_SELECT_OBJECT, 
-		TOOL_EDIT_SEGMENTS, 
+	enum EDIT_TOOL {
+		TOOL_ADD_RECT,
+		TOOL_SELECT_RECT,
+		TOOL_MAGIC_WAND,
+		TOOL_PENCIL,
+		TOOL_PICKER,
+		TOOL_ADD_OBJECT,
+		TOOL_SELECT_OBJECT,
+		TOOL_EDIT_SEGMENTS,
 		NUM_TOOLS };
 	EDIT_TOOL tool() const;
 	void change_tool(EDIT_TOOL tool);
@@ -208,7 +208,7 @@ public:
 
 	//switch the current facing.
 	void toggle_facing();
-	
+
 	//rotate & scale with the mouse
 	void set_rotate_reference();
 	void change_rotation();

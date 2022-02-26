@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -42,7 +42,7 @@ namespace KRE
 			return GL_CLAMP_TO_EDGE;
 		}
 
-		GLenum GetGLTextureType(TextureType tt) 
+		GLenum GetGLTextureType(TextureType tt)
 		{
 			switch(tt) {
 				case TextureType::TEXTURE_2D:		return GL_TEXTURE_2D;
@@ -74,7 +74,7 @@ namespace KRE
 		if(max_tex_units > 0) {
 			ASSERT_LOG(static_cast<int>(surfaces.size()) < max_tex_units, "Number of surfaces given exceeds maximum number of texture units for this hardware.");
 		}
-		
+
 		texture_data_.resize(getTextureCount());
 		int n = 0;
 		for(auto& surf : getSurfaces()) {
@@ -86,7 +86,7 @@ namespace KRE
 	}
 
 	TextureGLESv2::TextureGLESv2(const std::vector<SurfacePtr>& surfaces, TextureType type, int mipmap_levels)
-		: Texture(surfaces, type, mipmap_levels), 
+		: Texture(surfaces, type, mipmap_levels),
 		  texture_data_(),
 		  is_yuv_planar_(false)
 	{
@@ -190,7 +190,7 @@ namespace KRE
 					ASSERT_LOG(false, "Tried to do 2D texture update on wrong texture type.");
 					break;
 			}
-		
+
 			if(getMipMapLevels(n) > 0 && getType(n) > TextureType::TEXTURE_1D) {
 				glGenerateMipmap(GetGLTextureType(getType(n)));
 			}
@@ -380,7 +380,7 @@ namespace KRE
 		auto& td = texture_data_[n];
 		auto surf = n < static_cast<int>(getSurfaces().size()) ? getSurfaces()[n] : SurfacePtr();
 
-		// Change the format/internalFormat/type depending on the 
+		// Change the format/internalFormat/type depending on the
 		// data we now about the surface.
 		// XXX these need testing for correctness.
 		switch(td.surface_format) {
@@ -396,7 +396,7 @@ namespace KRE
 					auto& palette = getSurface(n)->getPalette();
 					texture_data_[n].palette.reserve(palette.size());
 					for(auto& color : palette) {
-						texture_data_[n].palette.emplace_back(color.asRGBA());	
+						texture_data_[n].palette.emplace_back(color.asRGBA());
 					}
 					//ASSERT_LOG(false, "Need to create a palette surface for 8-bit native index formats. Or translate to RGBA.");
 				}
@@ -501,7 +501,7 @@ namespace KRE
 				}
 				break;
 			case TextureType::TEXTURE_CUBIC:
-				// If we are using a cubic texture 		
+				// If we are using a cubic texture
 				ASSERT_LOG(false, "Implement texturing of cubic texture target");
 				break;
 			default:
@@ -513,7 +513,7 @@ namespace KRE
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 		}
 	}
-	
+
 	void TextureGLESv2::init(int n)
 	{
 		if(n < 0) {
@@ -602,7 +602,7 @@ namespace KRE
 		glBindTexture(type, 0);
 	}
 
-	void TextureGLESv2::bind(int binding_point) 
+	void TextureGLESv2::bind(int binding_point)
 	{
 		// XXX fix this fore multiple texture binding.
 		if(get_current_bound_texture() == *texture_data_[0].id) {
@@ -638,7 +638,7 @@ namespace KRE
 		}
 	}
 
-	const unsigned char* TextureGLESv2::colorAt(int x, int y) const 
+	const unsigned char* TextureGLESv2::colorAt(int x, int y) const
 	{
 		if(getFrontSurface() == nullptr) {
 			// We could probably try a glTexImage fall-back here. But ugh, slow.

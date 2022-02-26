@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,7 +29,7 @@
 #include "variant.hpp"
 #include "widget.hpp"
 
-namespace gui 
+namespace gui
 {
 	class AnimationPreviewWidget : public Widget
 	{
@@ -51,7 +51,7 @@ namespace gui
 		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(AnimationPreviewWidget);
-		
+
 		void handleProcess() override;
 		void handleDraw() const override;
 		bool handleEvent(const SDL_Event& event, bool claimed) override;

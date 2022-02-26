@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -32,12 +32,12 @@
 
 namespace css
 {
-	namespace 
+	namespace
 	{
 		class PseudoClassSelector : public FilterSelector
 		{
 		public:
-			PseudoClassSelector(const std::string& name, const std::string& param) 
+			PseudoClassSelector(const std::string& name, const std::string& param)
 				: FilterSelector(FilterId::PSEUDO),
 				  name_(name),
 				  has_param_(!param.empty()),
@@ -104,7 +104,7 @@ namespace css
 				}
 				return false;
 			}
-			std::string toString() const override 
+			std::string toString() const override
 			{
 				std::ostringstream ss;
 				ss << ":" << name_;
@@ -153,7 +153,7 @@ namespace css
 				}
 				return false;
 			}
-			std::string toString() const override 
+			std::string toString() const override
 			{
 				return "." + class_name_;
 			}
@@ -178,7 +178,7 @@ namespace css
 				auto id_attr = element->getAttribute("id");
 				return id_attr != nullptr ? id_attr->getValue() == id_ : false;
 			}
-			std::string toString() const override 
+			std::string toString() const override
 			{
 				return "#" + id_;
 			}
@@ -195,12 +195,12 @@ namespace css
 		};
 
 		enum class AttributeMatching {
-			NONE,			// E[foo]			- an E element with "foo" attribute 
+			NONE,			// E[foo]			- an E element with "foo" attribute
 			PREFIX,			// E[foo^="bar"]	- an E element whose "foo" attribute value starts with "bar".
 			SUFFIX,			// E[foo$="bar"]	- an E element whose "foo" attribute value ends with "bar".
 			SUBSTRING,		// E[foo*="bar"]	- an E element whose "foo" attribute value contains with "bar".
 			EXACT,			// E[foo="bar"]		- an E element whose "foo" attribute value exactly matches "bar".
-			INCLUDE,		// E[foo~="bar"]	- an E element whose "foo" attribute value is a list of whitespace-separated values, one of which is exactly equal to "bar" 
+			INCLUDE,		// E[foo~="bar"]	- an E element whose "foo" attribute value is a list of whitespace-separated values, one of which is exactly equal to "bar"
 			DASH,			// E[foo|="bar"]	- an E element whose "foo" attribute has a hyphen-separated list of values beginning (from the left) with "bar"
 		};
 
@@ -223,11 +223,11 @@ namespace css
 				const auto& id_str = id_attr->getValue();
 
 				switch(matching_) {
-					case AttributeMatching::NONE:		
+					case AttributeMatching::NONE:
 						return true;
 					case AttributeMatching::PREFIX:
 						return id_str.find(value_) == 0;
-					case AttributeMatching::SUFFIX: {						
+					case AttributeMatching::SUFFIX: {
 						auto pos = id_str.find(value_);
 						return pos != std::string::npos && pos == id_str.size() - value_.size();
 					}
@@ -251,7 +251,7 @@ namespace css
 				}
 				return false;
 			}
-			std::string toString() const override 
+			std::string toString() const override
 			{
 				std::ostringstream ss;
 				ss << "[" << attr_;
@@ -282,7 +282,7 @@ namespace css
 			std::string value_;
 		};
 
-		class SelectorParser 
+		class SelectorParser
 		{
 		public:
 			explicit SelectorParser(std::vector<TokenPtr>::const_iterator begin, std::vector<TokenPtr>::const_iterator end)
@@ -326,7 +326,7 @@ namespace css
 				}
 				return (*it_)->id() == value;
 			}
-			
+
 			bool isNextToken(TokenId value) {
 				auto next = it_+1;
 				if(next == end_) {
@@ -341,7 +341,7 @@ namespace css
 
 			SimpleSelectorPtr parseSelector() {
 				// simple_selector [ combinator selector | S+ [ combinator? selector ]? ]?
-				
+
 				auto simple_selector = parseSimpleSelector();
 				selector_.back()->addSimpleSelector(simple_selector);
 				while(true) {
@@ -496,7 +496,7 @@ namespace css
 						simple_selector->addFilter(std::make_shared<PseudoClassSelector>(name, param));
 					} else {
 						return simple_selector;
-					}					 
+					}
 				}
 			}
 		};
@@ -520,7 +520,7 @@ namespace css
 	}
 
 	void Selector::calculateSpecificity()
-	{		
+	{
 		for(auto& s : selector_chain_) {
 			auto specs = s->getSpecificity();
 
@@ -550,13 +550,13 @@ namespace css
 		}
 	}
 
-	void SimpleSelector::addFilter(FilterSelectorPtr f) 
+	void SimpleSelector::addFilter(FilterSelectorPtr f)
 	{
 		auto s = f->calculateSpecificity();
 		for(int n = 0; n != 3; ++n) {
 			specificity_[n] += s[n];
 		}
-		filters_.emplace_back(f); 
+		filters_.emplace_back(f);
 	}
 
 	std::string SimpleSelector::toString() const
@@ -609,7 +609,7 @@ namespace css
 						element = element->getLeft();
 						if(element == nullptr) {
 							return false;
-						}	
+						}
 					} while(element->id() != xhtml::NodeId::ELEMENT);
 					break;
 				case Combinator::CHILD:
@@ -624,7 +624,7 @@ namespace css
 		}
 		return true;
 	}
-	
+
 	bool SimpleSelector::match(xhtml::NodePtr element) const
 	{
 		if((element_ == xhtml::ElementId::ANY && element->id() == xhtml::NodeId::ELEMENT) || element->hasTag(element_)) {
@@ -638,9 +638,9 @@ namespace css
 		return false;
 	}
 
-	void SimpleSelector::setElementId(xhtml::ElementId id) 
-	{ 
-		element_ = id; 
+	void SimpleSelector::setElementId(xhtml::ElementId id)
+	{
+		element_ = id;
 		specificity_[2] = 1;
 	}
 
@@ -651,10 +651,10 @@ namespace css
 
 	bool SpecificityOrdering::operator()(const Specificity& lhs, const Specificity& rhs) const
 	{
-		return lhs[0] == rhs[0] 
-			? lhs[0] < rhs[0] 
-			: lhs[1] == rhs[1] 
-				? lhs[1] < rhs[1] 
+		return lhs[0] == rhs[0]
+			? lhs[0] < rhs[0]
+			: lhs[1] == rhs[1]
+				? lhs[1] < rhs[1]
 				: lhs[2] < rhs[2];
 	}
 }

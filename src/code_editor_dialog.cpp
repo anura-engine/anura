@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -94,7 +94,7 @@ void CodeEditorDialog::init()
 	Button* redo_button      = new Button("Redo", std::bind(&CodeEditorDialog::redo, this));
 	Button* increase_font    = new Button("Increase font size", std::bind(&CodeEditorDialog::changeFontSize, this, 1));
 	Button* decrease_font    = new Button("Decrease font size", std::bind(&CodeEditorDialog::changeFontSize, this, -1));
-	
+
 	find_next_button_ = new Button("Find next", std::bind(&CodeEditorDialog::on_find_next, this));
 	save_button_.reset(save_button);
 
@@ -102,8 +102,8 @@ void CodeEditorDialog::init()
 	using std::placeholders::_2;
 
 	DragWidget* dragger = new DragWidget(x(), y(), width(), height(),
-		DragWidget::Direction::HORIZONTAL, [](int,int){}, 
-		std::bind(&CodeEditorDialog::on_drag_end, this, _1, _2), 
+		DragWidget::Direction::HORIZONTAL, [](int,int){},
+		std::bind(&CodeEditorDialog::on_drag_end, this, _1, _2),
 		std::bind(&CodeEditorDialog::on_drag, this, _1, _2));
 
 	search_ = new TextEditorWidget(120);
@@ -212,7 +212,7 @@ void CodeEditorDialog::init_files_grid()
 	if(files_.empty()) {
 		return;
 	}
-	
+
 	using namespace gui;
 	using std::placeholders::_1;
 
@@ -485,7 +485,7 @@ void CodeEditorDialog::process()
 				json::set_file_contents(fname_, editor_->text());
 
 				LevelRunner::getCurrent()->replay_level_from_start();
-				
+
 			} else if(strstr(fname_.c_str(), "/tiles/")) {
 				LOG_INFO("INIT TILE MAP");
 
@@ -540,7 +540,7 @@ void CodeEditorDialog::process()
 				json::set_file_contents(fname_, editor_->text());
 				game_logic::invalidate_class_definition(class_name);
 				game_logic::FormulaObject::tryLoadClass(class_name);
-			} else { 
+			} else {
 				LOG_INFO("SET FILE: " << fname_);
 				CustomObjectType::setFileContents(fname_, editor_->text());
 			}
@@ -738,7 +738,7 @@ void CodeEditorDialog::process()
 	if(suggestions_grid_) {
 		const auto cursor_pos = editor_->charPositionOnScreen(editor_->cursorRow(), editor_->cursorCol());
 		suggestions_grid_->setLoc(static_cast<int>(x() + editor_->x() + cursor_pos.second), static_cast<int>(y() + editor_->y() + cursor_pos.first - suggestions_grid_->height()));
-		
+
 		if(suggestions_grid_->y() < 10) {
 			suggestions_grid_->setLoc(suggestions_grid_->x(), suggestions_grid_->y() + suggestions_grid_->height() + 14);
 		}
@@ -817,14 +817,14 @@ void CodeEditorDialog::change_width(int amount)
 	init();
 }
 
-void CodeEditorDialog::on_drag(int dx, int dy) 
+void CodeEditorDialog::on_drag(int dx, int dy)
 {
 	auto wnd_w = KRE::WindowManager::getMainWindow()->width();
 	int new_width = width() + dx;
 	int min_width = int(wnd_w * 0.17);
 	int max_width = int(wnd_w * 0.83);
 	//LOG_INFO("ON_DRAG: " << dx << ", " << min_width << ", " << max_width);
-	if(new_width < min_width) { 
+	if(new_width < min_width) {
 		new_width = min_width;
 	}
 
@@ -1129,7 +1129,7 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 	}
 }
 
-namespace 
+namespace
 {
 	void try_fix_assert()
 	{

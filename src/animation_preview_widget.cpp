@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,7 +39,7 @@
 
 // A lot in this code scares me. the raw pointers needs changed to intrusive.
 
-namespace 
+namespace
 {
 	using namespace KRE;
 	const unsigned char RedBorder[] = {0x3d, 0x30, 0xf9};
@@ -103,7 +103,7 @@ namespace
 		return 0;
 	}
 
-	rect get_border_rect_heuristic_search(const SurfacePtr& s, int ox, int oy, int max_cost) 
+	rect get_border_rect_heuristic_search(const SurfacePtr& s, int ox, int oy, int max_cost)
 	{
 		int x1 = std::numeric_limits<int>::max();
 		int y1 = std::numeric_limits<int>::max();
@@ -139,7 +139,7 @@ namespace
 				current->setOnOpenList(false);
 				current->setOnClosedList(true);
 				if(current->G() <= max_cost) {
-					reachable.push_back(reachable_node(current->getNodeValue(), 
+					reachable.push_back(reachable_node(current->getNodeValue(),
 						is_pixel_alpha(s, current->getNodeValue())));
 				}
 				for(auto& p : pathfinding::get_neighbours_from_rect(current->getNodeValue(), 1, 1, r)) {
@@ -273,26 +273,26 @@ namespace
 	}
 }
 
-namespace gui 
+namespace gui
 {
 	bool AnimationPreviewWidget::is_animation(variant obj)
 	{
 		return !obj.is_null() && obj["image"].is_string() && !obj["image"].as_string().empty();
 	}
 
-	AnimationPreviewWidget::AnimationPreviewWidget(const variant& v, game_logic::FormulaCallable* e) 
-		: Widget(v,e), 
-		  cycle_(0), 
-		  zoom_label_(nullptr), 
-		  pos_label_(nullptr), 
-		  scale_(0), 
-		  anchor_x_(-1), 
-		  anchor_y_(-1), 
-		  anchor_pad_(-1), 
-		  has_motion_(false), 
-		  dragging_sides_bitmap_(0), 
-		  moving_solid_rect_(false), 
-		  anchor_solid_x_(-1), 
+	AnimationPreviewWidget::AnimationPreviewWidget(const variant& v, game_logic::FormulaCallable* e)
+		: Widget(v,e),
+		  cycle_(0),
+		  zoom_label_(nullptr),
+		  pos_label_(nullptr),
+		  scale_(0),
+		  anchor_x_(-1),
+		  anchor_y_(-1),
+		  anchor_pad_(-1),
+		  has_motion_(false),
+		  dragging_sides_bitmap_(0),
+		  moving_solid_rect_(false),
+		  anchor_solid_x_(-1),
 		  anchor_solid_y_(-1)
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
@@ -319,7 +319,7 @@ namespace gui
 			solid_handler_ = std::bind(&AnimationPreviewWidget::solidHandlerDelegate, this, _1, _2);
 			ffl_solid_handler_ = getEnvironment()->createFormula(v["on_solid_change"]);
 		}
-	
+
 		try {
 			setObject(v);
 		} catch(type_error&) {
@@ -329,18 +329,18 @@ namespace gui
 		}
 	}
 
-	AnimationPreviewWidget::AnimationPreviewWidget(variant obj) 
-		: cycle_(0), 
-		  zoom_label_(nullptr), 
-		  pos_label_(nullptr), 
-		  scale_(0), 
-		  anchor_x_(-1), 
-		  anchor_y_(-1), 
-		  anchor_pad_(-1), 
-		  has_motion_(false), 
-		  dragging_sides_bitmap_(0), 
-		  moving_solid_rect_(false), 
-		  anchor_solid_x_(-1), 
+	AnimationPreviewWidget::AnimationPreviewWidget(variant obj)
+		: cycle_(0),
+		  zoom_label_(nullptr),
+		  pos_label_(nullptr),
+		  scale_(0),
+		  anchor_x_(-1),
+		  anchor_y_(-1),
+		  anchor_pad_(-1),
+		  has_motion_(false),
+		  dragging_sides_bitmap_(0),
+		  moving_solid_rect_(false),
+		  anchor_solid_x_(-1),
 		  anchor_solid_y_(-1)
 	{
 		setEnvironment();
@@ -350,23 +350,23 @@ namespace gui
 	AnimationPreviewWidget::AnimationPreviewWidget(const AnimationPreviewWidget& a)
 		: obj_(),
 		  frame_(nullptr),
-		  cycle_(a.cycle_), 
+		  cycle_(a.cycle_),
 		  widgets_(a.widgets_),
-		  zoom_label_(a.zoom_label_), 
-		  pos_label_(a.pos_label_), 
-		  scale_(a.scale_), 
+		  zoom_label_(a.zoom_label_),
+		  pos_label_(a.pos_label_),
+		  scale_(a.scale_),
 		  src_rect_(a.src_rect_),
 		  dst_rect_(a.dst_rect_),
-		  anchor_x_(a.anchor_x_), 
+		  anchor_x_(a.anchor_x_),
 		  anchor_y_(a.anchor_y_),
 		  anchor_area_(a.anchor_area_),
-		  anchor_pad_(a.anchor_pad_), 
-		  has_motion_(a.has_motion_), 
+		  anchor_pad_(a.anchor_pad_),
+		  has_motion_(a.has_motion_),
 		  locked_focus_(a.locked_focus_),
-		  dragging_sides_bitmap_(a.dragging_sides_bitmap_), 
+		  dragging_sides_bitmap_(a.dragging_sides_bitmap_),
 		  solid_rect_(a.solid_rect_),
-		  moving_solid_rect_(a.moving_solid_rect_), 
-		  anchor_solid_x_(a.anchor_solid_x_), 
+		  moving_solid_rect_(a.moving_solid_rect_),
+		  anchor_solid_x_(a.anchor_solid_x_),
 		  anchor_solid_y_(a.anchor_solid_y_),
 		  rect_handler_(a.rect_handler_),
 		  pad_handler_(a.pad_handler_),
@@ -471,7 +471,7 @@ namespace gui
 					scale_++;
 					update_zoom_label();
 				}
-		
+
 				while(focus_area.w()*scale > image_area.w() ||
 					  focus_area.h()*scale > image_area.h()) {
 					scale *= 0.5f;
@@ -544,7 +544,7 @@ namespace gui
 						dragging_sides_bitmap_ |= TOP_SIDE;
 						canvas->drawSolidRect(rect(box.x(), box.y()-1, box.w(), 2), KRE::Color::colorRed());
 					}
-				
+
 					if(rect_chosen || (!(dragging_sides_bitmap_&TOP_SIDE) && pointInRect(point(mousex, mousey), rect(box.x(), box.y2()-4, box.w(), 9)))) {
 						dragging_sides_bitmap_ |= BOTTOM_SIDE;
 						canvas->drawSolidRect(rect(box.x(), box.y2()-1, box.w(), 2), KRE::Color::colorRed());
@@ -554,7 +554,7 @@ namespace gui
 						dragging_sides_bitmap_ |= LEFT_SIDE;
 						canvas->drawSolidRect(rect(box.x()-1, box.y(), 2, box.h()), KRE::Color::colorRed());
 					}
-				
+
 					if(rect_chosen || (!(dragging_sides_bitmap_&LEFT_SIDE) && pointInRect(point(mousex, mousey), rect(box.x2()-4, box.y(), 9, box.h())))) {
 						dragging_sides_bitmap_ |= RIGHT_SIDE;
 						canvas->drawSolidRect(rect(box.x2()-1, box.y(), 2, box.h()), KRE::Color::colorRed());
@@ -577,7 +577,7 @@ namespace gui
 				int xpos2 = static_cast<int>(xpos - x1*scale + p2.x*scale);
 				int ypos1 = static_cast<int>(ypos - y1*scale + p1.y*scale);
 				int ypos2 = static_cast<int>(ypos - y1*scale + p2.y*scale);
-			
+
 				if(xpos2 < xpos1) {
 					std::swap(xpos1, xpos2);
 				}
@@ -585,7 +585,7 @@ namespace gui
 				if(ypos2 < ypos1) {
 					std::swap(ypos1, ypos2);
 				}
-			
+
 				canvas->drawHollowRect(rect(xpos1, ypos1, xpos2 - xpos1, ypos2 - ypos1), KRE::Color::colorWhite());
 			}
 		}
@@ -624,7 +624,7 @@ namespace gui
 
 		const int x = static_cast<int>(src_rect_.x() + (src_rect_.w() + 1.0)*xpos);
 		const int y = static_cast<int>(src_rect_.y() + (src_rect_.h() + 1.0)*ypos);
-	
+
 		return point(x, y);
 	}
 

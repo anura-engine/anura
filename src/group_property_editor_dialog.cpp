@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,7 +36,7 @@
 namespace editor_dialogs
 {
 	GroupPropertyEditorDialog::GroupPropertyEditorDialog(editor& e)
-	  : gui::Dialog(KRE::WindowManager::getMainWindow()->width() - 160, 160, 160, 440), 
+	  : gui::Dialog(KRE::WindowManager::getMainWindow()->width() - 160, 160, 160, 440),
 	  editor_(e)
 	{
 		group_ = e.get_level().editor_selection();

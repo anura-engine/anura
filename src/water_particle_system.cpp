@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -53,7 +53,7 @@ WaterParticleSystemInfo::WaterParticleSystemInfo(variant node)
 WaterParticleSystemFactory::WaterParticleSystemFactory(variant node)
 	: info(node)
 {
-	
+
 }
 
 ParticleSystemPtr WaterParticleSystemFactory::create(const Entity& e) const
@@ -63,10 +63,10 @@ ParticleSystemPtr WaterParticleSystemFactory::create(const Entity& e) const
 
 
 WaterParticleSystem::WaterParticleSystem(const Entity& e, const WaterParticleSystemFactory& factory)
-	: factory_(factory), 
-	  info_(factory.info), 
-	  velocity_x_(factory.info.velocity_x), 
-	  velocity_y_(factory.info.velocity_y), 
+	: factory_(factory),
+	  info_(factory.info),
+	  velocity_x_(factory.info.velocity_x),
+	  velocity_y_(factory.info.velocity_y),
 	  cycle_(0),
 	  u_point_size_(-1)
 {
@@ -104,13 +104,13 @@ void WaterParticleSystem::executeOnDraw()
 void WaterParticleSystem::process(const Entity& e)
 {
 	++cycle_;
-	
+
 	for(particle& p : particles_)
-	{		
+	{
 		p.pos[0] = fmod(p.pos[0]+direction[0] * p.velocity, static_cast<float>(info_.repeat_period));
 		p.pos[1] = fmod(p.pos[1]+direction[1] * p.velocity, static_cast<float>(info_.repeat_period));
 	}
-	
+
 
 	// XXX set is_circlular uniform to false/true
 	setColor(info_.color);
@@ -163,7 +163,7 @@ BEGIN_DEFINE_CALLABLE(WaterParticleSystem, ParticleSystem)
 		return obj.area_.write();
 	DEFINE_SET_FIELD_TYPE("[int]|string")
 		obj.area_ = rect(value);
-		
+
 	DEFINE_FIELD(velocity_x, "int")
 		return variant(obj.velocity_x_);
 	DEFINE_SET_FIELD

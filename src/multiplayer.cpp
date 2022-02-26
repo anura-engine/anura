@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -48,9 +48,9 @@
 using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
 
-namespace multiplayer 
+namespace multiplayer
 {
-	namespace 
+	namespace
 	{
 		std::shared_ptr<boost::asio::io_service> asio_service;
 		std::shared_ptr<tcp::socket> tcp_socket;
@@ -172,7 +172,7 @@ namespace multiplayer
 		}
 	}
 
-	namespace 
+	namespace
 	{
 		void send_confirm_packet(int nplayer, std::vector<char>& msg, bool has_confirm) {
 			msg.resize(6);
@@ -608,7 +608,7 @@ namespace multiplayer
 		return true;
 	}
 
-	
+
 BEGIN_DEFINE_CALLABLE_NOBASE(Client)
 DEFINE_FIELD(ready_to_start, "bool")
 	return variant::from_bool(obj.completed_);
@@ -673,7 +673,7 @@ COMMAND_LINE_UTILITY(hole_punch_test) {
 			Peer peer;
 			peer.host = beg;
 			peer.port = port;
-	
+
 			peers.push_back(peer);
 		}
 

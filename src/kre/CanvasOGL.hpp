@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -50,7 +50,7 @@ namespace KRE
 		void drawLineStrip(const std::vector<glm::vec2>& points, float line_width, const Color& color) const override;
 		void drawLineLoop(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const override;
 		void drawLine(const pointf& p1, const pointf& p2, const Color& color) const override;
-		// Draw filled polygon (i.e. triangle fan) using given color	
+		// Draw filled polygon (i.e. triangle fan) using given color
 		void drawPolygon(const std::vector<glm::vec2>& points, const Color& color) const override;
 
 		void drawSolidCircle(const point& centre, float radius, const Color& color) const override;

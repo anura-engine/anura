@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -48,7 +48,7 @@
 
 namespace voxel
 {
-	namespace 
+	namespace
 	{
 		const int debug_draw_faces = Chunk::FRONT | Chunk::RIGHT | Chunk::TOP | Chunk::BACK | Chunk::LEFT | Chunk::BOTTOM;
 
@@ -95,7 +95,7 @@ namespace voxel
 					const variant& block = node["colored_blocks"][i];
 					colored_tile_info ti;
 					ti.faces = 0;
-					ASSERT_LOG(block.has_key("name") && block["name"].is_string(), 
+					ASSERT_LOG(block.has_key("name") && block["name"].is_string(),
 						"Each block in list must have a 'name' attribute of type string.");
 					ti.name = block["name"].as_string();
 					ASSERT_LOG(block.has_key("id") && block["id"].is_string(),
@@ -163,7 +163,7 @@ namespace voxel
 		private:
 			std::map<std::string, colored_tile_info> tile_data_;
 		};
-		
+
 		class textured_terrain_info
 		{
 		public:
@@ -171,7 +171,7 @@ namespace voxel
 			virtual ~textured_terrain_info() {}
 			void load(const variant& node)
 			{
-				ASSERT_LOG(node.has_key("image") && node["image"].is_string(), 
+				ASSERT_LOG(node.has_key("image") && node["image"].is_string(),
 					"terrain info must have 'image' attribute that is a string.");
 				tex_ = graphics::texture::get(node["image"].as_string());
 				ASSERT_LOG(node.has_key("textured_blocks") && node["textured_blocks"].is_list(),
@@ -180,7 +180,7 @@ namespace voxel
 					const variant& block = node["textured_blocks"][i];
 					textured_tile_info ti;
 					ti.faces = 0;
-					ASSERT_LOG(block.has_key("name") && block["name"].is_string(), 
+					ASSERT_LOG(block.has_key("name") && block["name"].is_string(),
 						"Each block in list must have a 'name' attribute of type string.");
 					ti.name = block["name"].as_string();
 					ASSERT_LOG(block.has_key("id") && block["id"].is_string(),
@@ -237,7 +237,7 @@ namespace voxel
 					te.name = ti.name;
 					te.id = variant(ti.abbreviation);
 					te.group = block.has_key("group") ? block["group"].as_string() : "unspecified";
-					te.area = rect::from_coordinates(int(ti.area[0].xf() * tex_.width()), 
+					te.area = rect::from_coordinates(int(ti.area[0].xf() * tex_.width()),
 						int(ti.area[0].yf() * tex_.height()),
 						int(ti.area[0].x2f() * tex_.width()),
 						int(ti.area[0].y2f() * tex_.height()));
@@ -273,7 +273,7 @@ namespace voxel
 			graphics::texture tex_;
 			std::map<std::string, textured_tile_info> tile_data_;
 		};
-		
+
 		textured_terrain_info& get_textured_terrain_info()
 		{
 			static textured_terrain_info res;
@@ -301,7 +301,7 @@ namespace voxel
 	}
 
 	Chunk::Chunk()
-		: SceneObjectCallable("Chunk"), 
+		: SceneObjectCallable("Chunk"),
 		getWorldspacePosition_(0.0f)
 	{
 		// Call init *before* doing anything else
@@ -310,9 +310,9 @@ namespace voxel
 
 	Chunk::Chunk(LogicalWorldPtr logic, const variant& node)
 		: SceneObjectCallable(node),
-		getWorldspacePosition_(0.0f), 
-		scale_x_(logic->scale_x()), 
-		scale_y_(logic->scale_y()), 
+		getWorldspacePosition_(0.0f),
+		scale_x_(logic->scale_x()),
+		scale_y_(logic->scale_y()),
 		scale_z_(logic->scale_z())
 	{
 		// Call init *before* doing anything else
@@ -507,12 +507,12 @@ namespace voxel
 	{
 	}
 
-	ChunkColored::ChunkColored(LogicalWorldPtr logic, const variant& node) 
+	ChunkColored::ChunkColored(LogicalWorldPtr logic, const variant& node)
 		: chunk(shader, logic, node)
 	{
 		a_color_ = shader->get_fixed_attribute("color");
-		ASSERT_LOG(a_color_ != -1, "ChunkColored: color == -1");	
-		
+		ASSERT_LOG(a_color_ != -1, "ChunkColored: color == -1");
+
 		if(node.has_key("random")) {
 			// Load in some random data.
 			int size_x = node["random"]["width"].as_int(32);
@@ -558,7 +558,7 @@ namespace voxel
 					int h = heightmap[x][z] - int(getWorldspacePosition().y);
 					if(heightmap[x][z] >= int(getWorldspacePosition().y) + size_y) {
 						h = size_y;
-					} 
+					}
 					for(int y = 0; y < h; ++y) {
 						tiles_[position(x,y,z)] = color.write();
 					}
@@ -598,10 +598,10 @@ namespace voxel
 	ChunkTextured::ChunkTextured(gles2::program_ptr shader, LogicalWorldPtr logic, const variant& node) : chunk(shader, logic, node)
 	{
 		a_texcoord_ = shader->get_fixed_attribute("texcoord");
-		ASSERT_LOG(a_texcoord_ != -1, "ChunkColored: texcoord == -1");	
+		ASSERT_LOG(a_texcoord_ != -1, "ChunkColored: texcoord == -1");
 		u_texture_ = shader->get_fixed_uniform("texture");
-		ASSERT_LOG(u_texture_ != -1, "ChunkColored: texture == -1");	
-		
+		ASSERT_LOG(u_texture_ != -1, "ChunkColored: texture == -1");
+
 		if(node.has_key("random")) {
 			// Load in some random data.
 			int size_x = node["random"]["width"].as_int(32);
@@ -676,7 +676,7 @@ namespace voxel
 
 		build();
 	}
-	
+
 	void ChunkColored::handleBuild()
 	{
 		//profile::manager pman("ChunkColored::handleBuild");
@@ -742,7 +742,7 @@ namespace voxel
 				}
 			}
 		}
-		
+
 		add_vertex_vbo_data();
 
 		size_t total_size = 0;
@@ -821,7 +821,7 @@ namespace voxel
 				addFaceFront(xf,yf,zf,1,t.second);
 			}
 		}
-		
+
 		add_vertex_vbo_data();
 
 		size_t total_size = 0;
@@ -854,58 +854,58 @@ namespace voxel
 	{
 		switch(face) {
 		case FRONT_FACE:
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f());
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f());
+			tarray.push_back(area.xf());  tarray.push_back(area.yf());
 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf());
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf());
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f());
 			break;
 		case RIGHT_FACE:
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-		
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf());
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f());
+			tarray.push_back(area.xf());  tarray.push_back(area.yf());
+
+			tarray.push_back(area.xf());  tarray.push_back(area.yf());
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f());
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f());
 			break;
 		case TOP_FACE:
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-		
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f());
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf());
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f());
+
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f());
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf());
+			tarray.push_back(area.xf());  tarray.push_back(area.yf());
 			break;
 		case BACK_FACE:
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-		
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f());
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f());
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf());
+
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf());
+			tarray.push_back(area.xf());  tarray.push_back(area.yf());
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f());
 			break;
 		case LEFT_FACE:
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-		
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf());
+			tarray.push_back(area.xf());  tarray.push_back(area.yf());
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f());
+
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f());
+			tarray.push_back(area.xf());  tarray.push_back(area.yf());
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f());
 			break;
 		case BOTTOM_FACE:
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-		
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f());
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f());
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf());
+
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf());
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f());
+			tarray.push_back(area.xf());  tarray.push_back(area.yf());
 			break;
 		default: ASSERT_LOG(false, "isomap::add_vertex_data unexpected facing value: " << face);
 		}
@@ -1215,7 +1215,7 @@ namespace voxel
 		res.add("voxels", std::string(enc_and_comp.begin(), enc_and_comp.end()));
 		return res.build();
 	}
-	
+
 	variant ChunkTextured::handleWrite()
 	{
 		variant_builder res;
@@ -1232,8 +1232,8 @@ namespace voxel
 		res.add("voxels", std::string(enc_and_comp.begin(), enc_and_comp.end()));
 		return res.build();
 	}
-	
-	namespace chunk_factory 
+
+	namespace chunk_factory
 	{
 		chunk_ptr create(gles2::program_ptr shader, LogicalWorldPtr logic, const variant& v)
 		{

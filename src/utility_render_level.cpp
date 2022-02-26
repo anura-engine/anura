@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -49,7 +49,7 @@ UTILITY(render_level)
 	for(const std::string& f : files) {
 		LOG_INFO("FILENAME (" << f << ")");
 	}
-	
+
 	if(files.size() != outputs.size()) {
 		LOG_INFO("ERROR: " << files.size() << " FILES " << outputs.size() << "outputs");
 	}
@@ -59,7 +59,7 @@ UTILITY(render_level)
 	for(int n = 0; n != files.size(); ++n) {
 		const std::string file = files[n];
 		const std::string output = outputs[n];
-		
+
 		ffl::IntrusivePtr<Level> lvl(new Level(file));
 		lvl->set_editor();
 		lvl->finishLoading();
@@ -91,7 +91,7 @@ UTILITY(render_level)
 				fbo->clear();
 				KRE::ModelManager2D mm(-x, -y);
 				lvl->draw(x, y, seg_width, seg_height);
-				
+
 				auto s = fbo->readToSurface(nullptr);
 
 				fbo->unapply();

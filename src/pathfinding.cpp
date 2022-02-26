@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,7 +29,7 @@
 #include "tile_map.hpp"
 #include "unit_test.hpp"
 
-namespace pathfinding 
+namespace pathfinding
 {
 	template<> double manhattan_distance(const point& p1, const point& p2) {
 		return abs(p1.x - p2.x) + abs(p1.y - p2.y);
@@ -94,9 +94,9 @@ namespace pathfinding
 		};
 	}
 
-	variant a_star_search(WeightedDirectedGraphPtr wg, 
-		const variant src_node, 
-		const variant dst_node, 
+	variant a_star_search(WeightedDirectedGraphPtr wg,
+		const variant src_node,
+		const variant dst_node,
 		variant heuristic_fn)
 	{
 		typedef GraphNode<variant, decimal>::GraphNodePtr gnp;
@@ -122,8 +122,8 @@ namespace pathfinding
 				if(open_list.empty()) {
 					// open list is empty node not found.
 					PathfindingException<variant> path_error = {
-						"Open list was empty -- no path found. ", 
-						src_node, 
+						"Open list was empty -- no path found. ",
+						src_node,
 						dst_node
 					};
 					throw path_error;
@@ -184,9 +184,9 @@ namespace pathfinding
 	}
 
 	// Calculate the neighbour set of rectangles from a point.
-	std::vector<point> get_neighbours_from_rect(const point& mid_xy, 
-		const int tile_size_x, 
-		const int tile_size_y, 
+	std::vector<point> get_neighbours_from_rect(const point& mid_xy,
+		const int tile_size_x,
+		const int tile_size_y,
 		const rect& b,
 		const bool allow_diagonals) {
 		const int mid_x = mid_xy.x;
@@ -195,11 +195,11 @@ namespace pathfinding
 		if(mid_x - tile_size_x >= b.x()) {
 			// west
 			res.push_back(point(mid_x - tile_size_x, mid_y));
-		} 
+		}
 		if(mid_x + tile_size_x < b.x2()) {
 			// east
 			res.push_back(point(mid_x + tile_size_y, mid_y));
-		} 
+		}
 		if(mid_y - tile_size_y >= b.y()) {
 			// north
 			res.push_back(point(mid_x, mid_y - tile_size_y));
@@ -212,11 +212,11 @@ namespace pathfinding
 			if(mid_x - tile_size_x >= b.x() && mid_y - tile_size_y >= b.y()) {
 				// north-west
 				res.push_back(point(mid_x - tile_size_x, mid_y - tile_size_y));
-			} 
+			}
 			if(mid_x + tile_size_x < b.x2() && mid_y - tile_size_y >= b.y()) {
 				// north-east
 				res.push_back(point(mid_x + tile_size_x, mid_y - tile_size_y));
-			} 
+			}
 			if(mid_x - tile_size_x >= b.x() && mid_y + tile_size_y < b.y2()) {
 				// south-west
 				res.push_back(point(mid_x - tile_size_x, mid_y + tile_size_y));
@@ -243,13 +243,13 @@ namespace pathfinding
 	}
 
 	variant a_star_find_path(LevelPtr lvl,
-		const point& src_pt1, 
-		const point& dst_pt1, 
-		game_logic::ExpressionPtr heuristic, 
-		game_logic::ExpressionPtr weight_expr, 
-		game_logic::MapFormulaCallablePtr callable, 
-		const int tile_size_x, 
-		const int tile_size_y) 
+		const point& src_pt1,
+		const point& dst_pt1,
+		game_logic::ExpressionPtr heuristic,
+		game_logic::ExpressionPtr weight_expr,
+		game_logic::MapFormulaCallablePtr callable,
+		const int tile_size_x,
+		const int tile_size_y)
 	{
 		typedef GraphNode<point, double>::GraphNodePtr gnp;
 		std::priority_queue<gnp, std::vector<gnp>, DerefPointerMore<gnp>> open_list;
@@ -288,8 +288,8 @@ namespace pathfinding
 				if(open_list.empty()) {
 					// open list is empty node not found.
 					PathfindingException<point> path_error = {
-						"Open list was empty -- no path found. ", 
-						src, 
+						"Open list was empty -- no path found. ",
+						src,
 						dst
 					};
 					throw path_error;
@@ -344,8 +344,8 @@ namespace pathfinding
 								}
 							} else {
 								PathfindingException<point> path_error = {
-									"graph node on list, but not on open or closed lists. ", 
-									p, 
+									"graph node on list, but not on open or closed lists. ",
+									p,
 									dst_pt
 								};
 								throw path_error;
@@ -361,8 +361,8 @@ namespace pathfinding
 	}
 
 	// Find all the nodes reachable from src_node that have less than max_cost to get there.
-	variant path_cost_search(WeightedDirectedGraphPtr wg, 
-		const variant src_node, 
+	variant path_cost_search(WeightedDirectedGraphPtr wg,
+		const variant src_node,
 		decimal max_cost ) {
 		typedef GraphNode<variant, decimal>::GraphNodePtr gnp;
 		std::vector<variant> reachable;
@@ -421,7 +421,7 @@ namespace pathfinding
 
 UNIT_TEST(directed_graph_function) {
 	CHECK_EQ(game_logic::Formula(variant("directed_graph(map(range(4), [value/2,value%2]), null).vertices")).execute(), game_logic::Formula(variant("[[0,0],[0,1],[1,0],[1,1]]")).execute());
-	CHECK_EQ(game_logic::Formula(variant("directed_graph(map(range(4), [value/2,value%2]), filter(links(v), inside_bounds(value))).edges where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<2 and v[1]<2")).execute(), 
+	CHECK_EQ(game_logic::Formula(variant("directed_graph(map(range(4), [value/2,value%2]), filter(links(v), inside_bounds(value))).edges where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<2 and v[1]<2")).execute(),
 		game_logic::Formula(variant("[[[0, 0], [1, 0]], [[0, 0], [0, 1]], [[0, 1], [1, 1]], [[0, 1], [0, 0]], [[1, 0], [0, 0]], [[1, 0], [1, 1]], [[1, 1], [0, 1]], [[1, 1], [1, 0]]]")).execute());
 }
 
@@ -430,6 +430,6 @@ UNIT_TEST(weighted_graph_function) {
 }
 
 UNIT_TEST(cost_path_search_function) {
-	CHECK_EQ(game_logic::Formula(variant("sort(path_cost_search(weighted_graph(directed_graph(map(range(9), [value/3,value%3]), filter(links(v), inside_bounds(value))), def(any a, any b)->decimal sqrt((a[0]-b[0])^2+(a[1]-b[1])^2)), [1,1], 1)) where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1],[v[0]-1,v[1]-1],[v[0]-1,v[1]+1],[v[0]+1,v[1]-1],[v[0]+1,v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<3 and v[1]<3")).execute(), 
+	CHECK_EQ(game_logic::Formula(variant("sort(path_cost_search(weighted_graph(directed_graph(map(range(9), [value/3,value%3]), filter(links(v), inside_bounds(value))), def(any a, any b)->decimal sqrt((a[0]-b[0])^2+(a[1]-b[1])^2)), [1,1], 1)) where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1],[v[0]-1,v[1]-1],[v[0]-1,v[1]+1],[v[0]+1,v[1]-1],[v[0]+1,v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<3 and v[1]<3")).execute(),
 		game_logic::Formula(variant("sort([[1,1], [1,0], [2,1], [1,2], [0,1]])")).execute());
 }

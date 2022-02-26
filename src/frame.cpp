@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -49,7 +49,7 @@
 
 PREF_FLOAT(global_frame_scale, 2.0, "Sets the global frame scales for all frames in all animations");
 
-namespace 
+namespace
 {
 	std::set<Frame*>& palette_frames() {
 		static std::set<Frame*>* instance = new std::set<Frame*>;
@@ -200,7 +200,7 @@ Frame::Frame(variant node)
 	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(node.has_key("fbo"))),
 	 needs_serialization_(false),
 	 collision_areas_inside_frame_(true),
-	 current_palette_(-1), 
+	 current_palette_(-1),
 	 blit_target_(node)
 {
 	blit_target_.setCentre(KRE::Blittable::Centre::TOP_LEFT);
@@ -434,7 +434,7 @@ variant Frame::write() const
 	if(accel_x_ != std::numeric_limits<int>::min()) {
 		builder.add("accel_x", accel_x_);
 	}
-	
+
 	if(accel_y_ != std::numeric_limits<int>::min()) {
 		builder.add("accel_y", accel_y_);
 	}
@@ -442,7 +442,7 @@ variant Frame::write() const
 	if(velocity_x_ != std::numeric_limits<int>::min()) {
 		builder.add("velocity_x", velocity_x_);
 	}
-	
+
 	if(velocity_y_ != std::numeric_limits<int>::min()) {
 		builder.add("velocity_y", velocity_y_);
 	}
@@ -520,7 +520,7 @@ void Frame::buildAlphaFromFrameInfo()
 			std::vector<bool>::const_iterator src = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(area.x(), area.y() + y);
 
 			std::copy(src, src + area.w(), dst);
-			
+
 			dst_index += img_rect_.w()*nframes_;
 		}
 	}
@@ -549,7 +549,7 @@ void Frame::buildAlpha()
 		const int xbase = img_rect_.x() + current_col*(img_rect_.w()+pad_);
 		const int ybase = img_rect_.y() + current_row*(img_rect_.h()+pad_);
 
-		if(!allow_wrapping_ && (xbase < 0 || ybase < 0 
+		if(!allow_wrapping_ && (xbase < 0 || ybase < 0
 			|| xbase + img_rect_.w() > blit_target_.getTexture()->surfaceWidth()
 			|| ybase + img_rect_.h() > blit_target_.getTexture()->surfaceHeight())) {
 			LOG_INFO("IMAGE RECT FOR FRAME #" << n << " OF THE ANIMATION '" << id_ << "' GOES OUTSIDE THE BOUNDS OF THE SOURCE IMAGE." <<
@@ -592,7 +592,7 @@ void Frame::buildAlpha()
 		if(no_remove_alpha_borders_ || force_no_alpha_) {
 			continue;
 		}
-		
+
 		int top;
 		for(top = 0; top != img_rect_.h(); ++top) {
 			const std::vector<bool>::const_iterator a = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(xbase, ybase + top);
@@ -704,7 +704,7 @@ std::vector<bool>::const_iterator Frame::getAlphaItor(int x, int y, int time, bo
 
 	const int nframe = frameNumber(time);
 	x += nframe*img_rect_.w();
-	
+
 	const int index = y*img_rect_.w()*nframes_ + x;
 	ASSERT_INDEX_INTO_VECTOR(index, alpha_);
 	return alpha_.begin() + index;
@@ -1014,7 +1014,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	rectf rf = blit_target_.getTexture()->getSourceRectNormalised();
 
 	std::array<float, 4> r = { { rf.x1(), rf.y1(), rf.x2(), rf.y2() } };
-	
+
 	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
 	y += static_cast<int>(info->y_adjust * scale_);
 	int w = static_cast<int>(info->area.w() * scale_);
@@ -1109,19 +1109,19 @@ int Frame::frameNumber(int time) const
 			if(time >= duration()) {
 				if(reverse_frame_){
 					frame_num = nframes_-1;
-				}else{	
+				}else{
 					frame_num = 0;
 				}
 			} else {
 				frame_num = nframes_-1 - time/frame_time_;
 			}
-			
+
 			//if we are in reverse now
 			if(frame_num < 0) {
 				frame_num = -frame_num - 1;
 			}
 		}
-		
+
 		return frame_num;
 	} else {
 		int frame_num = 0;
@@ -1131,13 +1131,13 @@ int Frame::frameNumber(int time) const
 			} else {
 				frame_num = time/frame_time_;
 			}
-			
+
 			//if we are in reverse now
 			if(frame_num >= nframes_) {
 				frame_num = nframes_ - 1 - (frame_num - nframes_);
 			}
 		}
-		
+
 		return frame_num;
 	}
 }

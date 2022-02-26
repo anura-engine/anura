@@ -14,7 +14,7 @@ LayerBlitInfo::LayerBlitInfo()
 	opaques_ = std::make_shared<Attribute<tile_corner>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
 	opaques_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false, sizeof(tile_corner), offsetof(tile_corner, vertex)));
 	opaques_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(tile_corner), offsetof(tile_corner, uv)));
-	ab->addAttribute(opaques_);	
+	ab->addAttribute(opaques_);
 	ab->setDrawMode(DrawMode::TRIANGLES);
 	addAttributeSet(ab);
 

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -55,7 +55,7 @@ namespace css
 		ACTIVE	= 2,		// Active when between mouse press and mouse release.
 		FOCUS	= 4,		// Active when the element has focus and can accept keyboard events.
 		CHECKED = 8,		// Active when input element is checked.
-		BEFORE	= 16,		// 
+		BEFORE	= 16,		//
 	};
 
 	inline PseudoClass operator|(PseudoClass a, PseudoClass b) {

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -41,7 +41,7 @@ namespace KRE
 			struct uniform_mapping { const char* alt_name; const char* name; };
 			struct attribute_mapping { const char* alt_name; const char* name; };
 
-			const char* const default_vs = 
+			const char* const default_vs =
 				"uniform mat4 u_mvp_matrix;\n"
 				"attribute vec2 a_position;\n"
 				"attribute vec2 a_texcoord;\n"
@@ -99,7 +99,7 @@ namespace KRE
 				{"", ""},
 			};
 
-			const char* const simple_vs = 
+			const char* const simple_vs =
 				"uniform mat4 u_mvp_matrix;\n"
 				"uniform float u_point_size;\n"
 				"attribute vec2 a_position;\n"
@@ -134,7 +134,7 @@ namespace KRE
 			};
 
 			// circle shader definition starts
-			const char* const circle_vs = 
+			const char* const circle_vs =
 				"uniform mat4 u_mvp_matrix;\n"
 				"attribute vec2 a_position;\n"
 				"varying vec2 v_position;\n"
@@ -185,7 +185,7 @@ namespace KRE
 			};
 			// circle shader definition ends
 
-			const char* const complex_vs = 
+			const char* const complex_vs =
 				"uniform mat4 u_mv_matrix;\n"
 				"uniform mat4 u_p_matrix;\n"
 				"uniform float u_point_size;\n"
@@ -235,7 +235,7 @@ namespace KRE
 				{"", ""},
 			};
 
-			const char* const attr_color_vs = 
+			const char* const attr_color_vs =
 				"uniform mat4 u_mvp_matrix;\n"
 				"uniform float u_point_size;\n"
 				"attribute vec2 a_position;\n"
@@ -274,7 +274,7 @@ namespace KRE
 				{"", ""},
 			};
 
-			const char* const vtc_vs = 
+			const char* const vtc_vs =
 				"uniform mat4 u_mvp_matrix;\n"
 				"attribute vec2 a_position;\n"
 				"attribute vec2 a_texcoord;\n"
@@ -315,7 +315,7 @@ namespace KRE
 			};
 
 
-			const char* const particles_vs = 
+			const char* const particles_vs =
 				"#version 120\n"
 				"uniform mat4 u_pv_matrix;\n"
 				"attribute vec3 a_position;\n"
@@ -342,7 +342,7 @@ namespace KRE
 				"	gl_Position = u_pv_matrix * vec4(pos, 1.0);\n"
 				"	\n"
 				"}\n";
-			const char* const particles_fs = 
+			const char* const particles_fs =
 				"#version 120\n"
 				"uniform sampler2D u_tex_map;\n"
 				"uniform vec4 u_color;\n"
@@ -368,7 +368,7 @@ namespace KRE
 				{"", ""},
 			};
 
-			const char* const point_shader_vs = 
+			const char* const point_shader_vs =
 				"uniform mat4 u_mvp_matrix;\n"
 				"uniform float u_point_size;\n"
 				"attribute vec2 a_position;\n"
@@ -377,7 +377,7 @@ namespace KRE
 				"    gl_PointSize = u_point_size;\n"
 				"    gl_Position = u_mvp_matrix * vec4(a_position,0.0,1.0);\n"
 				"}\n";
-			const char* const point_shader_fs = 
+			const char* const point_shader_fs =
 				"#version 120\n"
 				"uniform vec4 u_color;\n"
 				"uniform bool u_is_circular;\n"
@@ -388,14 +388,14 @@ namespace KRE
 				"    }\n"
 				"    gl_FragColor = u_color;\n"
 				"}\n";
-			const uniform_mapping point_shader_uniform_mapping[] = 
+			const uniform_mapping point_shader_uniform_mapping[] =
 			{
 				{"mvp_matrix", "u_mvp_matrix"},
 				{"color", "u_color"},
 				{"point_size", "u_point_size"},
 				{"", ""},
 			};
-			const attribute_mapping point_shader_attribute_mapping[] = 
+			const attribute_mapping point_shader_attribute_mapping[] =
 			{
 				{"position", "a_position"},
 				{"", ""},
@@ -406,7 +406,7 @@ namespace KRE
 			// But then this won't work unless ARB_explicit_attrib_location is available or we have OpenGL >= 3.1
 			// installed. Perhaps a more general solution is to use glBindAttribLocation to explicitly map the
 			// location?
-			const char* const font_shader_vs_layout = 
+			const char* const font_shader_vs_layout =
 				"#version 150\n"
 				"#extension GL_ARB_explicit_attrib_location : enable\n"
 				"uniform mat4 u_mvp_matrix;\n"
@@ -421,7 +421,7 @@ namespace KRE
 				"    v_color = a_color;\n"
 				"    gl_Position = u_mvp_matrix * vec4(a_position,0.0,1.0);\n"
 				"}\n";
-			const char* const font_shader_vs = 
+			const char* const font_shader_vs =
 				"#version 120\n"
 				"uniform mat4 u_mvp_matrix;\n"
 				"attribute vec2 a_position;\n"
@@ -435,7 +435,7 @@ namespace KRE
 				"    v_color = a_color;\n"
 				"    gl_Position = u_mvp_matrix * vec4(a_position,0.0,1.0);\n"
 				"}\n";
-			const char* const font_shader_fs = 
+			const char* const font_shader_fs =
 				"#version 120\n"
 				"uniform sampler2D u_tex_map;\n"
 				"uniform vec4 u_color;\n"
@@ -450,14 +450,14 @@ namespace KRE
 				"    }\n"
 				"    gl_FragColor = color * v_color * u_color;\n"
 				"}\n";
-			const uniform_mapping font_shader_uniform_mapping[] = 
+			const uniform_mapping font_shader_uniform_mapping[] =
 			{
 				{"mvp_matrix", "u_mvp_matrix"},
 				{"color", "u_color"},
 				{"tex_map", "u_tex_map"},
 				{"", ""},
 			};
-			const attribute_mapping font_shader_attribute_mapping[] = 
+			const attribute_mapping font_shader_attribute_mapping[] =
 			{
 				{"position", "a_position"},
 				{"texcoord", "a_texcoord"},
@@ -501,7 +501,7 @@ namespace KRE
 				"        gl_FragColor = color1;\n"
 				"    }\n"
 				"}\n";
-			const uniform_mapping blur_uniform_mapping[] = 
+			const uniform_mapping blur_uniform_mapping[] =
 			{
 				{"mvp_matrix", "u_mvp_matrix"},
 				{"tex_map", "u_tex_map"},
@@ -509,7 +509,7 @@ namespace KRE
 				{"color", "u_color"},
 				{"", ""},
 			};
-			const attribute_mapping blur_attribute_mapping[] = 
+			const attribute_mapping blur_attribute_mapping[] =
 			{
 				{"position", "a_position"},
 				{"texcoord", "a_texcoord"},
@@ -545,7 +545,7 @@ namespace KRE
 				"    }\n"
 				"    gl_FragColor *= u_color;\n"
 				"}\n";
-			const uniform_mapping overlay_uniform_mapping[] = 
+			const uniform_mapping overlay_uniform_mapping[] =
 			{
 				{"mvp_matrix", "u_mvp_matrix"},
 				{"tex_map", "u_tex_map"},
@@ -553,7 +553,7 @@ namespace KRE
 				{"color", "u_color"},
 				{"", ""},
 			};
-			const attribute_mapping overlay_attribute_mapping[] = 
+			const attribute_mapping overlay_attribute_mapping[] =
 			{
 				{"position", "a_position"},
 				{"texcoord", "a_texcoord"},
@@ -647,14 +647,14 @@ namespace KRE
 				"    gl_FragColor.a *= u_opacity;\n"
 				"    gl_FragColor = gl_FragColor * u_color;\n"
 				"}\n";
-			const uniform_mapping filter_uniform_mapping[] = 
+			const uniform_mapping filter_uniform_mapping[] =
 			{
 				{"mvp_matrix", "u_mvp_matrix"},
 				{"tex_map", "u_tex_map"},
 				{"color", "u_color"},
 				{"", ""},
 			};
-			const attribute_mapping filter_attribute_mapping[] = 
+			const attribute_mapping filter_attribute_mapping[] =
 			{
 				{"position", "a_position"},
 				{"texcoord", "a_texcoord"},
@@ -684,13 +684,13 @@ namespace KRE
 				"    gl_FragData[0] = vec4(1.0, 1.0, 1.0, color.a);\n"
 				"    gl_FragData[1] = color;\n"
 				"}\n";
-			const uniform_mapping alphaizer_uniform_mapping[] = 
+			const uniform_mapping alphaizer_uniform_mapping[] =
 			{
 				{"mvp_matrix", "u_mvp_matrix"},
 				{"tex_map", "u_tex_map"},
 				{"", ""},
 			};
-			const attribute_mapping alphaizer_attribute_mapping[] = 
+			const attribute_mapping alphaizer_attribute_mapping[] =
 			{
 				{"position", "a_position"},
 				{"texcoord", "a_texcoord"},
@@ -705,7 +705,7 @@ namespace KRE
 				const char* const fragment_shader_data;
 				const uniform_mapping* u_mapping;
 				const attribute_mapping* a_mapping;
-			} shader_defs[] = 
+			} shader_defs[] =
 			{
 				{ "default", "default_vs", default_vs, "default_fs", default_fs, default_uniform_mapping, default_attribue_mapping },
 				{ "simple", "simple_vs", simple_vs, "simple_fs", simple_fs, simple_uniform_mapping, simple_attribue_mapping },
@@ -719,7 +719,7 @@ namespace KRE
 				{ "blur7", "blur_vs", blur_vs, "blur7_fs", blur7_fs, blur_uniform_mapping, blur_attribute_mapping },
 				{ "overlay", "overlay_vs", overlay_vs, "overlay_fs", overlay_fs, overlay_uniform_mapping, overlay_attribute_mapping },
 				{ "filter_shader", "filter_vs", filter_vs, "filter_fs", filter_fs, filter_uniform_mapping, filter_attribute_mapping },
-				{ "alphaizer", "alphaizer_vs", alphaizer_vs, "alphaizer_fs", alphaizer_fs, alphaizer_uniform_mapping, alphaizer_attribute_mapping },				
+				{ "alphaizer", "alphaizer_vs", alphaizer_vs, "alphaizer_fs", alphaizer_fs, alphaizer_uniform_mapping, alphaizer_attribute_mapping },
 			};
 
 			typedef std::map<std::string, ShaderProgramPtr> shader_factory_map;
@@ -729,8 +729,8 @@ namespace KRE
 				if(res.empty()) {
 					// XXX load some default shaders here.
 					for(auto& def : shader_defs) {
-						
-						auto spp = std::make_shared<OpenGL::ShaderProgram>(def.shader_name, 
+
+						auto spp = std::make_shared<OpenGL::ShaderProgram>(def.shader_name,
 							ShaderDef(def.vertex_shader_name, def.vertex_shader_data),
 							ShaderDef(def.fragment_shader_name, def.fragment_shader_data),
 							variant());
@@ -763,7 +763,7 @@ namespace KRE
 						node = resb.build();
 					}
 
-					auto spp = std::make_shared<OpenGL::ShaderProgram>("font_shader", 
+					auto spp = std::make_shared<OpenGL::ShaderProgram>("font_shader",
 						ShaderDef("font_shader_vs", font_shader_vertex_shader),
 						ShaderDef("font_shader_fs", font_shader_fs),
 						node);
@@ -843,8 +843,8 @@ namespace KRE
 		}
 
 		Shader::Shader(GLenum type, const std::string& name, const std::string& code)
-			: type_(type), 
-			  shader_(0), 
+			: type_(type),
+			  shader_(0),
 			  name_(name)
 		{
 			std::string working_version_str;
@@ -920,7 +920,7 @@ namespace KRE
 			  a_vertex_(-1),
 			  a_texcoord_(-1),
 			  a_color_(-1),
-			  a_normal_(-1),              
+			  a_normal_(-1),
 			  u_enable_palette_lookup_(-1),
 			  u_palette_(-1),
 			  u_palette_width_(-1),
@@ -933,9 +933,9 @@ namespace KRE
 			init(name, vs, fs);
 		}
 
-		ShaderProgram::ShaderProgram(const std::string& name, 
-			const std::vector<ShaderData>& shader_data, 
-			const std::vector<ActiveMapping>& uniform_map, 
+		ShaderProgram::ShaderProgram(const std::string& name,
+			const std::vector<ShaderData>& shader_data,
+			const std::vector<ActiveMapping>& uniform_map,
 			const std::vector<ActiveMapping>& attribute_map)
 			: KRE::ShaderProgram(name, variant()),
 			  name_(name),
@@ -956,7 +956,7 @@ namespace KRE
 			  a_vertex_(-1),
 			  a_texcoord_(-1),
 			  a_color_(-1),
-			  a_normal_(-1),              
+			  a_normal_(-1),
 			  u_enable_palette_lookup_(-1),
 			  u_palette_(-1),
 			  u_palette_width_(-1),
@@ -972,7 +972,7 @@ namespace KRE
 			}
 			bool linked_ok = link(shader_programs);
 			ASSERT_LOG(linked_ok == true, "Error linking program: " << name_);
-			
+
 			for(auto& um : uniform_map) {
 				setAlternateUniformName(um.name, um.alt_name);
 			}
@@ -1137,7 +1137,7 @@ namespace KRE
 				if(u.name.size() > 3 && std::equal(u.name.end()-3,u.name.end(),"[0]")) {
 					u.name.resize(u.name.size()-3);
 				}
-		
+
 				u.location = glGetUniformLocation(object_, u.name.c_str());
 				ASSERT_LOG(u.location >= 0, "Unable to determine the location of the uniform: " << u.name);
 				uniforms_[u.name] = u;
@@ -1179,7 +1179,7 @@ namespace KRE
 		}
 
 
-		void ShaderProgram::setAttributeValue(int aid, const int value) const 
+		void ShaderProgram::setAttributeValue(int aid, const int value) const
 		{
 			auto it = v_attribs_.find(aid);
 			ASSERT_LOG(it != v_attribs_.end(), "Couldn't find location " << aid << " on the uniform list.");
@@ -1188,8 +1188,8 @@ namespace KRE
 				case GL_INT:
 				case GL_BOOL:
 				case GL_SAMPLER_2D:
-				case GL_SAMPLER_CUBE:	
-					glVertexAttribI1i(a.location, value); 
+				case GL_SAMPLER_CUBE:
+					glVertexAttribI1i(a.location, value);
 					break;
 				case GL_FLOAT:
 					glVertexAttrib1f(a.location, static_cast<float>(value));
@@ -1199,7 +1199,7 @@ namespace KRE
 			}
 		}
 
-		void ShaderProgram::setAttributeValue(int aid, const float value) const 
+		void ShaderProgram::setAttributeValue(int aid, const float value) const
 		{
 			auto it = v_attribs_.find(aid);
 			ASSERT_LOG(it != v_attribs_.end(), "Couldn't find location " << aid << " on the uniform list.");
@@ -1208,8 +1208,8 @@ namespace KRE
 				case GL_INT:
 				case GL_BOOL:
 				case GL_SAMPLER_2D:
-				case GL_SAMPLER_CUBE:	
-					glVertexAttribI1i(a.location, static_cast<GLint>(value)); 
+				case GL_SAMPLER_CUBE:
+					glVertexAttribI1i(a.location, static_cast<GLint>(value));
 					break;
 				case GL_FLOAT:
 					glVertexAttrib1f(a.location, value);
@@ -1219,7 +1219,7 @@ namespace KRE
 			}
 		}
 
-		void ShaderProgram::setAttributeValue(int aid, const float* value) const 
+		void ShaderProgram::setAttributeValue(int aid, const float* value) const
 		{
 			if(aid == ShaderProgram::INVALID_ATTRIBUTE) {
 				LOG_WARN("Tried to set value for invalid attribute iterator.");
@@ -1247,7 +1247,7 @@ namespace KRE
 			}
 		}
 
-		void ShaderProgram::setAttributeValue(int aid, const int* value) const 
+		void ShaderProgram::setAttributeValue(int aid, const int* value) const
 		{
 			if(aid == ShaderProgram::INVALID_ATTRIBUTE) {
 				LOG_WARN("Tried to set value for invalid attribute iterator.");
@@ -1261,20 +1261,20 @@ namespace KRE
 				case GL_INT:
 				case GL_BOOL:
 				case GL_SAMPLER_2D:
-				case GL_SAMPLER_CUBE:	
-					glVertexAttribI1i(a.location, *value); 
+				case GL_SAMPLER_CUBE:
+					glVertexAttribI1i(a.location, *value);
 					break;
-				case GL_INT_VEC2:	
-				case GL_BOOL_VEC2:	
-					glVertexAttribI2i(a.location, value[0], value[1]); 
+				case GL_INT_VEC2:
+				case GL_BOOL_VEC2:
+					glVertexAttribI2i(a.location, value[0], value[1]);
 					break;
-				case GL_INT_VEC3:	
-				case GL_BOOL_VEC3:	
-					glVertexAttribI3iv(a.location, value); 
+				case GL_INT_VEC3:
+				case GL_BOOL_VEC3:
+					glVertexAttribI3iv(a.location, value);
 					break;
-				case GL_INT_VEC4: 	
+				case GL_INT_VEC4:
 				case GL_BOOL_VEC4:
-					glVertexAttribI4iv(a.location, value); 
+					glVertexAttribI4iv(a.location, value);
 					break;
 				case GL_FLOAT:
 					glVertexAttrib1f(a.location, static_cast<float>(*value));
@@ -1303,12 +1303,12 @@ namespace KRE
 			}
 		}
 
-		void ShaderProgram::setAttributeValue(int aid, const void* value) const 
+		void ShaderProgram::setAttributeValue(int aid, const void* value) const
 		{
 			ASSERT_LOG(false, "XXX todo: ShaderProgram::setAttributeValue");
 		}
 
-		void ShaderProgram::setAttributeFromVariant(int uid, const variant& value) const 
+		void ShaderProgram::setAttributeFromVariant(int uid, const variant& value) const
 		{
 			ASSERT_LOG(false, "XXX todo: ShaderProgram::setAttributeValue");
 		}
@@ -1327,20 +1327,20 @@ namespace KRE
 			case GL_INT:
 			case GL_BOOL:
 			case GL_SAMPLER_2D:
-			case GL_SAMPLER_CUBE:	
-				glUniform1i(u.location, *static_cast<const GLint*>(value)); 
+			case GL_SAMPLER_CUBE:
+				glUniform1i(u.location, *static_cast<const GLint*>(value));
 				break;
-			case GL_INT_VEC2:	
-			case GL_BOOL_VEC2:	
-				glUniform2i(u.location, (static_cast<const GLint*>(value))[0], (static_cast<const GLint*>(value))[1]); 
+			case GL_INT_VEC2:
+			case GL_BOOL_VEC2:
+				glUniform2i(u.location, (static_cast<const GLint*>(value))[0], (static_cast<const GLint*>(value))[1]);
 				break;
-			case GL_INT_VEC3:	
-			case GL_BOOL_VEC3:	
-				glUniform3iv(u.location, u.num_elements, static_cast<const GLint*>(value)); 
+			case GL_INT_VEC3:
+			case GL_BOOL_VEC3:
+				glUniform3iv(u.location, u.num_elements, static_cast<const GLint*>(value));
 				break;
-			case GL_INT_VEC4: 	
+			case GL_INT_VEC4:
 			case GL_BOOL_VEC4:
-				glUniform4iv(u.location, u.num_elements, static_cast<const GLint*>(value)); 
+				glUniform4iv(u.location, u.num_elements, static_cast<const GLint*>(value));
 				break;
 
 			case GL_FLOAT: {
@@ -1348,7 +1348,7 @@ namespace KRE
 					glUniform1fv(u.location, u.num_elements, static_cast<const GLfloat*>(value));
 				} else {
 					glUniform1f(u.location, *static_cast<const GLfloat*>(value));
-				}	
+				}
 				break;
 			}
 			case GL_FLOAT_VEC2: {
@@ -1393,8 +1393,8 @@ namespace KRE
 			case GL_INT:
 			case GL_BOOL:
 			case GL_SAMPLER_2D:
-			case GL_SAMPLER_CUBE:	
-				glUniform1i(u.location, value); 
+			case GL_SAMPLER_CUBE:
+				glUniform1i(u.location, value);
 				break;
 			case GL_FLOAT:
 				glUniform1f(u.location, static_cast<float>(value));
@@ -1420,7 +1420,7 @@ namespace KRE
 			}
 			default:
 				ASSERT_LOG(false, "Unhandled uniform type: " << it->second.type);
-			}	
+			}
 		}
 
 		void ShaderProgram::setUniformValue(int uid, const GLint* value) const
@@ -1437,20 +1437,20 @@ namespace KRE
 			case GL_INT:
 			case GL_BOOL:
 			case GL_SAMPLER_2D:
-			case GL_SAMPLER_CUBE:	
-				glUniform1i(u.location, *value); 
+			case GL_SAMPLER_CUBE:
+				glUniform1i(u.location, *value);
 				break;
-			case GL_INT_VEC2:	
-			case GL_BOOL_VEC2:	
-				glUniform2i(u.location, value[0], value[1]); 
+			case GL_INT_VEC2:
+			case GL_BOOL_VEC2:
+				glUniform2i(u.location, value[0], value[1]);
 				break;
-			case GL_INT_VEC3:	
-			case GL_BOOL_VEC3:	
-				glUniform3iv(u.location, u.num_elements, value); 
+			case GL_INT_VEC3:
+			case GL_BOOL_VEC3:
+				glUniform3iv(u.location, u.num_elements, value);
 				break;
-			case GL_INT_VEC4: 	
+			case GL_INT_VEC4:
 			case GL_BOOL_VEC4:
-				glUniform4iv(u.location, u.num_elements, value); 
+				glUniform4iv(u.location, u.num_elements, value);
 				break;
 			case GL_FLOAT:
 				glUniform1f(u.location, static_cast<float>(*value));
@@ -1505,7 +1505,7 @@ namespace KRE
 			}
 			default:
 				ASSERT_LOG(false, "Unhandled uniform type: " << it->second.type);
-			}	
+			}
 		}
 
 		void ShaderProgram::setUniformFromVariant(int uid, const variant& value) const
@@ -1568,7 +1568,7 @@ namespace KRE
 				glUniform4fv(u.location, static_cast<GLsizei>(v.size()/4), &v[0]);
 				break;
 			}
-			
+
 			case GL_BOOL:
 			case GL_INT: {
 				if(u.num_elements == 1) {
@@ -1584,7 +1584,7 @@ namespace KRE
 				}
 				break;
 			}
-			case GL_BOOL_VEC2:	
+			case GL_BOOL_VEC2:
 			case GL_INT_VEC2: {
 				if(!(value.num_elements() % 2 == 0 && value.num_elements()/2 <= u.num_elements)) {
 					LOG_WARN("Elements in vector must be divisible by 2 and fit in the array");
@@ -1596,7 +1596,7 @@ namespace KRE
 				glUniform2iv(u.location, static_cast<GLsizei>(v.size()/2), &v[0]);
 				break;
 			}
-			case GL_BOOL_VEC3:	
+			case GL_BOOL_VEC3:
 			case GL_INT_VEC3:{
 				if(!(value.num_elements() % 3 == 0 && value.num_elements()/3 <= u.num_elements)) {
 					LOG_WARN("Elements in vector must be divisible by 3 and fit in the array");
@@ -1620,7 +1620,7 @@ namespace KRE
 				glUniform2iv(u.location, static_cast<GLsizei>(v.size()/4), &v[0]);
 				break;
 			}
-			
+
 			case GL_FLOAT_MAT2:	{
 				if(value.num_elements() != 4) { LOG_WARN("Must be four(4) elements in matrix."); }
 				float v[4];
@@ -1735,14 +1735,14 @@ namespace KRE
 			}
 
 			ASSERT_LOG(node.is_map(), "instance must be a map.");
-			ASSERT_LOG(node.has_key("fragment") && node.has_key("vertex") && node.has_key("name"), 
+			ASSERT_LOG(node.has_key("fragment") && node.has_key("vertex") && node.has_key("name"),
 				"instances must have 'fragment', 'vertex' and 'name' attributes. " << node.to_debug_string());
-		
+
 			const std::string& name = node["name"].as_string();
 			const std::string& vert_data = node["vertex"].as_string();
 			const std::string& frag_data = node["fragment"].as_string();
 
-			auto spp = std::make_shared<OpenGL::ShaderProgram>(name, 
+			auto spp = std::make_shared<OpenGL::ShaderProgram>(name,
 				ShaderDef(name + "_vs", vert_data),
 				ShaderDef(name + "_fs", frag_data),
 				node);
@@ -1800,7 +1800,7 @@ namespace KRE
 				desc.setLocation(getAttribute(desc.getAttrName()));
 			}
 		}
-		
+
 		void ShaderProgram::configureUniforms(UniformBufferBase& uniforms)
 		{
 			/*if(DisplayDevice::checkForFeature(DisplayDeviceCapabilties::UNIFORM_BUFFERS)) {
@@ -1809,18 +1809,18 @@ namespace KRE
 			}*/
 		}
 
-		void ShaderProgram::applyAttribute(AttributeBasePtr attr) 
+		void ShaderProgram::applyAttribute(AttributeBasePtr attr)
 		{
 			auto attr_hw = attr->getDeviceBufferData();
 			attr_hw->bind();
 			for(auto& attrdesc : attr->getAttrDesc()) {
 				auto loc = attrdesc.getLocation();
-				glEnableVertexAttribArray(loc);					
-				glVertexAttribPointer(loc, 
-					attrdesc.getNumElements(), 
-					convert_render_variable_type(attrdesc.getVarType()), 
-					attrdesc.normalise(), 
-					static_cast<GLsizei>(attrdesc.getStride()), 
+				glEnableVertexAttribArray(loc);
+				glVertexAttribPointer(loc,
+					attrdesc.getNumElements(),
+					convert_render_variable_type(attrdesc.getVarType()),
+					attrdesc.normalise(),
+					static_cast<GLsizei>(attrdesc.getStride()),
 					reinterpret_cast<const GLvoid*>(attr_hw->value() + attr->getOffset() + attrdesc.getOffset()));
 				enabled_attribs_.emplace_back(loc);
 			}
@@ -1878,12 +1878,12 @@ namespace KRE
 							bool do_mix = false;
 							if(tex->shouldMixPalettes()) {
 								palette_sel[1] = static_cast<float>(tex->getPalette(1)) / h;
-								setUniformValue(u_mix_, tex->getMixingRatio()); 
+								setUniformValue(u_mix_, tex->getMixingRatio());
 								do_mix = true;
 							}
 							setUniformValue(u_mix_palettes_, do_mix);
 						}
-						setUniformValue(u_palette_, palette_sel); 
+						setUniformValue(u_palette_, palette_sel);
 					} else {
 						enable_palette = false;
 					}
@@ -1901,13 +1901,13 @@ namespace KRE
 			}
 		}
 
-		KRE::ShaderProgramPtr ShaderProgram::clone() 
+		KRE::ShaderProgramPtr ShaderProgram::clone()
 		{
 			return KRE::ShaderProgramPtr(new OpenGL::ShaderProgram(*this));
 		}
 
-		ShaderProgramPtr ShaderProgram::createShader(const std::string& name, 
-			const std::vector<ShaderData>& shader_data, 
+		ShaderProgramPtr ShaderProgram::createShader(const std::string& name,
+			const std::vector<ShaderData>& shader_data,
 			const std::vector<ActiveMapping>& uniform_map,
 			const std::vector<ActiveMapping>& attribute_map)
 		{

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,7 +38,7 @@
 #include "profile_timer.hpp"
 #include "widget_factory.hpp"
 
-namespace gui 
+namespace gui
 {
 	using std::placeholders::_1;
 
@@ -55,11 +55,11 @@ namespace gui
 	}
 
 	Grid::Grid(const variant& v, game_logic::FormulaCallable* e)
-		: ScrollableWidget(v, e), row_height_(v["row_height"].as_int(0)), selected_row_(-1), 
+		: ScrollableWidget(v, e), row_height_(v["row_height"].as_int(0)), selected_row_(-1),
 		allow_selection_(false), must_select_(false),
 		swallow_clicks_(false), hpad_(0), vpad_(0), show_background_(false),
 		max_height_(-1), allow_highlight_(true), set_h_(0), set_w_(0),
-		default_selection_(v["default_select"].as_int(-1)), 
+		default_selection_(v["default_select"].as_int(-1)),
 		draw_selection_highlight_(v["draw_selection_highlighted"].as_bool(false))
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
@@ -191,8 +191,8 @@ namespace gui
 		}
 
 		if(v.has_key("children")) {
-			// children is a list of lists or a list of single widgets, the outmost list being rows, 
-			// the inner list being the columns. 
+			// children is a list of lists or a list of single widgets, the outmost list being rows,
+			// the inner list being the columns.
 			resetContents(v["children"]);
 		}
 
@@ -455,7 +455,7 @@ namespace gui
 
 			if(allow_highlight_ && selected_row_ >= 0 && selected_row_ < getNRows()) {
 				if(std::find(header_rows_.begin(), header_rows_.end(), selected_row_) == header_rows_.end()) {
-					canvas->drawSolidRect(rect(x(),y()+row_height_*selected_row_ - getYscroll(),width(),row_height_), 
+					canvas->drawSolidRect(rect(x(),y()+row_height_*selected_row_ - getYscroll(),width(),row_height_),
 						focus_color_ ? *focus_color_ : KRE::Color(255,0,0,128));
 				}
 			}
@@ -472,7 +472,7 @@ namespace gui
 	}
 
 	bool Grid::handleEvent(const SDL_Event& event, bool claimed)
-	{		
+	{
 		claimed = ScrollableWidget::handleEvent(event, claimed);
 		if(claimed) {
 			return claimed;
@@ -501,7 +501,7 @@ namespace gui
 					}
 				} else {
 					int y3 = getYscroll() + 3*row_height_;
-					setYscroll(getVirtualHeight() - y3 < height() 
+					setYscroll(getVirtualHeight() - y3 < height()
 						? getVirtualHeight() - height()
 						: y3);
 					if(allow_selection_) {
@@ -559,7 +559,7 @@ namespace gui
 					claimed = true;
 				} else if(ev.key.keysym.sym == SDLK_DOWN) {
 					int y1 = getYscroll() + row_height_;
-					setYscroll(std::min(getVirtualHeight(),row_height_*getNRows()) - y1 < height() 
+					setYscroll(std::min(getVirtualHeight(),row_height_*getNRows()) - y1 < height()
 						? std::min(getVirtualHeight(),row_height_*getNRows()) - height()
 						: y1);
 					if(++selected_row_ == getNRows()) {
@@ -567,7 +567,7 @@ namespace gui
 						selected_row_ = 0;
 					}
 					claimed = true;
-				} else if(ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK) 
+				} else if(ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK)
 					|| ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_JUMP)) {
 					if(on_select_) {
 						on_select_(selected_row_);

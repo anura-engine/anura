@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,7 +34,7 @@ namespace graphics
 	const std::string& get_palette_name(int id);
 
 	KRE::SurfacePtr get_palette_surface(int palette);
-	
+
 	KRE::SurfacePtr map_palette(KRE::SurfacePtr surface, int palette);
 
 	KRE::TexturePtr get_palette_texture(const std::string& name, const variant& node, int palette);

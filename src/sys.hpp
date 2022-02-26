@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -23,9 +23,9 @@
 
 #pragma once
 
-namespace sys 
+namespace sys
 {
-	struct AvailableMemoryInfo 
+	struct AvailableMemoryInfo
 	{
 		int mem_used_kb, mem_free_kb, mem_total_kb;
 	};

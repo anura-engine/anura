@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -37,12 +37,12 @@ namespace KRE
 	class FboGLESv2 : public RenderTarget
 	{
 	public:
-		explicit FboGLESv2(int width, int height, 
-			int color_plane_count=1, 
-			bool depth=false, 
-			bool stencil=false, 
-			bool use_multi_sampling=false, 
-			int multi_samples=0);		
+		explicit FboGLESv2(int width, int height,
+			int color_plane_count=1,
+			bool depth=false,
+			bool stencil=false,
+			bool use_multi_sampling=false,
+			int multi_samples=0);
 		explicit FboGLESv2(const variant& node);
 		FboGLESv2(const FboGLESv2& op);
 		virtual ~FboGLESv2();

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -41,7 +41,7 @@
 #include "video_selections.hpp"
 #include "widget_factory.hpp"
 
-namespace 
+namespace
 {
 	void end_dialog(gui::Dialog* d, PAUSE_GAME_RESULT* result, PAUSE_GAME_RESULT value)
 	{
@@ -53,7 +53,7 @@ namespace
 PAUSE_GAME_RESULT show_pause_game_dialog()
 {
 	PAUSE_GAME_RESULT result = PAUSE_GAME_RESULT::QUIT;
-	
+
 	int button_width = 220;//232;
 	int button_height = 45;//50;
 	int padding = 12;//16;
@@ -65,7 +65,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	bool show_language = true;
 	gui::BUTTON_RESOLUTION buttonResolution = gui::BUTTON_SIZE_DOUBLE_RESOLUTION;
 	bool upscale_dialog_frame = true;
-	
+
 	using namespace gui;
 	using std::placeholders::_1;
 
@@ -211,19 +211,19 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	dd.setBackgroundFrame("empty_window");
 	dd.setUpscaleFrame(upscale_dialog_frame);
 	dd.setDrawBackgroundFn(draw_last_scene);
-							
+
 	ButtonPtr b1(new Button(resume_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::CONTINUE), BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b2(new Button(controls_label, show_controls_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b3(new Button(return_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b4(new Button(exit_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::QUIT), BUTTON_STYLE_DEFAULT, buttonResolution));
 	ButtonPtr b_video(new Button(video_select_label, show_video_selection_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
-	
+
 	b1->setDim(button_width, button_height);
 	b2->setDim(button_width, button_height);
 	b3->setDim(button_width, button_height);
 	b4->setDim(button_width, button_height);
 	b_video->setDim(button_width, button_height);
-	
+
 	ButtonPtr language_button = nullptr;
 	if(show_language) {
 		language_button = new Button(language_label, show_language_dialog, BUTTON_STYLE_NORMAL, buttonResolution);

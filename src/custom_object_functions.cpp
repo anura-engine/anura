@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -156,7 +156,7 @@ void CustomObjectCommandCallable::runCommand(Level& lvl, CustomObject& obj) cons
 
 using namespace game_logic;
 
-namespace 
+namespace
 {
 	const std::string FunctionModule = "custom_object";
 
@@ -231,7 +231,7 @@ namespace
 
 		ASSERT_LOG(objects.is_list(), "MUST PROVIDE A LIST OF OBJECTS TO RENDER");
 		ASSERT_LOG(area.is_list() && area.num_elements() == 4, "MUST PROVIDE AN AREA TO texture");
-	
+
 		std::vector<EntityPtr> obj;
 		for(int n = 0; n != objects.num_elements(); ++n) {
 			obj.push_back(objects[n].convert_to<Entity>());
@@ -246,7 +246,7 @@ namespace
 
 		ASSERT_LOG(objects.is_list(), "MUST PROVIDE A LIST OF OBJECTS TO RENDER");
 		ASSERT_LOG(area.is_list() && area.num_elements() == 4, "MUST PROVIDE AN AREA TO texture");
-	
+
 		std::vector<EntityPtr> obj;
 		for(int n = 0; n != objects.num_elements(); ++n) {
 			obj.push_back(objects[n].convert_to<Entity>());
@@ -347,7 +347,7 @@ namespace
 				c = 0;
 			}
 		}
-		
+
 		url.erase(std::remove(url.begin(), url.end(), 0), url.end());
 
 		static const char* prefix = "http://";
@@ -699,7 +699,7 @@ namespace
 			stats::record(v_);
 		}
 	};
-	
+
 	FUNCTION_DEF(report, 1, 1, "report(): Write a key and a value into [custom] in the stats.")
 		report_command* cmd = (new report_command(EVAL_ARG(0)));
 		cmd->setExpression(this);
@@ -754,7 +754,7 @@ namespace
 	END_FUNCTION_DEF(get_perf_info)
 
 
-	namespace 
+	namespace
 	{
 		int show_simple_option_dialog(Level& lvl, const std::string& text, const std::vector<std::string>& options)
 		{
@@ -774,7 +774,7 @@ namespace
 						done = true;
 					}
 				}
-		
+
 				if(d->process() || d->detectJoystickPress()) {
 					done = true;
 				}
@@ -919,7 +919,7 @@ namespace
 					dest_file = fname;
 				}
 			}
-		
+
 			if(dest_file.empty()) {
 
 				std::vector<std::string> save_options;
@@ -950,7 +950,7 @@ namespace
 					}
 
 					noption = show_simple_option_dialog(lvl, _("Select save slot to load."), option_descriptions);
-	
+
 					if(noption == -1) {
 						return;
 					}
@@ -963,7 +963,7 @@ namespace
 			Level::portal p;
 			p.level_dest = dest_file;
 			p.dest_starting_pos = true;
-			p.saved_game = true; 
+			p.saved_game = true;
 			p.transition = transition_;
 			lvl.force_enter_portal(p);
 		}
@@ -1008,7 +1008,7 @@ namespace
 		}
 
 		return variant(&result);
-	
+
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(available_save_slots)
 
@@ -1102,7 +1102,7 @@ namespace
 						sound::play_looped(names_[randomNum], &ob, volume_, fade_in_time_);
 					}
 				}
-			
+
 			}else{
 				if (names_.empty() == false){
 					int randomNum = rand()%names_.size();  //like a 1d-size die
@@ -1434,7 +1434,7 @@ namespace
 			{}
 			virtual void execute(Level& lvl, Entity& ob) const override {
 				screen_position& screen_pos = last_draw_position();
-			
+
 				screen_pos.shake_x_offset = x_offset_;
 				screen_pos.shake_y_offset = y_offset_;
 				screen_pos.shake_x_vel = x_velocity_;
@@ -1914,7 +1914,7 @@ namespace
 		ffl::IntrusivePtr<CustomObject> obj;
 
 		variant properties;
-	
+
 		if(NUM_ARGS > 2) {
 			const int x = EVAL_ARG(1).as_int();
 			const int y = EVAL_ARG(2).as_int();
@@ -1945,7 +1945,7 @@ namespace
 				obj.reset(new CustomObject(type, x, y, face_right, true));
 			}
 		}
-		
+
 		//adjust so the object's x/y is its midpoint.
 		obj->setPos(obj->x() - obj->getCurrentFrame().width() / 2 , obj->y() - obj->getCurrentFrame().height() / 2);
 
@@ -2097,7 +2097,7 @@ namespace
 		Formula::failIfStaticContext();
 		const std::string type = EVAL_ARG(0).as_string();
 		ffl::IntrusivePtr<CustomObject> obj;
-	
+
 		if(NUM_ARGS > 1) {
 			const int x = EVAL_ARG(1).as_int();
 			const int y = EVAL_ARG(2).as_int();
@@ -2109,7 +2109,7 @@ namespace
 			const bool face_right = true;
 			obj = new PlayableCustomObject(CustomObject(type, x, y, face_right));
 		}
-		
+
 		//adjust so the object's x/y is its midpoint.
 		obj->setPos(obj->x() - obj->getCurrentFrame().width() / 2 , obj->y() - obj->getCurrentFrame().height() / 2);
 
@@ -2193,7 +2193,7 @@ namespace
         ARG_TYPE("string")
     RETURN_TYPE("builtin frame")
     END_FUNCTION_DEF(get_object_type_animation)
-    
+
 	class animation_command : public CustomObjectCommandCallable
 	{
 	public:
@@ -2208,7 +2208,7 @@ namespace
 		std::string anim_;
 	};
 
-    
+
 	FUNCTION_DEF(animation, 1, 1, "animation(string id): changes the current object's animation to the given animation. time_in_animation is reset to 0.")
 		animation_command* cmd = (new animation_command(EVAL_ARG(0).as_string()));
 		cmd->setExpression(this);
@@ -2224,7 +2224,7 @@ namespace
 		virtual void execute(Level& lvl, CustomObject& ob) const override {
 			ob.die();
 		}
-	}; 
+	};
 
 	FUNCTION_DEF(die, 0, 0, "die(): causes the current object to die. The object will receive the on_die signal and may even use it to resurrect itself. Use remove_object() to remove an object from play without it receiving on_die.")
 		die_command* cmd = (new die_command());
@@ -2844,8 +2844,8 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(update_and_restart)
 
-	
-	
+
+
 	FUNCTION_DEF(scroll_to, 1, 1, "scroll_to(object target): scrolls the screen to the target object")
 		scroll_to_command* cmd = (new scroll_to_command(EVAL_ARG(0).try_convert<Entity>()));
 		cmd->setExpression(this);
@@ -2946,7 +2946,7 @@ RETURN_TYPE("bool")
 	struct in_dialog_setter {
 		bool was_in_dialog_;
 		Level& lvl_;
-		in_dialog_setter(Level& lvl) : lvl_(lvl) { 
+		in_dialog_setter(Level& lvl) : lvl_(lvl) {
 			was_in_dialog_ = lvl_.in_dialog();
 			lvl_.set_in_dialog(true);
 		}
@@ -3540,7 +3540,7 @@ RETURN_TYPE("bool")
 	class teleport_command : public EntityCommandCallable
 	{
 	public:
-		teleport_command(const std::string& level, const std::string& label, const std::string& transition, const EntityPtr& new_playable, bool no_move_to_standing, LevelPtr level_obj) 
+		teleport_command(const std::string& level, const std::string& label, const std::string& transition, const EntityPtr& new_playable, bool no_move_to_standing, LevelPtr level_obj)
 			: level_(level), label_(label), transition_(transition), new_playable_(new_playable), no_move_to_standing_(no_move_to_standing), level_obj_(level_obj)
 		{}
 
@@ -3610,7 +3610,7 @@ RETURN_TYPE("bool")
 		variant play;
 
 		LevelPtr level_obj;
-	
+
 		if(!(NUM_ARGS == 1 && EVAL_ARG(0).is_map())) {
 			variant dst_Level = EVAL_ARG(0);
 			dst_Level_str = dst_Level.is_null() ? "" : dst_Level.as_string();
@@ -4359,7 +4359,7 @@ RETURN_TYPE("bool")
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("string")
 	RETURN_TYPE("commands")
-	
+
 	END_FUNCTION_DEF(module_uninstall)
 
 	class module_rate_command : public EntityCommandCallable {
@@ -4387,7 +4387,7 @@ RETURN_TYPE("bool")
 		if(NUM_ARGS > 3) {
 			review = EVAL_ARG(3).as_string();
 		}
-	
+
 		module_rate_command* cmd = (new module_rate_command(cl, module_id, num_stars, review));
 		cmd->setExpression(this);
 		return variant(cmd);
@@ -4403,7 +4403,7 @@ RETURN_TYPE("bool")
 		std::string id_;
 		ConstFormulaCallablePtr callable_;
 	public:
-		explicit module_launch_command(const std::string& id, ConstFormulaCallablePtr callable) 
+		explicit module_launch_command(const std::string& id, ConstFormulaCallablePtr callable)
 			: id_(id), callable_(callable)
 		{}
 
@@ -4553,7 +4553,7 @@ RETURN_TYPE("bool")
 	}
 } //namespace
 
-bool in_speech_dialog () 
+bool in_speech_dialog ()
 {
 	return g_in_speech_dialog > 0;
 }

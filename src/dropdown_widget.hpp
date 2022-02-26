@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,7 +34,7 @@
 #include "text_editor_widget.hpp"
 #include "widget.hpp"
 
-namespace gui 
+namespace gui
 {
 	typedef std::vector<std::string> DropdownList;
 
@@ -85,14 +85,14 @@ namespace gui
 		std::vector<WidgetPtr> labels_;
 		WidgetPtr label_;
 		GuiSectionWidgetPtr dropdown_image_;
-		
+
 		std::function<void(const std::string&)> on_change_;
 		std::function<void(int, const std::string&)> on_select_;
-		
+
 		std::string normal_image_, focus_image_;
 		std::string font_;
 
-		// delgate 
+		// delgate
 		void changeDelegate(const std::string& s);
 		void selectDelegate(int selection, const std::string& s);
 

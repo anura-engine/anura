@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -25,11 +25,11 @@
 
 #include "variant.hpp"
 
-namespace tbs 
+namespace tbs
 {
 	class game;
-	
-	class ai_player 
+
+	class ai_player
 	{
 	public:
 		static ai_player* create(game& g, int nplayer);

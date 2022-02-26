@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -30,7 +30,7 @@
 #include "gui_section.hpp"
 
 
-namespace gui 
+namespace gui
 {
 	typedef std::function<void(float)> ChangeFn;
 	typedef std::function<void(float)> DragEndFn;
@@ -55,13 +55,13 @@ namespace gui
 		void handleDraw() const override;
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 		void handleProcess() override;
-		
+
 		int width_;
 		ChangeFn onchange_;
 		DragEndFn ondragend_;
 		bool dragging_;
 		float position_;
-		
+
 		WidgetPtr slider_left_, slider_right_, slider_middle_, slider_button_;
 
 		game_logic::FormulaPtr ffl_handler_;
@@ -69,6 +69,6 @@ namespace gui
 		game_logic::FormulaPtr ffl_end_handler_;
 		void dragEndDelegate(float);
 	};
-	
+
 	typedef ffl::IntrusivePtr<Slider> SliderPtr;
 }

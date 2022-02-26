@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,21 +29,21 @@ namespace graphics
 {
 	template <typename T1, typename T2> class Octree;
 	template <typename T1, typename T2> typedef ffl::IntrusivePtr<Octree<T1,T2>> OctreePtr<T1,T2>;
-	
+
 	template <typename T1, typename T2>
 	class Octree : public reference_counted_object
 	{
 	public:
 		explicit Octree(const glm::vec3& origin, float radius)
-			: origin_(origin), 
+			: origin_(origin),
 			radius_(radius)
 		{
 		}
 
-		virtual ~Octree() 
+		virtual ~Octree()
 		{}
 
-		int octantFromPoint(const glm::vec3& pt) 
+		int octantFromPoint(const glm::vec3& pt)
 		{
 			int octant = 0;
 			if(pt.x >= origin_.x) {
@@ -63,7 +63,7 @@ namespace graphics
 			return children_.empty();
 		}
 
-		void insert(const glm::vec3& pt, const T2& data) 
+		void insert(const glm::vec3& pt, const T2& data)
 		{
 			if(isLeaf()) {
 				is(data_ == nullptr) {
@@ -73,7 +73,7 @@ namespace graphics
 					T2 old_data = data_->second;
 					data_.reset();
 					for(int n = 0; n != 8; ++n) {
-						glm::vec3 child_origin(origin_.x+radius/(i&4 ? 2.0f : -2.0f), 
+						glm::vec3 child_origin(origin_.x+radius/(i&4 ? 2.0f : -2.0f),
 							origin_.y+radius/(i&2 ? 2.0f : -2.0f),
 							origin_.z+radius/(i&1 ? 2.0f : -2.0f));
 						children_.push_back(new octree(child_origin, radius/2.0f));
@@ -101,7 +101,7 @@ namespace graphics
 					glm::vec3 c1 = child.origin_ - child.radius_;
 					glm::vec3 c2 = child.origin_ + child.radius_;
 
-					if(c1.x < b1.x || c1.y < b1.y || c1.z < b1.z 
+					if(c1.x < b1.x || c1.y < b1.y || c1.z < b1.z
 						|| c2.x > b2.x || c2.y > b2.y || c2.z > b2.z) {
 						continue;
 					}

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -47,7 +47,7 @@ namespace {
 	PREF_INT(tbs_server_player_timeout_ms, 20000, "");
 }
 
-namespace tbs 
+namespace tbs
 {
 	using std::placeholders::_1;
 	using std::placeholders::_2;
@@ -55,7 +55,7 @@ namespace tbs
 	extern int g_tbs_server_delay_ms;
 	extern int g_tbs_server_heartbeat_freq;
 
-	namespace 
+	namespace
 	{
 
 		int time_between_heartbeats()
@@ -97,10 +97,10 @@ namespace tbs
 	void server::adopt_ajax_socket(socket_ptr socket, int session_id, const variant& msg)
 	{
 		handle_message(
-			std::bind(static_cast<void(server::*)(socket_ptr,const variant&)>(&server::send_msg), this, socket, _1), 
+			std::bind(static_cast<void(server::*)(socket_ptr,const variant&)>(&server::send_msg), this, socket, _1),
 			std::bind(&server::close_ajax, this, socket, _1),
 			std::bind(&server::get_socket_info, this, socket),
-			session_id, 
+			session_id,
 			msg);
 	}
 
@@ -221,7 +221,7 @@ namespace tbs
 			compressed_buf = zip::compress(msg_ref);
 			msg_ptr = &compressed_buf;
 
-			compress_header = "Content-Encoding: deflate\r\n"; 
+			compress_header = "Content-Encoding: deflate\r\n";
 		}
 
 		const std::string& msg = *msg_ptr;

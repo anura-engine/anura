@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,9 +38,9 @@
 #include <bps/bps.h>
 #endif
 
-namespace haptic 
+namespace haptic
 {
-	namespace 
+	namespace
 	{
 		std::map<int,std::shared_ptr<SDL_Haptic>> haptic_devices;
 		typedef std::map<SDL_Haptic*,std::map<std::string,int>> haptic_effect_table;
@@ -53,15 +53,15 @@ namespace haptic
 
 PREF_BOOL(start_rumble, true, "Controls whether we do a haptic device rumble effect on initialisation.");
 
-namespace joystick 
+namespace joystick
 {
-	namespace 
+	namespace
 	{
 		std::vector<std::shared_ptr<SDL_Joystick>> joysticks;
 		std::map<int,std::shared_ptr<SDL_GameController>> game_controllers;
 	}
 
-	Manager::Manager() 
+	Manager::Manager()
 	{
 		if(SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
 			LOG_ERROR("Unable to initialise joystick subsystem");
@@ -119,7 +119,7 @@ namespace joystick
 		LOG_INFO("Initialized " << haptic::haptic_devices.size() << " haptic devices");
 	}
 
-	Manager::~Manager() 
+	Manager::~Manager()
 	{
 		joysticks.clear();
 		game_controllers.clear();
@@ -133,7 +133,7 @@ namespace joystick
 #endif
 	}
 
-	bool pump_events(const SDL_Event& ev, bool claimed) 
+	bool pump_events(const SDL_Event& ev, bool claimed)
 	{
 		if(claimed) {
 			return claimed;
@@ -166,14 +166,14 @@ namespace joystick
 		return false;
 	}
 
-	void update() 
+	void update()
 	{
 		if(preferences::use_joystick()) {
 			SDL_JoystickUpdate();
 		}
 	}
 
-	bool up() 
+	bool up()
 	{
 		if(!preferences::use_joystick()) {
 			return false;
@@ -211,7 +211,7 @@ namespace joystick
 		return false;
 	}
 
-	bool down() 
+	bool down()
 	{
 		if(!preferences::use_joystick()) {
 			return false;
@@ -249,7 +249,7 @@ namespace joystick
 		return false;
 	}
 
-	bool left() 
+	bool left()
 	{
 		if(!preferences::use_joystick()) {
 			return false;
@@ -287,7 +287,7 @@ namespace joystick
 		return false;
 	}
 
-	bool right() 
+	bool right()
 	{
 		if(!preferences::use_joystick()) {
 			return false;
@@ -324,7 +324,7 @@ namespace joystick
 		return false;
 	}
 
-	bool button(int n) 
+	bool button(int n)
 	{
 		if(!preferences::use_joystick()) {
 			return false;
@@ -349,7 +349,7 @@ namespace joystick
 					state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_Y);
 					break;
 				}
-				case 4: { // 
+				case 4: { //
 					state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_START);
 					break;
 				}
@@ -373,7 +373,7 @@ namespace joystick
 		return false;
 	}
 
-	int iphone_tilt() 
+	int iphone_tilt()
 	{
 #if defined(TARGET_BLACKBERRY)
 		double x, y, z;
@@ -389,7 +389,7 @@ namespace joystick
 		return 0;
 	}
 
-	std::vector<size_t> get_info() 
+	std::vector<size_t> get_info()
 	{
 		std::vector<size_t> res;
 		res.push_back(joysticks.size());
@@ -397,13 +397,13 @@ namespace joystick
 			res.push_back(SDL_JoystickGetAxis(j.get(), 0));
 			res.push_back(SDL_JoystickGetAxis(j.get(), 1));
 		}
-	
+
 		return res;
 	}
 
 }
 
-namespace haptic 
+namespace haptic
 {
 	void play(const std::string& id, int iters)
 	{
@@ -449,16 +449,16 @@ namespace haptic
 	{
 	}
 
-	namespace 
+	namespace
 	{
-		void get_list3u(Uint16* li, const variant& v) 
+		void get_list3u(Uint16* li, const variant& v)
 		{
 			ASSERT_LOG(v.is_list(), "FATAL: Must be list type");
 			for(size_t n = 0; n != 3 && n != v.num_elements(); ++n) {
 				li[n] = Uint16(v[n].as_int());
 			}
 		}
-		void get_list3s(Sint16* li, const variant& v) 
+		void get_list3s(Sint16* li, const variant& v)
 		{
 			ASSERT_LOG(v.is_list(), "FATAL: Must be list type");
 			for(size_t n = 0; n != 3 && n != v.num_elements(); ++n) {
@@ -467,7 +467,7 @@ namespace haptic
 		}
 	}
 
-	void HapticEffectCallable::load(const std::string& name, const variant& eff) 
+	void HapticEffectCallable::load(const std::string& name, const variant& eff)
 	{
 		SDL_HapticEffect effect;
 		SDL_memset(&effect, 0, sizeof(effect));
@@ -602,7 +602,7 @@ namespace haptic
 		} else if(type == "custom") {
 			effect.type = SDL_HAPTIC_CUSTOM;
 		}
-		
+
 		for(auto hd : haptic_devices) {
 			int id = SDL_HapticNewEffect(hd.second.get(), &effect);
 			if(id >= 0) {

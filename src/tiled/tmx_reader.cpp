@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -99,9 +99,9 @@ namespace tiled
 
 		inline uint32_t make_uint32_le(char n3, char n2, char n1, char n0)
 		{
-			return (static_cast<uint32_t>(static_cast<uint8_t>(n3)) << 24) 
-				| (static_cast<uint32_t>(static_cast<uint8_t>(n2)) << 16) 
-				| (static_cast<uint32_t>(static_cast<uint8_t>(n1)) << 8) 
+			return (static_cast<uint32_t>(static_cast<uint8_t>(n3)) << 24)
+				| (static_cast<uint32_t>(static_cast<uint8_t>(n2)) << 16)
+				| (static_cast<uint32_t>(static_cast<uint8_t>(n1)) << 8)
 				| static_cast<uint32_t>(static_cast<uint8_t>(n0));
 		}
 	}
@@ -120,7 +120,7 @@ namespace tiled
 	{
 		ptree pt;
 		try {
-			std::stringstream ss; 
+			std::stringstream ss;
 			ss << str;
 			read_xml(ss, pt);
 
@@ -180,7 +180,7 @@ namespace tiled
 			if(v.first == "properties") {
 				LOG_DEBUG("parse map properties");
 				auto props = parseProperties(v.second);
-				map_->setProperties(&props);				
+				map_->setProperties(&props);
 			} else if(v.first == "tileset") {
 				parseTileset(v.second);
 			} else if(v.first == "objectgroup") {
@@ -204,7 +204,7 @@ namespace tiled
 		ASSERT_LOG(attributes, "tileset elements must have a minimum number of attributes: 'firstgid'");
 		int firstgid = attributes->get<int>("firstgid");
 		TileSet ts(firstgid);
-		
+
 		auto source = attributes->get_child_optional("source");
 		if(source) {
 			ASSERT_LOG(false, "read and process tileset data from file: " << source->data());
@@ -285,7 +285,7 @@ namespace tiled
 	TileImage TmxReader::parseImageElement(const boost::property_tree::ptree& pt)
 	{
 		auto attributes = pt.get_child("<xmlattr>");
-		
+
 		TileImage image;
 
 		auto source = attributes.get_child_optional("source");
@@ -340,7 +340,7 @@ namespace tiled
 		bool is_compressed_gzip = false;
 		bool is_base64_encoded = false;
 		bool is_csv_encoded = false;
-		
+
 		auto attributes = pt.get_child_optional("<xmlattr>");
 		if(attributes) {
 			auto encoding = attributes->get_child_optional("encoding");
@@ -357,7 +357,7 @@ namespace tiled
 				is_compressed_zlib = true;
 			}
 		}
-		
+
 		if(is_base64_encoded) {
 			std::vector<char> data(pt.data().begin(), pt.data().end());
 			auto unencoded = base64::b64decode(data);

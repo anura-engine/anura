@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,11 +39,11 @@
 
 namespace xhtml
 {
-	namespace 
+	namespace
 	{
 		static bool debug_display_tree_parse = false;
 
-		struct DocumentImpl : public Document 
+		struct DocumentImpl : public Document
 		{
 			DocumentImpl(css::StyleSheetPtr ss) : Document(ss) {}
 		};
@@ -65,7 +65,7 @@ namespace xhtml
 			return res;
 		}
 
-		const std::map<std::string, EventHandlerId>& get_event_handlers() 
+		const std::map<std::string, EventHandlerId>& get_event_handlers()
 		{
 			static std::map<std::string, EventHandlerId> res;
 			if(res.empty()) {
@@ -98,7 +98,7 @@ namespace xhtml
 				//res["onabort"] = EventHandlerId::ABORT;
 				//res["onbeforeinput"] = EventHandlerId::BEFOREINPUT;
 				//res["oninput"] = EventHandlerId::INPUT;
-				
+
 			}
 			return res;
 		}
@@ -129,7 +129,7 @@ namespace xhtml
 	Node::~Node()
 	{
 	}
-	
+
 	void Node::setActiveHandler(EventHandlerId id, bool active)
 	{
 		int index = static_cast<int>(id);
@@ -145,7 +145,7 @@ namespace xhtml
 	}
 
 	void Node::addChild(NodePtr child, const DocumentPtr& owner)
-	{		
+	{
 		if(child->id() == NodeId::DOCUMENT_FRAGMENT) {
 			// we add the children of a document fragment rather than the node itself.
 			if(children_.empty()) {
@@ -189,7 +189,7 @@ namespace xhtml
 				if(right != nullptr) {
 					right->left_ = child->left_;
 				}
-			}			
+			}
 			child->left_ = child->right_ = std::weak_ptr<Node>();
 		} else {
 			ASSERT_LOG(false, "Tried to remove child node which doesn't belong to us.");
@@ -207,7 +207,7 @@ namespace xhtml
 		attributes_[name] = Attribute::create(name, value, getOwnerDoc());
 	}
 
-	bool Node::preOrderTraversal(std::function<bool(NodePtr)> fn) 
+	bool Node::preOrderTraversal(std::function<bool(NodePtr)> fn)
 	{
 		// Visit node, visit children.
 		if(!fn(shared_from_this())) {
@@ -376,7 +376,7 @@ namespace xhtml
 
 	void Node::setScrollbar(const scrollable::ScrollbarPtr& scrollbar)
 	{
-		ASSERT_LOG(scrollbar != nullptr, "setting a null scrollbar isn't allowed. Use removeScrollbar() instead.");	
+		ASSERT_LOG(scrollbar != nullptr, "setting a null scrollbar isn't allowed. Use removeScrollbar() instead.");
 		if(scrollbar->getDirection() == scrollable::Scrollbar::Direction::VERTICAL) {
 			scrollbar_vert_ = scrollbar;
 		} else {
@@ -393,9 +393,9 @@ namespace xhtml
 		}
 	}
 
-	void Node::markTransitions() 
-	{ 
-		properties_.markTransitions(); 
+	void Node::markTransitions()
+	{
+		properties_.markTransitions();
 	}
 
 	bool Node::handleMouseWheel(bool* trigger, const point& p, const point& delta, int direction)
@@ -684,7 +684,7 @@ namespace xhtml
 		if(claimed) {
 			return claimed;
 		}
-		
+
 		bool trigger = false;
 		claimed = !preOrderTraversalParam<point>([&trigger, delta, direction](NodePtr node, point* p) {
 			node->handleMouseWheel(&trigger, *p, delta, direction);
@@ -738,7 +738,7 @@ namespace xhtml
 		preOrderTraversal([&ss](NodePtr n) {
 			if(n->hasTag(ElementId::STYLE)) {
 				for(auto& child : n->getChildren()) {
-					if(child->id() == NodeId::TEXT) {						
+					if(child->id() == NodeId::TEXT) {
 						css::Parser::parse(ss, child->getValue());
 					}
 				}
@@ -761,7 +761,7 @@ namespace xhtml
 			}
 			return true;
 		});
-		
+
 		processStyleRules();
 	}
 
@@ -786,7 +786,7 @@ namespace xhtml
 			}
 			return true;
 		});
-		
+
 		static bool marked_transtions = false;
 		if(!marked_transtions) {
 			//marked_transtions = true;
@@ -820,8 +820,8 @@ namespace xhtml
 #if defined(ENABLE_PROFILING)
 			LOG_INFO("Triggered layout!");
 #endif
-			RenderContext::get().setViewport(point(w, h));			
-			
+			RenderContext::get().setViewport(point(w, h));
+
 			clearEventListeners();
 
 			// XXX should we should have a re-process styles flag here.
@@ -885,7 +885,7 @@ namespace xhtml
 		properties_.merge(specificity, plist);
 	}
 
-	std::string Document::toString() const 
+	std::string Document::toString() const
 	{
 		std::ostringstream ss;
 		ss << "Document(" << nodeToString() << ")";
@@ -927,7 +927,7 @@ namespace xhtml
 		return std::make_shared<DocumentFragmentImpl>(owner);
 	}
 
-	std::string DocumentFragment::toString() const 
+	std::string DocumentFragment::toString() const
 	{
 		std::ostringstream ss;
 		ss << "DocumentFragment(" << nodeToString() << ")";
@@ -946,7 +946,7 @@ namespace xhtml
 		return std::make_shared<AttributeImpl>(name, value, owner);
 	}
 
-	std::string Attribute::toString() const 
+	std::string Attribute::toString() const
 	{
 		std::ostringstream ss;
 		ss << "Attribute('" << name_ << ":" << value_ << "'" << nodeToString() << ")";

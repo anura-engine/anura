@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,11 +39,11 @@ namespace KRE
 {
 	namespace Particles
 	{
-		namespace 
+		namespace
 		{
 			SceneNodeRegistrar<ParticleSystemContainer> psc_register("particle_system_container");
 
-			std::default_random_engine& get_rng_engine() 
+			std::default_random_engine& get_rng_engine()
 			{
 				static std::unique_ptr<std::default_random_engine> res;
 				if(res == nullptr) {
@@ -100,14 +100,14 @@ namespace KRE
 			return os;
 		}
 
-		std::ostream& operator<<(std::ostream& os, const Particle& p) 
+		std::ostream& operator<<(std::ostream& os, const Particle& p)
 		{
-			os << "P"<< p.current.position 
-				<< ", IP" << p.initial.position 
-				<< ", DIM" << p.current.dimensions 
-				<< ", IDIR" << p.initial.direction 
-				<< ", DIR" << p.current.direction 
-				<< ", TTL(" << p.current.time_to_live << ")" 
+			os << "P"<< p.current.position
+				<< ", IP" << p.initial.position
+				<< ", DIM" << p.current.dimensions
+				<< ", IDIR" << p.initial.direction
+				<< ", DIR" << p.current.direction
+				<< ", TTL(" << p.current.time_to_live << ")"
 				<< ", ITTL(" <<  p.initial.time_to_live << ")"
 				<< ", C" << p.current.color
 				<< ", M(" << p.current.mass << ")"
@@ -120,7 +120,7 @@ namespace KRE
 		}
 
 		// Compute any vector out of the infinite set perpendicular to v.
-		glm::vec3 perpendicular(const glm::vec3& v) 
+		glm::vec3 perpendicular(const glm::vec3& v)
 		{
 			glm::vec3 perp = glm::cross(v, glm::vec3(1.0f,0.0f,0.0f));
 			float len_sqr = perp.x*perp.x + perp.y*perp.y + perp.z*perp.z;
@@ -146,14 +146,14 @@ namespace KRE
 		}
 
 		ParticleSystem::ParticleSystem(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
-			: EmitObject(parent, node), 
+			: EmitObject(parent, node),
 			  SceneObject(node),
 			  default_particle_width_(node["default_particle_width"].as_float(1.0f)),
 			  default_particle_height_(node["default_particle_height"].as_float(1.0f)),
 			  default_particle_depth_(node["default_particle_depth"].as_float(1.0f)),
 			  particle_quota_(node["particle_quota"].as_int32(100)),
-			  elapsed_time_(0.0f), 
-			  scale_velocity_(1.0f), 
+			  elapsed_time_(0.0f),
+			  scale_velocity_(1.0f),
 			  scale_time_(1.0f),
 			  scale_dimensions_(1.0f),
 			  texture_node_(),
@@ -182,7 +182,7 @@ namespace KRE
 
 			if(node.has_key("emitter")) {
 				if(node["emitter"].is_map()) {
-					emitter_ = Emitter::factory(parent, node["emitter"]);					
+					emitter_ = Emitter::factory(parent, node["emitter"]);
 				} else {
 					ASSERT_LOG(false, "'emitter' attribute must be a map.");
 				}
@@ -350,14 +350,14 @@ namespace KRE
 
 			// Kill end-of-life particles
 			active_particles_.erase(std::remove_if(active_particles_.begin(), active_particles_.end(),
-				[](decltype(active_particles_[0]) p){return p.current.time_to_live <= 0.0f;}), 
+				[](decltype(active_particles_[0]) p){return p.current.time_to_live <= 0.0f;}),
 				active_particles_.end());
 			// Kill end-of-life emitters
 			if(active_emitter_->current.time_to_live <= 0.0f) {
 				active_emitter_.reset();
 			}
 			//active_affectors_.erase(std::remove_if(active_affectors_.begin(), active_affectors_.end(),
-			//	[](decltype(active_affectors_[0]) e){return e->current.time_to_live < 0.0f;}), 
+			//	[](decltype(active_affectors_[0]) e){return e->current.time_to_live < 0.0f;}),
 			//	active_affectors_.end());
 
 
@@ -410,7 +410,7 @@ namespace KRE
 
 		void ParticleSystem::initAttributes()
 		{
-			// XXX We need to render to a billboard style renderer ala 
+			// XXX We need to render to a billboard style renderer ala
 			// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/
 			/*auto& urv_ = std::make_shared<UniformRenderVariable<glm::vec4>>();
 			urv_->AddVariableDescription(UniformRenderVariableDesc::COLOR, UniformRenderVariableDesc::FLOAT_VEC4);
@@ -561,7 +561,7 @@ namespace KRE
 			}
 		}
 
-		ParticleSystemContainer::ParticleSystemContainer(std::weak_ptr<SceneGraph> sg, const variant& node) 
+		ParticleSystemContainer::ParticleSystemContainer(std::weak_ptr<SceneGraph> sg, const variant& node)
 			: SceneNode(sg, node),
 			  particle_system_()
 		{
@@ -577,14 +577,14 @@ namespace KRE
 			return std::static_pointer_cast<ParticleSystemContainer>(shared_from_this());
 		}
 
-		variant ParticleSystemContainer::write() const 
+		variant ParticleSystemContainer::write() const
 		{
 			if(particle_system_) {
 				return particle_system_->write();
 			}
 			return variant();
 		}
-		
+
 		void ParticleSystemContainer::init(const variant& node)
 		{
 			particle_system_ = ParticleSystem::factory(get_this_ptr(), node);
@@ -608,7 +608,7 @@ namespace KRE
 			: name_(),
 			  enabled_(true),
 			  do_debug_draw_(false),
-			  parent_container_(parent) 
+			  parent_container_(parent)
 		{
 			ASSERT_LOG(parent.lock() != nullptr, "parent is null");
 			std::stringstream ss;
@@ -616,11 +616,11 @@ namespace KRE
 			name_ = ss.str();
 		}
 
-		EmitObject::EmitObject(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
+		EmitObject::EmitObject(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: name_(),
 			  enabled_(node["enabled"].as_bool(true)),
 			  do_debug_draw_(node["debug_draw"].as_bool(false)),
-			  parent_container_(parent) 
+			  parent_container_(parent)
 		{
 			ASSERT_LOG(parent.lock() != nullptr, "parent is null");
 			if(node.has_key("name")) {
@@ -648,14 +648,14 @@ namespace KRE
 			return res.build();
 		}
 
-		ParticleSystemContainerPtr EmitObject::getParentContainer() const 
-		{ 
+		ParticleSystemContainerPtr EmitObject::getParentContainer() const
+		{
 			auto parent = parent_container_.lock();
 			ASSERT_LOG(parent != nullptr, "parent container is nullptr");
-			return parent; 
+			return parent;
 		}
 
-		DebugDrawHelper::DebugDrawHelper() 
+		DebugDrawHelper::DebugDrawHelper()
 				: SceneObject("DebugDrawHelper")
 		{
 			setShader(ShaderProgram::getProgram("attr_color_shader"));
@@ -671,7 +671,7 @@ namespace KRE
 			addAttributeSet(as);
 		}
 
-		void DebugDrawHelper::update(const glm::vec3& p1, const glm::vec3& p2, const Color& col) 
+		void DebugDrawHelper::update(const glm::vec3& p1, const glm::vec3& p2, const Color& col)
 		{
 			std::vector<vertex_color3> res;
 			const glm::u8vec4& color = col.as_u8vec4();
@@ -687,10 +687,10 @@ namespace KRE
 
 			res.emplace_back(glm::vec3(p2.x, p2.y, p2.z), color);
 			res.emplace_back(glm::vec3(p1.x, p2.y, p2.z), color);
-					
+
 			res.emplace_back(glm::vec3(p2.x, p2.y, p2.z), color);
 			res.emplace_back(glm::vec3(p2.x, p1.y, p2.z), color);
-					
+
 			res.emplace_back(glm::vec3(p2.x, p2.y, p2.z), color);
 			res.emplace_back(glm::vec3(p2.x, p2.y, p1.z), color);
 

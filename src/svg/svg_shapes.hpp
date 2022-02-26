@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -40,7 +40,7 @@ namespace KRE
 		{
 		public:
 			shape(element* doc, const boost::property_tree::ptree& pt);
-			virtual ~shape();			
+			virtual ~shape();
 		protected:
 			void render_path(render_context& ctx) const;
 			void clip_render_path(render_context& ctx) const;
@@ -68,7 +68,7 @@ namespace KRE
 			svg_length height_;
 			bool is_rounded_;
 		};
-		
+
 		class circle : public shape
 		{
 		public:

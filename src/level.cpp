@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -81,30 +81,30 @@
 #endif
 
 #ifndef NO_EDITOR
-std::set<Level*>& get_all_levels_set() 
+std::set<Level*>& get_all_levels_set()
 {
 	static std::set<Level*>* all = new std::set<Level*>;
 	return *all;
 }
 #endif
 
-namespace 
+namespace
 {
 	PREF_INT(debug_skip_draw_zorder_begin, INT_MIN, "Avoid drawing the given zorder");
 	PREF_INT(debug_skip_draw_zorder_end, INT_MIN, "Avoid drawing the given zorder");
 	PREF_BOOL(debug_shadows, false, "Show debug visualization of shadow drawing");
 
-	LevelPtr& get_current_level() 
+	LevelPtr& get_current_level()
 	{
 		static LevelPtr current_level;
 		return current_level;
 	}
 
-	std::map<std::string, Level::Summary> load_level_summaries() 
+	std::map<std::string, Level::Summary> load_level_summaries()
 	{
 		std::map<std::string, Level::Summary> result;
 		const variant node = json::parse_from_file("data/compiled/level_index.cfg");
-	
+
 		for(variant level_node : node["level"].as_list()) {
 			Level::Summary& s = result[level_node["level"].as_string()];
 			s.music = level_node["music"].as_string();
@@ -113,7 +113,7 @@ namespace
 		return result;
 	}
 
-	bool level_tile_not_in_rect(const rect& r, const LevelTile& t) 
+	bool level_tile_not_in_rect(const rect& r, const LevelTile& t)
 	{
 		return t.x < r.x() || t.y < r.y() || t.x >= r.x2() || t.y >= r.y2();
 	}
@@ -151,7 +151,7 @@ CurrentLevelScope::CurrentLevelScope(Level* lvl) : old_(get_current_level())
 	lvl->setAsCurrentLevel();
 }
 
-CurrentLevelScope::~CurrentLevelScope() 
+CurrentLevelScope::~CurrentLevelScope()
 {
 	if(old_) {
 		old_->setAsCurrentLevel();
@@ -164,9 +164,9 @@ void Level::setAsCurrentLevel()
 	Frame::setColorPalette(palettes_used_);
 }
 
-namespace 
+namespace
 {
-	KRE::ColorTransform default_dark_color() 
+	KRE::ColorTransform default_dark_color()
 	{
 		return KRE::ColorTransform(1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 	}
@@ -220,7 +220,7 @@ std::vector<Level::SubComponentUsage> Level::getSubComponentUsagesOrdered() cons
 {
 	//sub component usages all copy their data in.
 	//Resolve the sub component usages in the correct order by
-	//searching for a sub component usage which doesn't have 
+	//searching for a sub component usage which doesn't have
 	//any unresolved usages that map into its source.
 	std::vector<SubComponentUsage> usages = getSubComponentUsages();
 	std::vector<SubComponentUsage> result;
@@ -275,7 +275,7 @@ void Level::applySubComponents()
 			addTileRectVector(p.first, tile_dst.x(), tile_dst.y(), tile_dst.x2(), tile_dst.y2(), p.second);
 			layers.push_back(p.first);
 		}
-	
+
 		std::vector<EntityPtr> chars = get_chars();
 		for(auto c : chars) {
 			if(c->x() >= dst.x() && c->x() <= dst.x2() && c->y() >= dst.y() && c->y() <= dst.y2()) {
@@ -330,9 +330,9 @@ Level::Level(const std::string& level_cfg, variant node)
 	instant_zoom_level_set_(-1),
 	  palettes_used_(0),
 	  background_palette_(-1),
-	  segment_width_(0), 
+	  segment_width_(0),
 	  segment_height_(0),
-	  mouselook_enabled_(false), 
+	  mouselook_enabled_(false),
 	  mouselook_inverted_(false),
 	  allow_touch_controls_(true),
 	  show_builtin_settings_(false),
@@ -400,10 +400,10 @@ Level::Level(const std::string& level_cfg, variant node)
 		)) {
 			auto unprefixed_id_start = level_cfg.find(":") + 1;
 			if(unprefixed_id_start) {
-				ASSERT_LOG(level_cfg.substr(unprefixed_id_start) == id_, 
+				ASSERT_LOG(level_cfg.substr(unprefixed_id_start) == id_,
 					"Level file " << level_cfg << " has incorrect id: " << id_);
 			} else {
-				ASSERT_LOG(level_cfg == id_, 
+				ASSERT_LOG(level_cfg == id_,
 					"Level file " << level_cfg << " has incorrect id: " << id_);
 			}
 		}
@@ -1067,7 +1067,7 @@ void Level::load_save_point(const Level& lvl)
 	}
 }
 
-namespace 
+namespace
 {
 	//we allow rebuilding tiles in the background. We only rebuild the tiles
 	//one at a time, if more requests for rebuilds come in while we are
@@ -1076,7 +1076,7 @@ namespace
 	//the level we're currently building tiles for.
 	const Level* level_building = nullptr;
 
-	struct level_tile_rebuild_info 
+	struct level_tile_rebuild_info
 	{
 		level_tile_rebuild_info() : tile_rebuild_in_progress(false),
 									tile_rebuild_queued(false),
@@ -1188,9 +1188,9 @@ void Level::unfreeze_rebuild_tiles_in_background()
 	start_rebuild_tiles_in_background(info.rebuild_tile_layers_buffer);
 }
 
-namespace 
+namespace
 {
-	bool level_tile_from_layer(const LevelTile& t, int zorder) 
+	bool level_tile_from_layer(const LevelTile& t, int zorder)
 	{
 		return t.layer_from == zorder;
 	}
@@ -1360,7 +1360,7 @@ void Level::flip_variations(int xtile, int ytile, int delta)
 	rebuild_tiles_rect(rect(xtile*TileSize, ytile*TileSize, TileSize, TileSize));
 }
 
-namespace 
+namespace
 {
 	struct TileInRect {
 		explicit TileInRect(const rect& r) : rect_(r)
@@ -1682,7 +1682,7 @@ variant Level::write() const
 			LOG_INFO("LARGEST_RECT: " << largest_rect.w() << " x " << largest_rect.h());
 
 			//have a minimum size for rectangles. If we fail to reach
-			//the minimum size then just stop. It's not worth bothering 
+			//the minimum size then just stop. It's not worth bothering
 			//with lots of small little rectangles.
 			if(largest_rect.w()*largest_rect.h() < TileSize*TileSize*32) {
 				break;
@@ -1781,7 +1781,7 @@ variant Level::write() const
 	res.add("vars", vars_);
 
 #if defined(USE_BOX2D)
-	for(std::vector<box2d::body_ptr>::const_iterator it = bodies_.begin(); 
+	for(std::vector<box2d::body_ptr>::const_iterator it = bodies_.begin();
 		it != bodies_.end();
 		++it) {
 		res.add("bodies", (*it)->write());
@@ -1834,7 +1834,7 @@ void Level::set_next_level(const std::string& name)
 	right_portal_.automatic = true;
 }
 
-namespace 
+namespace
 {
 	//counter incremented every time the level is drawn.
 	int draw_count = 0;
@@ -1876,11 +1876,11 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 
 		position.x = diffx;
 		position.y = diffy;
-		
+
 		//here, we adjust the screen bounds (they're a first order optimization) to account for the parallax shift
 		x -= diffx;
 		y -= diffy;
-	} 
+	}
 
 	typedef std::vector<LevelTile>::const_iterator itor;
 	std::pair<itor,itor> range = std::equal_range(tiles_.begin(), tiles_.end(), layer, level_tile_zorder_comparer());
@@ -1895,7 +1895,7 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 	}
 
 	draw_layer_solid(layer, x, y, w, h);
-	
+
 	auto& blit_cache_info = *layer_itor->second;
 	KRE::ModelManager2D model_matrix_scope(position.x, position.y);
 	KRE::WindowManager::getMainWindow()->render(&blit_cache_info);
@@ -1923,7 +1923,7 @@ void Level::draw_layer_solid(int layer, int x, int y, int w, int h) const
 
 			rr.update(solid.first->area, solid.first->color);
 			KRE::WindowManager::getMainWindow()->render(&rr);
-			
+
 			++solid.first;
 		}
 	}
@@ -1983,7 +1983,7 @@ void Level::prepare_tiles_for_drawing()
 					continue;
 				}
 			}
-				
+
 			solid_color_rect r;
 			r.color = *tiles_[n].object->getSolidColor();
 			r.area = rect(tiles_[n].x, tiles_[n].y, TileSize, TileSize);
@@ -1999,7 +1999,7 @@ void Level::prepare_tiles_for_drawing()
 		const int npoints = LevelObject::calculateTileCorners(tiles_[n].object->isOpaque() ? &vertices_ot[tiles_[n].zorder].first : &vertices_ot[tiles_[n].zorder].second, tiles_[n]);
 		if(npoints > 0) {
 			if(*tiles_[n].object->texture() != *blit_cache_info_ptr->getTexture()) {
-				ASSERT_LOG(false, "Multiple tile textures per level per zorder are unsupported. level: '" 
+				ASSERT_LOG(false, "Multiple tile textures per level per zorder are unsupported. level: '"
 					<< this->id() << "' zorder: " << tiles_[n].zorder
 					<< " ; " << tiles_[n].object->texture()->isPaletteized() << " " << blit_cache_info_ptr->getTexture()->isPaletteized());
 			}
@@ -2054,9 +2054,9 @@ void Level::draw_status() const
 	}
 }
 
-namespace 
+namespace
 {
-	void draw_entity(const Entity& obj, int x, int y, bool editor) 
+	void draw_entity(const Entity& obj, int x, int y, bool editor)
 	{
 		const std::pair<int,int>* scroll_speed = obj.parallaxScaleMillis();
 
@@ -2077,7 +2077,7 @@ namespace
 		}
 	}
 
-	void draw_entity_later(const Entity& obj, int x, int y, bool editor) 
+	void draw_entity_later(const Entity& obj, int x, int y, bool editor)
 	{
 		const std::pair<int,int>* scroll_speed = obj.parallaxScaleMillis();
 
@@ -2132,12 +2132,12 @@ void Level::draw(int x, int y, int w, int h) const
 
 	g_camera_extend_x = widest_tile_;
 	g_camera_extend_y = highest_tile_;
-	
+
 	x -= widest_tile_;
 	y -= highest_tile_;
 	w += widest_tile_;
 	h += highest_tile_;
-	
+
 	{
 		{
 		formula_profiler::Instrument instrument_sort("LEVEL_SORT");
@@ -2196,7 +2196,7 @@ void Level::draw(int x, int y, int w, int h) const
 			}
 		}
 
-		auto stencil = KRE::StencilScope::create(KRE::StencilSettings(true, 
+		auto stencil = KRE::StencilScope::create(KRE::StencilSettings(true,
 			KRE::StencilFace::FRONT_AND_BACK,
 			KRE::StencilFunc::ALWAYS,
 			0xff,
@@ -2232,7 +2232,7 @@ void Level::draw(int x, int y, int w, int h) const
 			const bool alpha_test = *layer >= begin_alpha_test && *layer < end_alpha_test;
 			graphics::set_alpha_test(alpha_test);
 			stencil->updateMask(alpha_test ? 0x02 : 0x0);
-			
+
 			if(!water_drawn && *layer > water_zorder) {
 				get_water()->preRender(wnd);
 				wnd->render(get_water());
@@ -2331,7 +2331,7 @@ void Level::draw(int x, int y, int w, int h) const
 	calculateLighting(start_x, start_y, start_w, start_h);
 
 	if(g_debug_shadows) {
-		auto stencil = KRE::StencilScope::create(KRE::StencilSettings(true, 
+		auto stencil = KRE::StencilScope::create(KRE::StencilSettings(true,
 			KRE::StencilFace::FRONT_AND_BACK,
 			KRE::StencilFunc::EQUAL,
 			0xff,
@@ -2370,7 +2370,7 @@ void Level::frameBufferEnterZorder(int zorder) const
 	if(shaders != active_fb_shaders_ || (render_to_texture_ && !doing_render_to_texture_)) {
 
 		bool need_flush_to_screen = true, need_new_virtual_area = true;
-        
+
 		if(active_fb_shaders_.empty()) {
 			need_flush_to_screen = false;
 		} else if(shaders.empty() && !render_to_texture_) {
@@ -2421,7 +2421,7 @@ KRE::RenderTargetPtr& Level::applyShaderToFrameBufferTexture(graphics::AnuraShad
 		if(!backup_rt_) {
 			try {
 				const assert_recover_scope safe_scope;
-				backup_rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, true);			
+				backup_rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, true);
 			} catch(validation_failure_exception& /*e*/) {
 				LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 				backup_rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, false);
@@ -2504,7 +2504,7 @@ void Level::calculateLighting(int x, int y, int w, int h) const
 	{
 		KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE);
 		//rect screen_area(x, y, w, h);
-		
+
 		rt->setClearColor(dark_color_.applyBlack());
 		KRE::RenderTarget::RenderScope scope(rt, rect(0, 0, gs.getVirtualWidth(), gs.getVirtualHeight()));
 
@@ -2672,7 +2672,7 @@ void Level::process()
 	//}
 
 	sound::process();
-	
+
 	auto& gs = graphics::GameScreen::get();
 	if(rt_ && rt_->needsRebuild()) {
 		rt_->rebuild(gs.getVirtualWidth(), gs.getVirtualHeight());
@@ -2707,9 +2707,9 @@ void Level::process_draw()
 	}
 }
 
-namespace 
+namespace
 {
-	bool compare_entity_num_parents(const EntityPtr& a, const EntityPtr& b) 
+	bool compare_entity_num_parents(const EntityPtr& a, const EntityPtr& b)
 	{
 		bool a_human = false, b_human = false;
 		const int deptha = a->parentDepth(&a_human);
@@ -2729,9 +2729,9 @@ void Level::set_active_chars()
 {
 	int screen_width = graphics::GameScreen::get().getVirtualWidth();
 	int screen_height = graphics::GameScreen::get().getVirtualHeight();
-	
+
 	const float inverse_zoom_level = std::abs(zoom_level_) > FLT_EPSILON ? (1.0f / zoom_level_) : 0.0f;
-	// pad the screen if we're zoomed out so stuff now-visible becomes active  
+	// pad the screen if we're zoomed out so stuff now-visible becomes active
 	const int zoom_buffer = static_cast<int>(std::max(0.0f, (inverse_zoom_level - 1.0f)) * screen_width);
 	const int screen_left = last_draw_position().x/100 - zoom_buffer;
 	const int screen_right = last_draw_position().x/100 + screen_width + zoom_buffer;
@@ -2814,12 +2814,12 @@ void Level::do_processing()
 			if(!c->destroyed()) {
 				c->process(*this);
 			}
-	
+
 			if(c->destroyed() && !c->isHuman()) {
 				if(player_ && !c->respawn() && c->getId() != -1) {
 					player_->isHuman()->objectDestroyed(id(), c->getId());
 				}
-	
+
 				erase_char(c);
 			}
 		}
@@ -2859,7 +2859,7 @@ bool Level::isSolid(const LevelSolidMap& map, const Entity& e, const std::vector
 	int prev_x = std::numeric_limits<int>::min(), prev_y = std::numeric_limits<int>::min();
 
 	const Frame& current_frame = e.getCurrentFrame();
-	
+
 	for(std::vector<point>::const_iterator p = points.begin(); p != points.end(); ++p) {
 		int x, y;
 		if(prev_x != std::numeric_limits<int>::min()) {
@@ -2868,14 +2868,14 @@ bool Level::isSolid(const LevelSolidMap& map, const Entity& e, const std::vector
 
 			x = prev_x + diff_x;
 			y = prev_y + diff_y;
-			
+
 			if(x < 0 || y < 0 || x >= TileSize || y >= TileSize) {
 				//we need to recalculate the info, since we've stepped into
 				//another tile.
 				prev_x = std::numeric_limits<int>::min();
 			}
 		}
-		
+
 		if(prev_x == std::numeric_limits<int>::min()) {
 			x = e.x() + (e.isFacingRight() ? p->x : (current_frame.width() - 1 - p->x));
 			y = e.y() + p->y;
@@ -2904,7 +2904,7 @@ bool Level::isSolid(const LevelSolidMap& map, const Entity& e, const std::vector
 
 				return true;
 			}
-		
+
 			const int index = y*TileSize + x;
 			if(info->bitmap.test(index)) {
 				if(surf_info) {
@@ -2946,7 +2946,7 @@ bool Level::isSolid(const LevelSolidMap& map, int x, int y, const SurfaceInfo** 
 
 			return true;
 		}
-		
+
 		const int index = y*TileSize + x;
 		if(info->bitmap.test(index)) {
 			if(surf_info) {
@@ -2994,7 +2994,7 @@ bool Level::standable_tile(int x, int y, const SurfaceInfo** info) const
 	if(isSolid(solid_, x, y, info) || isSolid(standable_, x, y, info)) {
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -3136,7 +3136,7 @@ void Level::refresh_tile_rect(int x1, int y1, int x2, int y2)
 	rebuild_tiles_rect(rect(x1-128, y1-128, (x2 - x1) + 256, (y2 - y1) + 256));
 }
 
-namespace 
+namespace
 {
 	int round_tile_size(int n)
 	{
@@ -3251,7 +3251,7 @@ bool Level::clear_tile_rect(int x1, int y1, int x2, int y2)
 			changed = true;
 		}
 	}
-	
+
 	return changed;
 }
 
@@ -3395,9 +3395,9 @@ std::vector<EntityPtr> Level::get_characters_in_rect(const rect& r, int screen_x
 		}
 		CustomObject* obj = dynamic_cast<CustomObject*>(c.get());
 
-		const int xP = c->getMidpoint().x + ((c->parallaxScaleMillisX() - 1000)*screen_xpos)/1000 
+		const int xP = c->getMidpoint().x + ((c->parallaxScaleMillisX() - 1000)*screen_xpos)/1000
 			+ (obj->useAbsoluteScreenCoordinates() ? screen_xpos + absolute_object_adjust_x() : 0);
-		const int yP = c->getMidpoint().y + ((c->parallaxScaleMillisY() - 1000)*screen_ypos)/1000 
+		const int yP = c->getMidpoint().y + ((c->parallaxScaleMillisY() - 1000)*screen_ypos)/1000
 			+ (obj->useAbsoluteScreenCoordinates() ? screen_ypos + absolute_object_adjust_y() : 0);
 		if(pointInRect(point(xP, yP), r)) {
 			res.push_back(c);
@@ -3424,11 +3424,11 @@ std::vector<EntityPtr> Level::get_characters_at_point(int x, int y, int screen_x
 			result.push_back(c);
 		}
 	}
-	
+
 	return result;
 }
 
-namespace 
+namespace
 {
 	bool compare_entities_by_spawned(EntityPtr a, EntityPtr b)
 	{
@@ -3839,7 +3839,7 @@ DEFINE_FIELD(editor, "null|builtin editor")
 	}
 
 	return variant();
-	
+
 DEFINE_FIELD(zoom, "decimal")
 	return variant(obj.zoom_level_);
 DEFINE_SET_FIELD
@@ -3968,10 +3968,10 @@ DEFINE_FIELD(camera_target, "[int,int]")
 	pos.push_back(variant(last_draw_position().target_ypos));
 
 	return variant(&pos);
-	
+
 DEFINE_FIELD(zoom_current, "decimal")
 	return variant(last_draw_position().zoom);
-	
+
 
 DEFINE_FIELD(debug_properties, "[string]")
 	return vector_to_variant(obj.debug_properties_);
@@ -4081,7 +4081,7 @@ DEFINE_SET_FIELD_TYPE("string|map|builtin anura_shader")
 //	return variant(obj.iso_world_.get());
 //DEFINE_SET_FIELD_TYPE("builtin world|map|null")
 //	if(value.is_null()) {
-//		obj.iso_world_.reset(); 
+//		obj.iso_world_.reset();
 //	} else {
 //		obj.iso_world_.reset(new voxel::World(value));
 //	}
@@ -4648,7 +4648,7 @@ void Level::add_sub_level(const std::string& lvl, int xoffset, int yoffset, bool
 			if(e->isHuman()) {
 				continue;
 			}
-	
+
 			EntityPtr c = e->clone();
 			if(!c) {
 				continue;
@@ -4815,14 +4815,14 @@ std::vector<EntityPtr> Level::get_characters_at_world_point(const glm::vec3& pt)
 			continue;
 		}
 
-		if(abs(pt.x - c->tx()) < tolerance 
-			&& abs(pt.y - c->ty()) < tolerance 
+		if(abs(pt.x - c->tx()) < tolerance
+			&& abs(pt.y - c->ty()) < tolerance
 			&& abs(pt.z - c->tz()) < tolerance) {
 			result.push_back(c);
 		}
 	}
 	*/
-	return result;	
+	return result;
 }
 
 int Level::current_difficulty() const
@@ -5033,8 +5033,8 @@ void Level::addKnownLayer(int layer)
 {
     layers_.insert(layer);
 }
-                      
-                      
+
+
 /*
 UTILITY(correct_solidity)
 {

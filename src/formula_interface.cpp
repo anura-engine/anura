@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -32,7 +32,7 @@ namespace game_logic
 	FormulaInterfaceInstanceFactory::~FormulaInterfaceInstanceFactory()
 	{}
 
-	namespace 
+	namespace
 	{
 		class dynamic_bound_factory;
 		class static_bound_factory;
@@ -213,8 +213,8 @@ namespace game_logic
 		ffl::IntrusivePtr<dynamic_bound_factory> dynamic_factory_;
 	};
 
-	FormulaInterface::FormulaInterface(const std::map<std::string, variant_type_ptr>& types_map) 
-		: types_(types_map), 
+	FormulaInterface::FormulaInterface(const std::map<std::string, variant_type_ptr>& types_map)
+		: types_(types_map),
 		impl_(new FormulaInterfaceImpl())
 	{
 		ASSERT_LOG(!types_map.empty(), "Empty interface");

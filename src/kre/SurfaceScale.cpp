@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -40,7 +40,7 @@ namespace KRE
 				SurfacePtr inp = input_surf;
 				// Convert surface to ARGB format if needed
 				if(input_surf->getPixelFormat()->getFormat() != PixelFormat::PF::PIXELFORMAT_ARGB8888) {
-					inp = input_surf->convert(PixelFormat::PF::PIXELFORMAT_ARGB8888); 
+					inp = input_surf->convert(PixelFormat::PF::PIXELFORMAT_ARGB8888);
 				}
 				return inp;
 			}
@@ -139,10 +139,10 @@ namespace KRE
 					const uint8_t green = BILINEAR_GREEN(a, b, c, d, xd, yd);
 					const uint8_t blue = BILINEAR_BLUE(a, b, c, d, xd, yd);
 
-					new_pixels[y * new_image_width + x] 
-						= (static_cast<uint32_t>(alpha) << 24) 
-						+ (static_cast<uint32_t>(red) << 16) 
-						+ (static_cast<uint32_t>(green) << 8) 
+					new_pixels[y * new_image_width + x]
+						= (static_cast<uint32_t>(alpha) << 24)
+						+ (static_cast<uint32_t>(red) << 16)
+						+ (static_cast<uint32_t>(green) << 8)
 						+ static_cast<uint32_t>(blue);
 				}
 			}
@@ -157,8 +157,8 @@ namespace KRE
 				const double a0 = -a / 2.0 + (3.0 * b) / 2.0 - (3.0 * c) / 2.0 + d / 2.0;
 				const double b0 = a - (5.0 * b) / 2.0 + 2.0 * c - d / 2.0;
 				const double c0 = -a / 2.0 + c / 2.0;
-				const double d0 = b; 
-			
+				const double d0 = b;
+
 				return t * ((a0 * t + b0) * t + c0) + d0;
 			}
 
@@ -168,7 +168,7 @@ namespace KRE
 				double au[4];
 				double bu[4];
 				double cu[4];
-				double du[4]; 
+				double du[4];
 
 				for(int n = 0; n != 4; ++n) {
 					const double A = a & 0xff;

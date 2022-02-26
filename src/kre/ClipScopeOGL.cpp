@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -45,28 +45,28 @@ namespace KRE
 		stencil_scope_.reset();
 	}
 
-	void ClipScopeOGL::apply(const CameraPtr& cam) const 
+	void ClipScopeOGL::apply(const CameraPtr& cam) const
 	{
 		stencil_scope_.reset(new StencilScopeOGL(get_stencil_mask_settings()));
 
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		glDepthMask(GL_FALSE);
 		glClear(GL_STENCIL_BUFFER_BIT);
-	
+
 		const float varray[] = {
 			area().x(), area().y(),
 			area().x2(), area().y(),
 			area().x(), area().y2(),
 			area().x2(), area().y2(),
 		};
-		
+
 		CameraPtr clip_cam = cam;
 		if(cam == nullptr) {
 			clip_cam = DisplayDevice::getCurrent()->getDefaultCamera();
 		}
 
 		glm::mat4 mvp = clip_cam->getProjectionMat() * clip_cam->getViewMat() * get_global_model_matrix();
-		
+
 		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
 		shader->makeActive();
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
@@ -82,7 +82,7 @@ namespace KRE
 		glDepthMask(GL_TRUE);
 	}
 
-	void ClipScopeOGL::clear() const 
+	void ClipScopeOGL::clear() const
 	{
 		stencil_scope_.reset();
 	}
@@ -100,14 +100,14 @@ namespace KRE
 		stencil_scope_.reset();
 	}
 
-	void ClipShapeScopeOGL::apply(const CameraPtr& cam) const 
+	void ClipShapeScopeOGL::apply(const CameraPtr& cam) const
 	{
 		stencil_scope_.reset(new StencilScopeOGL(get_stencil_mask_settings()));
 
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		glDepthMask(GL_FALSE);
 		glClear(GL_STENCIL_BUFFER_BIT);
-	
+
 		CameraPtr clip_cam = cam;
 		if(cam == nullptr) {
 			clip_cam = DisplayDevice::getCurrent()->getDefaultCamera();
@@ -125,7 +125,7 @@ namespace KRE
 		glDepthMask(GL_TRUE);
 	}
 
-	void ClipShapeScopeOGL::clear() const 
+	void ClipShapeScopeOGL::clear() const
 	{
 		stencil_scope_.reset();
 	}

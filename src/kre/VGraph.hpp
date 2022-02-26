@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -25,7 +25,7 @@
 
 #ifndef _USE_MATH_DEFINES
 #	define _USE_MATH_DEFINES	1
-#endif 
+#endif
 
 #include <cmath>
 #include <string>
@@ -76,7 +76,7 @@ namespace KRE
 			virtual void Rectangle(const double x, const double y, const double width, const double height) = 0;
 
 			virtual void Arc(const double cx, const double cy, const double radius, const double start_angle, const double end_angle, bool negative=false) = 0;
-				
+
 			// Adds a Cubic Bezier curve to the current path from the current position to the end position
 			// (ex,ey) using the control points (x1,y1) and (x2,y2)
 			// If relative is true then the curve is drawn with all positions relative to the current point.
@@ -123,7 +123,7 @@ namespace KRE
 
 			int width() const { return width_; }
 			int height() const { return height_; }
-				
+
 			virtual void Save() = 0;
 			virtual void Restore() = 0;
 
@@ -155,7 +155,7 @@ namespace KRE
 			virtual const std::vector<double> GetDashStyle() const = 0;
 			virtual void SetDashOffset(double offset) = 0;
 			virtual double GetDashOffset() const = 0;
-				
+
 			virtual void Paint(const double alpha=1.0) = 0;
 
 			virtual void Fill(const bool preserve=false) = 0;

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -37,8 +37,8 @@ namespace gui
 		enum class Direction {HORIZONTAL, VERTICAL};
 		explicit DragWidget(const int x, const int y, const int w, const int h,
 			const Direction dir,
-			std::function<void(int, int)> drag_start, 
-			std::function<void(int, int)> drag_end, 
+			std::function<void(int, int)> drag_start,
+			std::function<void(int, int)> drag_end,
 			std::function<void(int, int)> drag_move);
 		explicit DragWidget(const variant&, game_logic::FormulaCallable* e);
 

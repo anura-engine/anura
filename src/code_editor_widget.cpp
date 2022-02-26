@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -45,11 +45,11 @@ namespace gui
 		colors_(),
 		bracket_match_(),
 		slider_(),
-	    row_slider_(0), 
-		begin_col_slider_(0), 
+	    row_slider_(0),
+		begin_col_slider_(0),
 		end_col_slider_(0),
-	    slider_decimal_(false), 
-		slider_magnitude_(0), 
+	    slider_decimal_(false),
+		slider_magnitude_(0),
 		slider_range_(),
 		slider_labels_(),
 		current_text_(),
@@ -61,16 +61,16 @@ namespace gui
 		setFontSize(g_code_editor_font_size);
 	}
 
-	CodeEditorWidget::CodeEditorWidget(const variant& v, game_logic::FormulaCallable* e) 
-		: TextEditorWidget(v,e), 
+	CodeEditorWidget::CodeEditorWidget(const variant& v, game_logic::FormulaCallable* e)
+		: TextEditorWidget(v,e),
 		  colors_(),
 		  bracket_match_(),
 		  slider_(),
-		  row_slider_(0), 
-		  begin_col_slider_(0), 
+		  row_slider_(0),
+		  begin_col_slider_(0),
 		  end_col_slider_(0),
-		  slider_decimal_(false), 
-		  slider_magnitude_(0), 
+		  slider_decimal_(false),
+		  slider_magnitude_(0),
 		  slider_range_(),
 		  slider_labels_(),
 		  current_text_(),
@@ -172,7 +172,7 @@ namespace gui
 								t.type = formula_tokenizer::FFL_TOKEN_TYPE::KEYWORD;
 
 							}
-						
+
 							while(begin != i) {
 								if(*begin == '\n') {
 									colors_.resize(colors_.size()+1);
@@ -285,7 +285,7 @@ namespace gui
 		TextEditorWidget::selectToken(row, begin_row, end_row, begin_col, end_col);
 
 		std::string token(row.begin() + begin_col, row.begin() + end_col);
-	
+
 		boost::regex numeric_regex("-?\\d+(\\.\\d+)?", boost::regex::perl);
 		LOG_DEBUG("token: (" << token << ")");
 		if(boost::regex_match(token.c_str(), numeric_regex)) {
@@ -296,7 +296,7 @@ namespace gui
 				slider_.reset(new Slider(200, std::bind(&CodeEditorWidget::onSliderMove, this, _1)));
 				slider_decimal_ = std::count(token.begin(), token.end(), '.') ? true : false;
 				slider_magnitude_ = (abs(current_value.as_int())+1) * 5;
-	
+
 				const decimal slider_value = (current_value - decimal::from_int(-slider_magnitude_)) / decimal::from_int(slider_magnitude_*2);
 				slider_->setPosition(static_cast<float>(slider_value.as_float()));
 
@@ -342,7 +342,7 @@ namespace gui
 				if(y > height() - slider_->height()) {
 					y = height() - slider_->height();
 				}
-	
+
 				slider_->setLoc(x, y);
 
 				for(SliderRange& r : slider_range_) {
@@ -445,7 +445,7 @@ namespace gui
 		}
 	}
 
-	namespace 
+	namespace
 	{
 		variant get_map_editing(int row, int col, variant item)
 		{

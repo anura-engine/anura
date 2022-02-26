@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -53,7 +53,7 @@
 #include "utf8_to_codepoint.hpp"
 #include "wml_formula_callable.hpp"
 
-namespace 
+namespace
 {
 	static const std::string variant_type_str[] = {"null", "bool", "int", "decimal", "object", "object_loading", "list", "string", "map", "function", "generic_function", "multi_function", "delayed", "weak", "enum"};
 }
@@ -521,7 +521,7 @@ variant result;
 IntRefCount refcount;
 };
 
-struct variant_weak 
+struct variant_weak
 {
 	variant_weak() : refcount(0)
 	{}
@@ -812,7 +812,7 @@ variant::variant(std::map<variant,variant>* map)
 			assert(false);
 		}
 	}
-	
+
 	assert(map);
 	map_ = new variant_map;
 	map_->add_reference();
@@ -978,7 +978,7 @@ const variant& variant::operator[](const variant& v) const
 		}
 		generate_error(formatter() << "type error: " << " expected a list or a map but found " << variant_type_to_string(type_) << " (" << write_json() << ") " << loc);
 		return *this;
-	}	
+	}
 }
 
 const variant& variant::operator[](const std::string& key) const
@@ -1228,7 +1228,7 @@ variant variant::operator()(std::vector<variant>* passed_args) const
 	std::vector<variant>* args = args_buf.empty() ? passed_args : &args_buf;
 
 	ffl::IntrusivePtr<game_logic::SlotFormulaCallable> callable = fn_->cached_callable;
-	
+
 	if(callable) {
 		fn_->cached_callable.reset();
 	} else {
@@ -1496,7 +1496,7 @@ std::vector<std::string> variant::as_list_string_optional() const
 	if(is_null()) {
 		return std::vector<std::string>();
 	}
-	
+
 	if(is_string()) {
 		std::vector<std::string> res;
 		res.push_back(as_string());
@@ -1700,7 +1700,7 @@ variant variant::bind_args(const std::vector<variant>& args)
 
 	std::string msg;
 	ASSERT_LOG(function_call_valid(args, &msg, true), "Invalid argument binding: " << msg);
-	
+
 	variant result;
 	result.type_ = VARIANT_TYPE_FUNCTION;
 	result.fn_ = new variant_fn(*fn_);
@@ -1741,7 +1741,7 @@ int variant::min_function_arguments() const
 	} else if(type_ == VARIANT_TYPE_GENERIC_FUNCTION) {
 		return std::max<int>(0, generic_fn_->type->arg_names.size() - generic_fn_->type->num_default_args() - static_cast<int>(generic_fn_->bound_args.size()));
 	}
-	
+
 	must_be(VARIANT_TYPE_FUNCTION);
 	return std::max(0, static_cast<int>(fn_->type->arg_names.size()) - static_cast<int>(fn_->bound_args.size()) - fn_->type->num_default_args());
 }
@@ -1778,7 +1778,7 @@ variant_type_ptr variant::function_return_type() const
 	} else if(type_ == VARIANT_TYPE_GENERIC_FUNCTION) {
 		return generic_fn_->type->return_type;
 	}
-	
+
 	must_be(VARIANT_TYPE_FUNCTION);
 	return fn_->type->return_type;
 }
@@ -1986,7 +1986,7 @@ variant variant::operator*(const variant& v) const
 
 		return variant(&res);
 	}
-	
+
 	return variant(as_int() * v.as_int());
 }
 
@@ -2187,7 +2187,7 @@ variant variant::operator^(const variant& v) const
 
 	if( type_ == VARIANT_TYPE_DECIMAL || v.type_ == VARIANT_TYPE_DECIMAL ) {
 		double res = pow( as_decimal().value()/double(VARIANT_DECIMAL_PRECISION),
-		                v.as_decimal().value()/double(VARIANT_DECIMAL_PRECISION));		
+		                v.as_decimal().value()/double(VARIANT_DECIMAL_PRECISION));
 		res *= DECIMAL_PRECISION;
 #if defined(TARGET_BLACKBERRY)
 		return variant(static_cast<int64_t>(llround(res)), DECIMAL_VARIANT);
@@ -2408,7 +2408,7 @@ void variant::throw_type_error(variant::TYPE t) const
 					info = g_variant_thread_info->last_query_map.get_debug_info();
 				}
 				generate_error(formatter() << "In object at " << *info->filename << " " << info->line << " (column " << info->column << ") attribute for " << i->first << " was " << *this << ", which is a " << variant_type_to_string(type_) << ", must be a " << variant_type_to_string(t));
-				
+
 			}
 		}
 	} else if(g_variant_thread_info->last_query_map.is_map() && g_variant_thread_info->last_query_map.get_source_expression()) {
@@ -2939,7 +2939,7 @@ void variant::write_json(std::ostream& s, unsigned int flags) const
 				if(i != list_->begin) {
 					s << ',';
 				}
-	
+
 				i->write_json(s, flags);
 			}
 		}
@@ -2950,8 +2950,8 @@ void variant::write_json(std::ostream& s, unsigned int flags) const
 	case VARIANT_TYPE_STRING: {
 		const std::string& str = string_->translated_from.empty() ? string_->str : string_->translated_from;
 		const char delim = string_->translated_from.empty() ? '"' : '~';
-		if(std::count(str.begin(), str.end(), '\\') 
-			|| std::count(str.begin(), str.end(), delim) 
+		if(std::count(str.begin(), str.end(), '\\')
+			|| std::count(str.begin(), str.end(), delim)
 			|| ((flags&JSON_COMPLIANT) && std::count(str.begin(), str.end(), '\n'))) {
 			//escape the string
 			s << delim;
@@ -3019,7 +3019,7 @@ void variant::write_function(std::ostream& s) const
 	if(serialize_closure) {
 		s << "delay_until_end_of_loading(q(bind_closure(";
 	}
-	
+
 	s << "def(";
 	const int default_base = static_cast<int>(fn_->type->arg_names.size()) - static_cast<int>(fn_->type->default_args.size());
 	for(std::vector<std::string>::const_iterator p = fn_->type->arg_names.begin(); p != fn_->type->arg_names.end(); ++p) {
@@ -3028,7 +3028,7 @@ void variant::write_function(std::ostream& s) const
 		}
 
 		s << *p;
-		
+
 		const int index = static_cast<int>(p - fn_->type->arg_names.begin());
 		if(index >= default_base) {
 			variant v = fn_->type->default_args[index - default_base];
@@ -3109,7 +3109,7 @@ void variant::write_json_pretty(std::ostream& s, std::string indent, unsigned in
 				if(i != list_->begin) {
 					s << ',';
 				}
-	
+
 				s << "\n" << indent;
 
 				i->write_json_pretty(s, indent, flags);

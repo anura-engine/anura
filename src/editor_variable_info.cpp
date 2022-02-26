@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,7 +29,7 @@
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
 
-namespace 
+namespace
 {
 	const decimal DefaultMinValue(decimal::from_int(-100));
 	const decimal DefaultMaxValue(decimal::from_int(100));
@@ -38,7 +38,7 @@ namespace
 EditorVariableInfo::EditorVariableInfo(const variant& node)
   : name_(node["name"].as_string()),
     is_property_(false),
-    type_(VARIABLE_TYPE::INTEGER), 
+    type_(VARIABLE_TYPE::INTEGER),
 	is_real_enum_(false),
 	info_(node["info"].as_string_default()),
     help_(node["help"].as_string_default()),

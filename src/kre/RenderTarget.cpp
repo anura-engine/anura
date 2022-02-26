@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,11 +29,11 @@
 
 namespace KRE
 {
-	RenderTarget::RenderTarget(int width, int height, 
-		int color_plane_count, 
-		bool depth, 
-		bool stencil, 
-		bool use_multi_sampling, 
+	RenderTarget::RenderTarget(int width, int height,
+		int color_plane_count,
+		bool depth,
+		bool stencil,
+		bool use_multi_sampling,
 		int multi_samples)
 		: width_(width),
 		  height_(height),
@@ -98,7 +98,7 @@ namespace KRE
 	{
 		handleCreate();
 	}
-	
+
 	void RenderTarget::apply(const rect& r) const
 	{
 		handleApply(r);
@@ -185,11 +185,11 @@ namespace KRE
 		return DisplayDevice::renderTargetInstance(node);
 	}
 
-	RenderTargetPtr RenderTarget::create(int width, int height, 
-		unsigned color_plane_count, 
-		bool depth, 
-		bool stencil, 
-		bool use_multi_sampling, 
+	RenderTargetPtr RenderTarget::create(int width, int height,
+		unsigned color_plane_count,
+		bool depth,
+		bool stencil,
+		bool use_multi_sampling,
 		unsigned multi_samples)
 	{
 		auto rt = DisplayDevice::renderTargetInstance(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);

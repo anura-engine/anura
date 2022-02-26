@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -54,12 +54,12 @@ extern bool g_tbs_server_local;
 PREF_STRING(tbs_server_save_replay, "", "ID for the tbs server to save the replay as");
 PREF_STRING(tbs_server_save_replay_file, "", "File for the tbs server to save the replay to");
 
-namespace game_logic 
+namespace game_logic
 {
 	void flush_all_backed_maps();
 }
 
-namespace tbs 
+namespace tbs
 {
 	extern ffl::IntrusivePtr<http_client> g_game_server_http_client_to_matchmaking_server;
 
@@ -124,7 +124,7 @@ namespace tbs
 
 	using namespace game_logic;
 
-	std::string string_tolower(const std::string& s) 
+	std::string string_tolower(const std::string& s)
 	{
 		std::string res(s);
 		boost::algorithm::to_lower(res);
@@ -336,9 +336,9 @@ namespace tbs
 
 		bool send_delta = false;
 
-		if(nplayer >= 0 
-			&& nplayer < static_cast<int>(players_.size()) 
-			&& players_[nplayer].state_id_sent != -1 
+		if(nplayer >= 0
+			&& nplayer < static_cast<int>(players_.size())
+			&& players_[nplayer].state_id_sent != -1
 			&& players_[nplayer].allow_deltas) {
 			send_delta = true;
 		}
@@ -773,7 +773,7 @@ namespace {
 		}
 	}
 
-	variant game::getValueDefault(const std::string& key) const 
+	variant game::getValueDefault(const std::string& key) const
 	{
 		if(backup_callable_) {
 			return backup_callable_->queryValue(key);
@@ -794,7 +794,7 @@ namespace {
 	BEGIN_DEFINE_CALLABLE_NOBASE(game)
 		DEFINE_FIELD(game, "builtin game")
 			return variant(&obj_instance);
-		
+
 #ifdef USE_DB_CLIENT
 		DEFINE_FIELD(db_client, "builtin db_client")
 			if(obj.db_client_.get() == NULL) {
@@ -904,7 +904,7 @@ namespace {
 				  },
 				  [](size_t a, size_t b, bool c) {
 				  });
-			
+
 				while(!complete) {
 					client.process();
 				}
@@ -1022,15 +1022,15 @@ namespace {
 	{
 	}
 
-	namespace 
+	namespace
 	{
-		struct backup_callable_scope 
+		struct backup_callable_scope
 		{
 			game_logic::FormulaCallable** ptr_;
 			game_logic::FormulaCallable* backup_;
-			backup_callable_scope(game_logic::FormulaCallable** ptr, game_logic::FormulaCallable* var) 
-				: ptr_(ptr), 
-				  backup_(*ptr) 
+			backup_callable_scope(game_logic::FormulaCallable** ptr, game_logic::FormulaCallable* var)
+				: ptr_(ptr),
+				  backup_(*ptr)
 			{
 				if(var) {
 					*ptr_ = var;
@@ -1039,7 +1039,7 @@ namespace {
 				}
 			}
 
-			~backup_callable_scope() 
+			~backup_callable_scope()
 			{
 				if(ptr_) {
 					*ptr_ = backup_;
@@ -1081,7 +1081,7 @@ namespace {
 				queue_message(msg, n);
 			}
 		}
-	
+
 	}
 
 	void game::player_reconnect(int nplayer)
@@ -1115,22 +1115,22 @@ namespace {
 	}
 }
 
-namespace 
+namespace
 {
 	bool g_create_bot_game = false;
-	void create_game_return(const std::string& msg) 
+	void create_game_return(const std::string& msg)
 	{
 		g_create_bot_game = true;
 		LOG_INFO("GAME CREATED");
 	}
 
-	void start_game_return(const std::string& msg) 
+	void start_game_return(const std::string& msg)
 	{
 		LOG_INFO("GAME STARTED");
 	}
 }
 
-COMMAND_LINE_UTILITY(tbs_bot_game) 
+COMMAND_LINE_UTILITY(tbs_bot_game)
 {
 	using namespace tbs;
 	using namespace game_logic;

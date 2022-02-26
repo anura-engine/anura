@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -90,7 +90,7 @@ extern int g_vsync;
 
 void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce, bool isFullscreen);
 
-namespace 
+namespace
 {
 	PREF_STRING(play_music_function, "", "");
 
@@ -127,7 +127,7 @@ namespace
 	PREF_BOOL(allow_builtin_settings_dialog, true, "Allow the builtin Anura settings dialog");
 
 	PREF_INT(max_frame_skips, 3, "Maximum frames to skip due to performance");
-	
+
 	PREF_STRING(editor_controller, "", "Object used when the editor is started");
 	PREF_BOOL_PERSISTENT(skip_odd_frames, false, "Skips every other frame");
 
@@ -135,11 +135,11 @@ namespace
 
 	LevelRunner* current_level_runner = nullptr;
 
-	class current_level_runner_scope 
+	class current_level_runner_scope
 	{
 		LevelRunner* old_;
 	public:
-		current_level_runner_scope(LevelRunner* value) 
+		current_level_runner_scope(LevelRunner* value)
 			: old_(current_level_runner)
 		{
 			current_level_runner = value;
@@ -150,9 +150,9 @@ namespace
 		}
 	};
 
-	struct upload_screenshot_info 
+	struct upload_screenshot_info
 	{
-		upload_screenshot_info() 
+		upload_screenshot_info()
 			: error(false), done(false), client(new http_client("www.theargentlark.com", "80"))
 		{
 			client->set_timeout_and_retry();
@@ -178,8 +178,8 @@ namespace
 		if(g_user_info_registry["user"].is_string()) {
 			user_parm = "&user=" + g_user_info_registry["user"].as_string();
 		}
-		info->client->send_request("POST /cgi-bin/upload-screenshot.pl?module=" + module::get_module_name() + user_parm, 
-			base64::b64encode(sys::read_file(file)), 
+		info->client->send_request("POST /cgi-bin/upload-screenshot.pl?module=" + module::get_module_name() + user_parm,
+			base64::b64encode(sys::read_file(file)),
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, false),
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, true),
 			[](size_t,size_t,bool){});
@@ -211,7 +211,7 @@ namespace
 	int global_pause_time;
 
 	typedef std::function<void(const Level&, screen_position&, float)> TransitionFn;
-		
+
 	//prepare to call transition_scene by making sure that frame buffers are
 	//filled with the image of the screen.
 	void prepare_transition_scene(Level& lvl, screen_position& screen_pos)
@@ -220,7 +220,7 @@ namespace
 		KRE::WindowManager::getMainWindow()->swap();
 	}
 
-	void transition_scene(Level& lvl, screen_position& screen_pos, bool transition_out, const std::string& transition_type) 
+	void transition_scene(Level& lvl, screen_position& screen_pos, bool transition_out, const std::string& transition_type)
 	{
 		const int num_frames = lvl.setup_level_transition(transition_type);
 
@@ -248,19 +248,19 @@ namespace
 		}
 
 		Level::set_level_transition_ratio(decimal(0.0f));
-	
+
 		if(lvl.player()) {
 			lvl.player()->getEntity().setInvisible(false);
 		}
 	}
 
-	void fade_scene(const Level& lvl, screen_position& screen_pos, float fade) 
+	void fade_scene(const Level& lvl, screen_position& screen_pos, float fade)
 	{
 		auto& gs = graphics::GameScreen::get();
 		KRE::Canvas::getInstance()->drawSolidRect(rect(0,0,gs.getVirtualWidth(),gs.getVirtualHeight()),KRE::Color(0.0f, 0.0f, 0.0f, 0.5f*fade));
 	}
 
-	void flip_scene(const Level& lvl, screen_position& screen_pos, float amount) 
+	void flip_scene(const Level& lvl, screen_position& screen_pos, float amount)
 	{
 		screen_pos.flip_rotate = static_cast<int>(amount*1000);
 		draw_scene(lvl, screen_pos);
@@ -278,7 +278,7 @@ namespace
 		for(unsigned n = 0; n <= msg.size(); ++n) {
 			const float percent = static_cast<float>(n)/static_cast<float>(msg.size());
 			canvas->drawSolidRect(rect(0, 0, gs.getVirtualWidth(), gs.getVirtualHeight()), KRE::Color::colorBlack());
-			canvas->blitTexture(t, rect(0,0,static_cast<int>(percent*gs.getVirtualWidth()),0), 0, 
+			canvas->blitTexture(t, rect(0,0,static_cast<int>(percent*gs.getVirtualWidth()),0), 0,
 				rect(xpos, ypos,static_cast<int>(t->width()*percent), t->height()));
 			wnd->swap();
 			profile::delay(40);
@@ -348,23 +348,23 @@ void addAsynchronousWorkItem(std::function<void()> fn)
 	asynchronous_work_items_.push_back(fn);
 }
 
-void begin_skipping_game() 
+void begin_skipping_game()
 {
 	++skipping_game;
 }
 
-void end_skipping_game() 
+void end_skipping_game()
 {
 	skipping_game = 0;
 }
 
-bool is_skipping_game() 
+bool is_skipping_game()
 {
 	return skipping_game > 0;
 }
 
 // XXX We should handle the window resize event in the WindowManager code
-void video_resize(const SDL_Event &event) 
+void video_resize(const SDL_Event &event)
 {
 	if(preferences::get_screen_mode() == preferences::ScreenMode::WINDOWED) {
 		int width = event.window.data1;
@@ -424,9 +424,9 @@ void LevelRunner::on_player_set(EntityPtr e)
 
 #if 0
 void LevelRunner::handle_mouse_over_voxel_objects(const SDL_Event &event,
-	const std::vector<voxel::UserVoxelObjectPtr>& voxel_objs, 
-	game_logic::MapFormulaCallablePtr callable, 
-	const int basic_evt, 
+	const std::vector<voxel::UserVoxelObjectPtr>& voxel_objs,
+	game_logic::MapFormulaCallablePtr callable,
+	const int basic_evt,
 	const int catch_all_event)
 {
 	static const int MouseEnterID = get_object_event_id("mouse_enter");
@@ -516,16 +516,16 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 			int y, my = event.type == SDL_MOUSEMOTION ? event.motion.y : event.button.y;
 			int event_type = event.type;
 			int event_button_button = event.button.button;
-            
+
 			x = mx;
 			y = my;
 
 			const int basic_evt = event_type == SDL_MOUSEBUTTONDOWN
-				? MouseDownEventID 
+				? MouseDownEventID
 				: event_type == SDL_MOUSEMOTION
 					? MouseMoveEventID : MouseUpEventID;
-			const int catch_all_event = event_type == SDL_MOUSEBUTTONDOWN 
-				? MouseDownEventAllID 
+			const int catch_all_event = event_type == SDL_MOUSEBUTTONDOWN
+				? MouseDownEventAllID
 				: event_type == SDL_MOUSEMOTION
 					? MouseMoveEventAllID : MouseUpEventAllID;
 			Uint8 button_state = input::sdl_get_mouse_state(0,0);
@@ -716,7 +716,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 								e->handleEvent(MouseLeaveID, callable.get());
 								e->setMouseOverEntity(false);
 							}
-						}								
+						}
 					}
 				}
 			}
@@ -747,11 +747,11 @@ LevelRunner* LevelRunner::getCurrent()
 }
 
 LevelRunner::LevelRunner(LevelPtr& lvl, std::string& level_cfg, std::string& original_level_cfg)
-  : lvl_(lvl), 
-	level_cfg_(level_cfg), 
+  : lvl_(lvl),
+	level_cfg_(level_cfg),
 	original_level_cfg_(original_level_cfg),
 #ifndef NO_EDITOR
-	history_trails_state_id_(-1), 
+	history_trails_state_id_(-1),
 	object_reloads_state_id_(-1),
 	tile_rebuild_state_id_(-1),
 #endif
@@ -859,7 +859,7 @@ bool LevelRunner::play_level()
 	bool reversing = false;
 
 	if(preferences::edit_on_start()) {
-		start_editor();	
+		start_editor();
 	}
 
 	if(!lvl_->music().empty()) {
@@ -907,11 +907,11 @@ bool LevelRunner::play_level()
 	return quit_;
 }
 
-namespace 
+namespace
 {
 	std::set<std::string> g_levels_modified;
 
-	void level_file_modified(std::string lvl_path) 
+	void level_file_modified(std::string lvl_path)
 	{
 		g_levels_modified.insert(lvl_path);
 	}
@@ -951,7 +951,7 @@ bool LevelRunner::play_cycle()
 	if(controls::num_players() > 1) {
 		lvl_->backup();
 	}
-	
+
 #if defined(USE_BOX2D)
 	box2d::world_ptr world = box2d::world::our_world_ptr();
 	if(world && !paused) {
@@ -984,7 +984,7 @@ bool LevelRunner::play_cycle()
 	if(editor_) {
 		controls::control_backup_scope ctrl_backup;
 		auto& gs = graphics::GameScreen::get();
-		editor_->setPos(last_draw_position().x/100 - (editor_->zoom() - 1) * gs.getVirtualWidth()/2, 
+		editor_->setPos(last_draw_position().x/100 - (editor_->zoom() - 1) * gs.getVirtualWidth()/2,
 			last_draw_position().y/100 - (editor_->zoom() - 1) * gs.getVirtualHeight()/2);
 		//editor_->setPos(last_draw_position().x/100 - (editor_->zoom()-1)*(gs.getVirtualWidth()-editor::sidebar_width())/2, last_draw_position().y/100 - (editor_->zoom()-1)*(gs.getVirtualHeight())/2);
 		editor_->process();
@@ -1173,7 +1173,7 @@ bool LevelRunner::play_cycle()
 				editor_->confirm_quit(false);
 			}
 #endif
-			
+
 			if (preferences::load_compiled())
 			{
 				Level::Summary summary = Level::getSummary(level_cfg_);
@@ -1467,7 +1467,7 @@ bool LevelRunner::play_cycle()
 				break;
 			}
 			case SDL_WINDOWEVENT:
-				if((event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED 
+				if((event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED
 					|| event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
 					&& preferences::allow_autopause()) {
 					if(event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
@@ -1487,7 +1487,7 @@ bool LevelRunner::play_cycle()
 					LOG_INFO("SDL WINDOW EVENT RESTORED");
 				} else if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
 					LOG_INFO("SDL WINDOW EVENT RESIZED to " << event.window.data1 << " x " << event.window.data2);
-					//video_resize(event); 
+					//video_resize(event);
 					video_resize_event(event);
 				}
 			break;
@@ -1533,7 +1533,7 @@ bool LevelRunner::play_cycle()
 				} else if(key == SDLK_s && (mod&KMOD_CTRL) && !editor_) {
 					LOG_INFO("SAVING...");
 					std::string data;
-					
+
 					variant lvl_node = lvl_->write();
 					if(sound::current_music().empty() == false) {
 						lvl_node = lvl_node.add_attr(variant("music"), variant(sound::current_music()));
@@ -1576,7 +1576,7 @@ bool LevelRunner::play_cycle()
 					if(key == SDLK_n) {
 						pause_next = true;
 					}
-					
+
 				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
 
 					static int last_pushed = -1;
@@ -1705,7 +1705,7 @@ bool LevelRunner::play_cycle()
 				c->handleEvent(OBJECT_EVENT_SETTINGS_MENU);
 			}
 		}
-		
+
 		if(lvl_->show_builtin_settingsDialog() && g_allow_builtin_settings_dialog)
 		{
 			lvl_->set_show_builtin_settingsDialog(false);
@@ -1764,12 +1764,12 @@ bool LevelRunner::play_cycle()
 		formula_profiler::Instrument instrument("DRAW");
 		bool should_draw = true;
 
-#ifndef NO_EDITOR		
+#ifndef NO_EDITOR
 		if(editor_) {
 			editor_->handle_tracking_to_mouse(); //This call should be moved to editor.cpp, but it freezes the display there. (Even here, framerate is terrible.)
 		}
 #endif
-		
+
 		if(editor_ && paused) {
 #ifndef NO_EDITOR
 			const int xpos = editor_->xpos();
@@ -1829,8 +1829,8 @@ bool LevelRunner::play_cycle()
 			wnd->clear(KRE::ClearFlags::ALL);
 #ifndef NO_EDITOR
 			const Uint8 *key = SDL_GetKeyboardState(nullptr);
-			if(editor_ && key[SDL_SCANCODE_L] 
-				&& !editor_->hasKeyboardFocus() 
+			if(editor_ && key[SDL_SCANCODE_L]
+				&& !editor_->hasKeyboardFocus()
 				&& (!console_ || !console_->hasKeyboardFocus())) {
 #endif
 				editor_->toggle_active_level();
@@ -1894,7 +1894,7 @@ bool LevelRunner::play_cycle()
 #endif
 
 		performance_data perf(current_max_,current_fps_, current_cycles_, current_delay_, current_draw_, current_process_, current_flip_, cycle, current_events_, profiling_summary_);
-	
+
 		if(!is_skipping_game() && preferences::show_fps()) {
 			draw_fps(*lvl_, perf);
 		}
@@ -1973,7 +1973,7 @@ bool LevelRunner::play_cycle()
 	}
 
 	performance_data::set_current(current_perf);
-	
+
 	if(is_skipping_game()) {
 		const int adjust_time = desired_end_time - profile::get_tick_time();
 		if(adjust_time > 0) {
@@ -2054,7 +2054,7 @@ void LevelRunner::quit_game()
 		lvl_->player()->getEntity().recordStatsMovement();
 		stats::Entry("quit").addPlayerPos();
 	}
-	
+
 	done = true;
 	quit_ = true;
 }
@@ -2109,7 +2109,7 @@ void LevelRunner::onHistoryChange(float value)
 		LOG_INFO("STEPPING FORWARD FROM " << lvl_->cycle() << " TO " << targetFrame << " /" << controls::local_controls_end());
 
 		const controls::control_backup_scope ctrl_scope;
-		
+
 		while(lvl_->cycle() < targetFrame) {
 			lvl_->process();
 			lvl_->process_draw();
@@ -2189,7 +2189,7 @@ void LevelRunner::replay_level_from_start()
 
 	if(last_frame > lvl_->cycle()) {
 		const controls::control_backup_scope ctrl_scope;
-		
+
 		while(lvl_->cycle() < last_frame) {
 			lvl_->process();
 			lvl_->process_draw();

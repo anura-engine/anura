@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -35,7 +35,7 @@ PREF_INT(tbs_server_timeout, 60000*3, "Timeout for connections to the tbs server
 
 namespace tbs
 {
-	namespace 
+	namespace
 	{
 		const variant& get_server_info_file()
 		{
@@ -116,10 +116,10 @@ namespace tbs
 		return g;
 	}
 
-	void server_base::handle_message(send_function send_fn, 
-		std::function<void(client_info&)> close_fn, 
+	void server_base::handle_message(send_function send_fn,
+		std::function<void(client_info&)> close_fn,
 		std::function<socket_info&(void)> socket_info_fn,
-		int session_id, 
+		int session_id,
 		const variant& msg)
 	{
 		const std::string& type = msg["type"].as_string();
@@ -136,7 +136,7 @@ namespace tbs
 
 				LOG_VERBOSE("SEND game_created");
 				send_fn(json::parse(formatter() << "{ \"type\": \"game_created\", \"game_id\": " << g->game_state->game_id() << " }"));
-			
+
 				status_change();
 
 				return;
@@ -216,7 +216,7 @@ namespace tbs
 		}
 
 		client_info& cli_info = client_itor->second;
-		
+
 		if(socket_info_fn) {
 			socket_info& info = socket_info_fn();
 			ASSERT_LOG(info.session_id == -1 || g_tbs_server_local, "Invalid session: " << info.session_id << " " << cli_info.user);
@@ -483,11 +483,11 @@ namespace tbs
 			for(int client_session : cli_info.game->clients) {
 				const client_info& info = clients_[client_session];
 				variant_builder value;
-	
+
 				value.add("nick", info.user);
 				value.add("ingame", info.game == cli_info.game);
 				value.add("lag", nheartbeat_ - info.last_contact);
-	
+
 				items.push_back(value.build());
 			}
 

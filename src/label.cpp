@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -37,22 +37,22 @@
 #include "text_editor_widget.hpp"
 #include "widget_settings_dialog.hpp"
 
-namespace gui 
+namespace gui
 {
-	namespace 
+	namespace
 	{
 		const int default_font_size = 14;
 	}
 
 	Label::Label(const std::string& text, int size, const std::string& font)
-		: text_(i18n::tr(text)), 
-		  border_size_(0), 
-		  size_(size), 
+		: text_(i18n::tr(text)),
+		  border_size_(0),
+		  size_(size),
 		  down_(false),
-		  fixed_width_(false), 
+		  fixed_width_(false),
 		  highlight_color_(KRE::Color::colorRed()),
-		  highlight_on_mouseover_(false), 
-		  draw_highlight_(false), 
+		  highlight_on_mouseover_(false),
+		  draw_highlight_(false),
 		  font_(font)
 	{
 		setEnvironment();
@@ -60,14 +60,14 @@ namespace gui
 	}
 
 	Label::Label(const std::string& text, const KRE::Color& color, int size, const std::string& font)
-		: text_(i18n::tr(text)), 
+		: text_(i18n::tr(text)),
 		  border_size_(0),
-		  size_(size), 
+		  size_(size),
 		  down_(false),
 		  font_(font),
 		  fixed_width_(false),
 		  highlight_color_(KRE::Color::colorRed()),
-		  highlight_on_mouseover_(false), 
+		  highlight_on_mouseover_(false),
 		  draw_highlight_(false)
 	{
 		setColor(color);
@@ -76,15 +76,15 @@ namespace gui
 	}
 
 	Label::Label(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v,e), 
-		  fixed_width_(false), 
-		  down_(false), 
-		  highlight_color_(KRE::Color::colorRed()), 
+		: Widget(v,e),
+		  fixed_width_(false),
+		  down_(false),
+		  highlight_color_(KRE::Color::colorRed()),
 		  draw_highlight_(false),
 		  font_(v["font"].as_string_default())
 	{
 		text_ = i18n::tr(v["text"].as_string());
-	
+
 		if(v.has_key("border_color")) {
 			border_color_.reset(new KRE::Color(v["border_color"]));
 			if(v.has_key("border_size")) {
@@ -382,14 +382,14 @@ namespace gui
 	END_DEFINE_CALLABLE(Label)
 
 	DialogLabel::DialogLabel(const std::string& text, const KRE::Color& color, int size)
-		: Label(text, color, size), 
-		  progress_(0) 
+		: Label(text, color, size),
+		  progress_(0)
 	{
 		recalculateTexture();
 	}
 
 	DialogLabel::DialogLabel(const variant& v, game_logic::FormulaCallable* e)
-		: Label(v, e), 
+		: Label(v, e),
 		  progress_(0)
 	{
 		recalculateTexture();

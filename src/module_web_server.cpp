@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -49,11 +49,11 @@
 using boost::asio::ip::tcp;
 
 ModuleWebServer::ModuleWebServer(const std::string& data_path, const std::string& chunk_path, boost::asio::io_service& io_service, int port)
-	: http::web_server(io_service, port), 
-	timer_(io_service), 
-	nheartbeat_(0), 
-	data_path_(data_path), 
-	chunk_path_(chunk_path), 
+	: http::web_server(io_service, port),
+	timer_(io_service),
+	nheartbeat_(0),
+	data_path_(data_path),
+	chunk_path_(chunk_path),
 	next_lock_id_(1)
 {
 	if(data_path_.empty() || data_path_[data_path_.size()-1] != '/') {
@@ -413,7 +413,7 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 
 			const std::string module_path_tmp = module_path + ".tmp";
 			const std::string contents = module_node.write_json();
-			
+
 			sys::write_file(module_path_tmp, contents);
 			const int rename_result = rename(module_path_tmp.c_str(), module_path.c_str());
 			ASSERT_LOG(rename_result == 0, "FAILED TO RENAME FILE: " << errno);
@@ -489,7 +489,7 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 
 			const std::string module_path_tmp = dst_path + ".tmp";
 			const std::string contents = module_node.write_json();
-			
+
 			sys::write_file(module_path_tmp, contents);
 			const int rename_result = rename(module_path_tmp.c_str(), dst_path.c_str());
 			ASSERT_LOG(rename_result == 0, "FAILED TO RENAME FILE: " << errno);
@@ -571,7 +571,7 @@ void ModuleWebServer::handleGet(socket_ptr socket, const std::string& url, const
 	if(std::adjacent_find(url.begin(), url.end(), consecutive_periods) != url.end()) {
 		return;
 	}
-	
+
 	std::map<variant,variant> response;
 	try {
 		static const std::string ModuleVersionStr = "/module_version/";

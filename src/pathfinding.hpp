@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,10 +39,10 @@
 class Level;
 typedef ffl::IntrusivePtr<Level> LevelPtr;
 
-namespace pathfinding 
+namespace pathfinding
 {
 	template<typename N>
-	struct PathfindingException 
+	struct PathfindingException
 	{
 		const char* msg;
 		const N src;
@@ -62,21 +62,21 @@ namespace pathfinding
 	class GraphNode {
 	public:
 		typedef std::shared_ptr<GraphNode<N, T>> GraphNodePtr;
-		GraphNode(const N& src) 
-			: src_(src), 
-			f_(T(0)), 
-			g_(T(0)), 
-			h_(T(0)), 
+		GraphNode(const N& src)
+			: src_(src),
+			f_(T(0)),
+			g_(T(0)),
+			h_(T(0)),
 			parent_(nullptr),
-			on_open_list_(false), 
+			on_open_list_(false),
 			on_closed_list_(false)
 		{}
-		GraphNode(const N& src, T g, T h, GraphNodePtr parent) 
-			: f_(g+h), 
-			g_(g), 
-			h_(h), 
-			src_(src), 
-			parent_(parent), 
+		GraphNode(const N& src, T g, T h, GraphNodePtr parent)
+			: f_(g+h),
+			g_(g),
+			h_(h),
+			src_(src),
+			parent_(parent),
 			on_open_list_(false), on_closed_list_
 			(false)
 		{}
@@ -113,28 +113,28 @@ namespace pathfinding
 		bool on_closed_list_;
 	};
 
-	template<typename N, typename T> inline 
+	template<typename N, typename T> inline
 	std::ostream& operator<<(std::ostream& out, const GraphNode<N,T>& n) {
-		out << "GNODE: " << n.getNodeValue().to_string() << " : cost( " << n.F() << "," << n.G() << "," << n.H() 
+		out << "GNODE: " << n.getNodeValue().to_string() << " : cost( " << n.F() << "," << n.G() << "," << n.H()
 			<< ") : parent(" << (n.getParent() == nullptr ? "nullptr" : n.getParent()->getNodeValue().to_string())
 			<< ") : (" << n.isOnOpenList() << "," << n.isOnClosedList() << ")" << std::endl;
 		return out;
 	}
 
 	template<typename N, typename T>
-	bool graph_node_cmp(const typename GraphNode<N,T>::graph_node_ptr& lhs, 
+	bool graph_node_cmp(const typename GraphNode<N,T>::graph_node_ptr& lhs,
 		const typename GraphNode<N,T>::GraphNodePtr& rhs);
 	template<typename N, typename T> T manhattan_distance(const N& p1, const N& p2);
 
 	typedef std::map<variant, GraphNode<variant, decimal>::GraphNodePtr > vertex_list;
 
-	class DirectedGraph : public game_logic::FormulaCallable 
+	class DirectedGraph : public game_logic::FormulaCallable
 	{
 		DECLARE_CALLABLE(DirectedGraph);
 		std::vector<variant> vertices_;
 		graph_edge_list edges_;
 	public:
-		DirectedGraph(std::vector<variant>* vertices, 
+		DirectedGraph(std::vector<variant>* vertices,
 			graph_edge_list* edges )
 		{
 			// Here we pilfer the contents of vertices and the edges.
@@ -152,14 +152,14 @@ namespace pathfinding
 		}
 	};
 
-	class WeightedDirectedGraph : public game_logic::FormulaCallable 
+	class WeightedDirectedGraph : public game_logic::FormulaCallable
 	{
 		DECLARE_CALLABLE(WeightedDirectedGraph);
 		edge_weights weights_;
 		DirectedGraphPtr dg_;
 		vertex_list graph_node_list_;
 	public:
-		WeightedDirectedGraph(DirectedGraphPtr dg, edge_weights* weights) 
+		WeightedDirectedGraph(DirectedGraphPtr dg, edge_weights* weights)
 			: dg_(dg)
 		{
 			weights_.swap(*weights);
@@ -198,26 +198,26 @@ namespace pathfinding
 	};
 
 	std::vector<point> get_neighbours_from_rect(const point &mid_xy,
-		const int tile_size_x, 
+		const int tile_size_x,
 		const int tile_size_y,
 		const rect& b,
 		const bool allow_diagonals = true);
 	variant point_as_variant_list(const point& pt);
 
-	variant a_star_search(WeightedDirectedGraphPtr wg, 
-		const variant src_node, 
-		const variant dst_node, 
+	variant a_star_search(WeightedDirectedGraphPtr wg,
+		const variant src_node,
+		const variant dst_node,
 		variant heuristic_fn);
 
-	variant a_star_find_path(LevelPtr lvl, const point& src, 
-		const point& dst, 
-		game_logic::ExpressionPtr heuristic, 
-		game_logic::ExpressionPtr weight_expr, 
-		game_logic::MapFormulaCallablePtr callable, 
-		const int tile_size_x, 
+	variant a_star_find_path(LevelPtr lvl, const point& src,
+		const point& dst,
+		game_logic::ExpressionPtr heuristic,
+		game_logic::ExpressionPtr weight_expr,
+		game_logic::MapFormulaCallablePtr callable,
+		const int tile_size_x,
 		const int tile_size_y);
 
-	variant path_cost_search(WeightedDirectedGraphPtr wg, 
-		const variant src_node, 
+	variant path_cost_search(WeightedDirectedGraphPtr wg,
+		const variant src_node,
 		decimal max_cost );
 }

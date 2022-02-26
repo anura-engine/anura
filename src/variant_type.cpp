@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -270,7 +270,7 @@ public:
 		}
 
 		if(type_ == variant::VARIANT_TYPE_DECIMAL) {
-			if(simple_type && simple_type->type_ == variant::VARIANT_TYPE_INT) { 
+			if(simple_type && simple_type->type_ == variant::VARIANT_TYPE_INT) {
 				return true;
 			}
 		} else if(type_ == variant::VARIANT_TYPE_LIST) {
@@ -943,7 +943,7 @@ public:
 
 		return specific_map_.get();
 	}
-	
+
 
 	std::pair<variant_type_ptr,variant_type_ptr> is_map_of() const override {
 		std::vector<variant_type_ptr> key_types, value_types;
@@ -1073,7 +1073,7 @@ public:
 					}
 
 					variant_types_compatible(get_null_excluded(value_type_), get_null_excluded(mismatching_element), why);
-					
+
 				}
 			}
 
@@ -1568,7 +1568,7 @@ public:
 
 		return false;
 	}
-	
+
 private:
 
 	std::vector<variant_type_ptr> args_;
@@ -1636,8 +1636,8 @@ public:
 			variant_type_ptr result;
 			std::vector<variant_type_ptr> args;
 			int min_args = 0;
-			if(!fn->is_function(&args, &result, &min_args) 
-				|| static_cast<unsigned>(min_args) > args.size() 
+			if(!fn->is_function(&args, &result, &min_args)
+				|| static_cast<unsigned>(min_args) > args.size()
 				|| parms.size() > args.size()) {
 				continue;
 			}
@@ -2083,7 +2083,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 				++i1;
 
 				ASSERT_COND(i1 != i2, "UNEXPECTED END OF INPUT WHILE PARSING FUNCTION DEF:\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
-				
+
 				return_type = parse_variant_type(original_str, i1, i2, allow_failure);
 			} else {
 				return_type = variant_type::get_any();
@@ -2200,7 +2200,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 				const variant_type_ptr key_type = parse_variant_type(original_str, i1, end, allow_failure);
 				ASSERT_COND(key_type, "");
 				ASSERT_COND(i1->type == FFL_TOKEN_TYPE::POINTER, "ERROR PARSING MAP TYPE, NO ARROW FOUND: " << original_str.debug_location());
-		
+
 				++i1;
 				ASSERT_COND(i1 != end, "ERROR PARSING MAP TYPE: " << original_str.debug_location());
 
@@ -2217,10 +2217,10 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			const Token* end = i1+1;
 			const bool res = TokenMatcher().add(FFL_TOKEN_TYPE::RSQUARE).find_match(end, i2);
 			ASSERT_COND(res, "ERROR PARSING ARRAY TYPE: " << original_str.debug_location());
-	
+
 			++i1;
 			ASSERT_COND(i1 != end, "ERROR PARSING ARRAY TYPE: " << original_str.debug_location());
-			
+
 			const variant_type_ptr value_type = parse_variant_type(original_str, i1, end, allow_failure);
 			if(!value_type) {
 				return value_type;
@@ -2695,5 +2695,5 @@ UNIT_TEST(variant_type) {
 	TYPES_INCOMPAT("enum{abc}", "int");
 	TYPES_INCOMPAT("{int -> string}", "{int|string -> string}");
 
-#undef TYPES_COMPAT	
+#undef TYPES_COMPAT
 }

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,12 +39,12 @@
 #include "widget_fwd.hpp"
 #include "variant_utils.hpp"
 
-namespace game_logic 
+namespace game_logic
 {
 	class FormulaCallableVisitor;
 }
 
-namespace gui 
+namespace gui
 {
 	class Widget : public game_logic::FormulaCallable
 	{
@@ -178,7 +178,7 @@ namespace gui
 
 	private:
 		DECLARE_CALLABLE(Widget);
-		
+
 		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor) override {}
 		virtual void handleColorChanged() {}
 

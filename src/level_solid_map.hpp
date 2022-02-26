@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,7 +39,7 @@ extern int g_tile_size;
 typedef std::pair<int,int> tile_pos;
 typedef boost::dynamic_bitset<> tile_bitmap;
 
-struct SurfaceInfo 
+struct SurfaceInfo
 {
 	SurfaceInfo() : friction(0), traction(0), damage(-1), info(0)
 	{}
@@ -48,7 +48,7 @@ struct SurfaceInfo
 	static const std::string* get_info_str(const std::string& key);
 };
 
-struct TileSolidInfo 
+struct TileSolidInfo
 {
 	TileSolidInfo() : bitmap(TileSize*TileSize), all_solid(false)
 	{}
@@ -57,7 +57,7 @@ struct TileSolidInfo
 	bool all_solid;
 };
 
-class LevelSolidMap 
+class LevelSolidMap
 {
 public:
 	LevelSolidMap();

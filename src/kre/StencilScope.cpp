@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -26,14 +26,14 @@
 
 namespace KRE
 {
-	const StencilSettings& get_stencil_mask_settings() 
+	const StencilSettings& get_stencil_mask_settings()
 	{
-		static const KRE::StencilSettings ss(true, 
-			KRE::StencilFace::FRONT_AND_BACK, 
-			KRE::StencilFunc::NOT_EQUAL, 
-			0xff, 0x00, 0xff, 
-			KRE::StencilOperation::INCREMENT, 
-			KRE::StencilOperation::KEEP, 
+		static const KRE::StencilSettings ss(true,
+			KRE::StencilFace::FRONT_AND_BACK,
+			KRE::StencilFunc::NOT_EQUAL,
+			0xff, 0x00, 0xff,
+			KRE::StencilOperation::INCREMENT,
+			KRE::StencilOperation::KEEP,
 			KRE::StencilOperation::KEEP);
 		return ss;
 	}
@@ -41,8 +41,8 @@ namespace KRE
 	const StencilSettings& get_stencil_keep_settings()
 	{
 		static const StencilSettings keep_stencil_settings(true,
-			StencilFace::FRONT_AND_BACK, 
-			StencilFunc::EQUAL, 
+			StencilFace::FRONT_AND_BACK,
+			StencilFunc::EQUAL,
 			0xff,
 			0x01,
 			0x00,

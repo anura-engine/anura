@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -154,14 +154,14 @@ namespace xhtml
 		void processWhitespace();
 
 		NodePtr getElementById(const std::string& id);
-		
+
 		void addPseudoClass(css::PseudoClass pclass) { pclass_ = pclass_ | pclass; }
 		bool hasPseudoClass(css::PseudoClass pclass) { return (pclass_ & pclass) != css::PseudoClass::NONE; }
 		bool hasPsuedoClassActive(css::PseudoClass pclass) { return (active_pclass_ & pclass) != css::PseudoClass::NONE; }
 		css::PseudoClass getPseudoClass() const { return pclass_; }
 		// This sets the rectangle that should be active for mouse presses.
-		void setActiveRect(const rect& r) { 
-			active_rect_ = r; 
+		void setActiveRect(const rect& r) {
+			active_rect_ = r;
 			handleSetActiveRect(r);
 		}
 		const rect& getActiveRect() const { return active_rect_; }
@@ -179,7 +179,7 @@ namespace xhtml
 
 		void clearProperties() { properties_.clear(); }
 		void inheritProperties();
-		
+
 		// for elements
 		const rect& getDimensions() { return dimensions_; }
 		void setDimensions(const rect& r) { dimensions_ = r; handleSetDimensions(r); }
@@ -194,7 +194,7 @@ namespace xhtml
 		void setActiveHandler(EventHandlerId id, bool active=true);
 		bool hasActiveHandler(EventHandlerId id);
 
-		
+
 		void setScrollbar(const scrollable::ScrollbarPtr& scrollbar);
 		void removeScrollbar(scrollable::Scrollbar::Direction d);
 		const scrollable::ScrollbarPtr& getScrollbar(scrollable::Scrollbar::Direction d) const {
@@ -210,7 +210,7 @@ namespace xhtml
 		virtual bool handleMouseButtonDownInt(bool* trigger, const point& p) { return true; }
 		virtual bool handleMouseWheelInt(bool* trigger, const point& p, const point& delta, int direction) { return true; }
 		virtual void handleSetDimensions(const rect& r) {}
-		virtual void handleSetActiveRect(const rect& r) {} 
+		virtual void handleSetActiveRect(const rect& r) {}
 
 		NodeId id_;
 		NodeList children_;
@@ -320,7 +320,7 @@ namespace xhtml
 	{
 		ScriptHandlerRegistrar(const std::string& type, std::function<ScriptPtr()> create_fn)
 		{
-			// register the class factory function 
+			// register the class factory function
 			Document::registerScriptHandler(type, create_fn);
 		}
 	};

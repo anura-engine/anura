@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,7 +38,7 @@
 #define pclose _pclose
 #endif
 
-namespace 
+namespace
 {
 	std::string normalize_fname(std::string fname)
 	{
@@ -103,7 +103,7 @@ namespace
 						if(known_servers_.count(server)) {
 							continue;
 						}
-	
+
 						known_servers_.insert(server);
 					}
 

@@ -24,7 +24,7 @@ std::vector<IntrusivePtr<reference_counted_object>*> getAllIntrusivePtrDebug();
 
 std::set<variant*>& get_all_global_variants();
 #endif
-	
+
 namespace {
 	GarbageCollectible* g_head;
 	int g_count;
@@ -773,7 +773,7 @@ void runGarbageCollection(int num_gens, bool mandatory)
 	}
 
 	std::lock_guard<std::mutex> lock(GarbageCollector::getGlobalMutex(), std::adopt_lock_t());
-	
+
 	reapGarbageCollection();
 
 	formula_profiler::Instrument instrument("GC");

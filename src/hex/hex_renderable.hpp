@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2014-2015 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -42,7 +42,7 @@ namespace hex
 		static MapNodePtr create(std::weak_ptr<KRE::SceneGraph> sg, const variant& node);
 	private:
 		void notifyNodeAttached(std::weak_ptr<SceneNode> parent) override;
-		
+
 		std::vector<MapLayerPtr> layers_;
 		std::shared_ptr<RectRenderable> rr_;
 
@@ -52,7 +52,7 @@ namespace hex
 		MapNode(const MapNode&) = delete;
 		void operator=(const MapNode&) = delete;
 	};
-	
+
 	class MapLayer : public KRE::SceneObject
 	{
 	public:

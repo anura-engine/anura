@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@ template<typename ValueType>
 class point_map
 {
 public:
-	const ValueType& get(const point& p) const 
+	const ValueType& get(const point& p) const
 	{
 		const ValueType* value = lookup(p);
 		if(!value) {
@@ -44,7 +44,7 @@ public:
 		}
 	}
 
-	void insert(const point& p, ValueType value) 
+	void insert(const point& p, ValueType value)
 	{
 		Row* row;
 		if(p.y < 0) {
@@ -82,7 +82,7 @@ public:
 
 private:
 
-	const ValueType* lookup(const point& p) const 
+	const ValueType* lookup(const point& p) const
 	{
 		const Row* row;
 		if(p.y < 0) {

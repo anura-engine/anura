@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -58,7 +58,7 @@ namespace voxel
 			if(it ==  model_path_cache().end()) {
 				it = model_path_cache().find(model_name + ".cfg");
 				ASSERT_LOG(it != model_path_cache().end(), "Unable to find the file '" << model_name << "' in the list of models.");
-			}				
+			}
 			return it->second;
 		}
 	}
@@ -83,7 +83,7 @@ namespace voxel
 		if(!shader_ || node.has_key("shader")) {
 			shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
 		}
-		
+
 		if(!model_ || node.has_key("model")) {
 			std::map<variant,variant> m;
 			m[variant("model")] = variant(model_path_getOrDie(node["model"].as_string()));
@@ -125,7 +125,7 @@ namespace voxel
 	{
 		//profile::manager pman("voxel_object::draw");
 		if(model_) {
-			model_matrix_ = 
+			model_matrix_ =
 				  glm::translate(glm::mat4(1.0f), translation_)
 				* glm::scale(glm::mat4(1.0f), scale_)
 				* glm::rotate(glm::mat4(1.0f), glm::radians(rotation_.x), glm::vec3(1,0,0))
@@ -151,7 +151,7 @@ namespace voxel
 			if(pt.x >= bb1.x && pt.x <= bb2.x && pt.y >= bb1.y && pt.y <= bb2.y && pt.z >= bb1.z && pt.z <= bb2.z) {
 				return true;
 			}
-		} 
+		}
 		return false;
 	}
 

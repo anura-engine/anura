@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,13 +38,13 @@ namespace xhtml
 		LayoutEngine();
 
 		void layoutRoot(StyleNodePtr node, BoxPtr parent, const point& container);
-		
+
 		std::vector<BoxPtr> layoutChildren(const std::vector<StyleNodePtr>& children, BoxPtr parent);
 
 		FixedPoint getDescent() const;
 
 		RootBoxPtr getRoot() const { return root_; }
-		
+
 		FixedPoint getXAtPosition(FixedPoint y1, FixedPoint y2) const;
 		FixedPoint getX2AtPosition(FixedPoint y1, FixedPoint y2) const;
 
@@ -79,12 +79,12 @@ namespace xhtml
 		RootBoxPtr root_;
 		Dimensions dims_;
 		RenderContext& ctx_;
-		
+
 		std::stack<int> list_item_counter_;
 		std::stack<point> offset_;
 
 		std::stack<FloatList> float_list_;
-		
+
 		point cursor_;
 
 		std::shared_ptr<LineBoxContainer> open_line_box_;

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -37,11 +37,11 @@ namespace tbs
 	public:
 		server_base(boost::asio::io_service& io_service);
 		virtual ~server_base();
-		
+
 		void clear_games();
 		static variant get_server_info();
 
-		struct game_info 
+		struct game_info
 		{
 			explicit game_info(const variant& value);
 			~game_info();
@@ -58,11 +58,11 @@ namespace tbs
 		game_info_ptr create_game(variant msg);
 	protected:
 
-		struct client_info 
+		struct client_info
 		{
 			client_info();
 
-			std::string user;	
+			std::string user;
 			game_info_ptr game;
 			int nplayer;
 			int last_contact;
@@ -72,7 +72,7 @@ namespace tbs
 			std::deque<std::string> msg_queue;
 		};
 
-		struct socket_info 
+		struct socket_info
 		{
 			socket_info() : session_id(-1) {}
 			std::vector<char> partial_message;
@@ -80,10 +80,10 @@ namespace tbs
 			int session_id;
 		};
 
-		virtual void handle_message(send_function send_fn, 
+		virtual void handle_message(send_function send_fn,
 			std::function<void(client_info&)> close_fn,
 			std::function<socket_info&(void)> socket_info_fn,
-			int session_id, 
+			int session_id,
 			const variant& msg);
 
 		virtual void queue_msg(int session_id, const std::string& msg, bool has_priority=false);

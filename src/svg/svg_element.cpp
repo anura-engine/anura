@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -31,8 +31,8 @@ namespace KRE
 	{
 		using namespace boost::property_tree;
 
-		element::element(element* parent, const ptree& pt) 
-			: core_attribs(pt), 
+		element::element(element* parent, const ptree& pt)
+			: core_attribs(pt),
 			  visual_attribs_(pt),
 			  clipping_attribs_(pt),
 			  filter_effect_attribs_(pt),
@@ -106,13 +106,13 @@ namespace KRE
 			cairo_t* ctx_;
 		};
 
-		void element::render(render_context& ctx) const 
+		void element::render(render_context& ctx) const
 		{
 			// XXX Need to do some normalising of co-ordinates to the viewBox.
 			// XXX need to translate if x/y specified and use width/height from svg element if
 			// overriding -- well map them to ctx.width()/ctx.height()
 			// XXX also need to process preserveAspectRatio value.
-			
+
 			context_save cs(ctx.cairo());
 			if(view_box_.w() != 0 && view_box_.h() != 0) {
 				cairo_scale(ctx.cairo(), ctx.width()/view_box_.w(), ctx.height()/view_box_.h());
@@ -160,7 +160,7 @@ namespace KRE
 		{
 			ASSERT_LOG(false, "handle_clip() called on non clip_path element");
 		}
-		
+
 		void element::clip_render(render_context& ctx) const
 		{
 			handle_clip_render(ctx);
@@ -244,7 +244,7 @@ namespace KRE
 			xlink_ref_->render(ctx);
 		}
 
-		void use_element::handle_clip_render(render_context& ctx) const 
+		void use_element::handle_clip_render(render_context& ctx) const
 		{
 			if(xlink_ref_) {
 				xlink_ref_->clip_render(ctx);

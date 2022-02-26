@@ -349,7 +349,7 @@ namespace KRE
 
 			bool save_open = true;
 			if (ImGui::BeginPopupModal("Save File As ...", &save_open)) {
-				
+
 				bool write_file = false;
 				bool close_popup = false;
 				ImGui::Text("Enter File Name to Save:");
@@ -447,7 +447,7 @@ namespace KRE
 					}
 					ImGui::TextColored(glm::vec4(1.0f, 0.1f, 0.2f, 1.0f), "Press ESC to exit mouselook mode");
 
-				} else if(current_item == Camera::CAMERA_ORTHOGONAL) {				
+				} else if(current_item == Camera::CAMERA_ORTHOGONAL) {
 					int tbv[2]{ ps_camera->getOrthoTop(), ps_camera->getOrthoBottom() };
 					if(ImGui::DragInt2("Top/Bottom", tbv, 1, 0, 4000)) {
 						ps_camera->setOrthoWindow(ps_camera->getOrthoLeft(),ps_camera->getOrthoRight(), tbv[0], tbv[1]);
@@ -937,7 +937,7 @@ namespace KRE
 									data_changed = true;
 								}
 								ImGui::EndGroup();
-								ImGui::PopID();								
+								ImGui::PopID();
 							}
 							for(auto& p : tc_data_to_remove) {
 								auto it = std::find(tcdata.begin(), tcdata.end(), p);
@@ -1005,9 +1005,9 @@ namespace KRE
 									data_changed = true;
 								}
 								if(pixel_coords) {
-									int r[4]{ static_cast<int>(tc.second.x1()), 
-										static_cast<int>(tc.second.y1()), 
-										static_cast<int>(tc.second.x2()), 
+									int r[4]{ static_cast<int>(tc.second.x1()),
+										static_cast<int>(tc.second.y1()),
+										static_cast<int>(tc.second.x2()),
 										static_cast<int>(tc.second.y2()) };
 									bool changed = false;
 									int width = psystem->getTexture()->surfaceWidth() - 1;
@@ -1045,7 +1045,7 @@ namespace KRE
 									data_changed = true;
 								}
 								ImGui::EndGroup();
-								ImGui::PopID();								
+								ImGui::PopID();
 							}
 
 							for(auto& p : tc_data_to_remove) {
@@ -1236,7 +1236,7 @@ namespace KRE
 							const char* const optype[] = { "Add", "Average" };
 							if(ImGui::Combo("Force Application", &current_item, optype, 2)) {
 								sfa->setForceApplication(static_cast<Particles::SineForceAffector::ForceApplication>(current_item));
-							}			
+							}
 							break;
 						}
 						case Particles::AffectorType::TEXTURE_ROTATOR: {

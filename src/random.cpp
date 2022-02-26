@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,16 +27,16 @@
 
 #include "random.hpp"
 
-namespace rng 
+namespace rng
 {
-	namespace 
+	namespace
 	{
 		boost::random::mt19937 state;
 		boost::random::uniform_int_distribution<> generator(0,0xFFFFFF);
 		bool rng_init = false;
 	}
 
-	int generate() 
+	int generate()
 	{
 		if(!rng_init) {
 			// using std::time to initialise a mersienne twister is a really pitiful and inadequate idea.
@@ -45,18 +45,18 @@ namespace rng
 		return generator(state);
 	}
 
-	void seed_from_int(unsigned int seed) 
+	void seed_from_int(unsigned int seed)
 	{
 		rng_init = true;
 		state = boost::random::mt19937(seed);
 	}
 
-	void set_seed(const Seed& seed) 
+	void set_seed(const Seed& seed)
 	{
 		state = seed;
 	}
 
-	Seed get_seed() 
+	Seed get_seed()
 	{
 		return state;
 	}

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -76,7 +76,7 @@ namespace game_logic
 {
 	void invalidate_class_definition(const std::string& class_name);
 
-	namespace 
+	namespace
 	{
 		variant flatten_list_of_maps(variant v) {
 			if(v.is_list() && v.num_elements() >= 1) {
@@ -226,7 +226,7 @@ std::map<std::string, std::string>& class_path_map()
 		void load_class_node(const std::string& type, const variant& node)
 		{
 			class_node_map[type] = node;
-	
+
 			const variant classes = flatten_list_of_maps(node["classes"]);
 			if(classes.is_map()) {
 				for(variant key : classes.getKeys().as_list()) {
@@ -439,7 +439,7 @@ std::map<std::string, std::string>& class_path_map()
 				if(itor != properties_.end()) {
 					return itor->second;
 				}
-		
+
 				return -1;
 			}
 
@@ -490,7 +490,7 @@ std::map<std::string, std::string>& class_path_map()
 			{
 				return -1;
 			}
-			
+
 
 		private:
 			std::map<std::string, int> properties_;
@@ -602,7 +602,7 @@ std::map<std::string, std::string>& class_path_map()
 		std::vector<PropertyEntry> slots_;
 
 		std::vector<const PropertyEntry*> variable_slots_;
-	
+
 		classes_map sub_classes_;
 
 		variant unit_test_;
@@ -620,7 +620,7 @@ std::map<std::string, std::string>& class_path_map()
 #endif
 
 		int nstate_slots_;
-		
+
 		bool is_library_only_;
 	};
 
@@ -663,10 +663,10 @@ std::map<std::string, std::string>& class_path_map()
 					if(entry == nullptr) {
 						continue;
 					}
-	
+
 					entry->constant_fn = std::function<bool(variant*)>();
 				}
-				
+
 				def_.reset();
 			}
 		}
@@ -779,7 +779,7 @@ std::map<std::string, std::string>& class_path_map()
 
 			const variant prop_node = properties[key];
 			PropertyEntry entry;
-			
+
 			auto itor = preloaded_entries.find(key.as_string());
 			if(itor != preloaded_entries.end()) {
 				entry = itor->second;
@@ -948,7 +948,7 @@ std::map<std::string, std::string>& class_path_map()
 
 	namespace
 	{
-		struct private_data_scope 
+		struct private_data_scope
 		{
 			explicit private_data_scope(int* r, int new_value) : r_(*r), old_value_(*r) {
 				r_ = new_value;
@@ -1009,7 +1009,7 @@ std::map<std::string, std::string>& class_path_map()
 			}
 
 			ffl::IntrusivePtr<FormulaClass> result;
-	
+
 			if(!backup_classes_.empty() && backup_classes_.count(type)) {
 				try {
 					result = build_class(type);
@@ -1072,7 +1072,7 @@ std::map<std::string, std::string>& class_path_map()
 			seen->pop_back();
 			return;
 		}
-	
+
 		if(node.is_list()) {
 			for(const variant& item : node.as_list()) {
 				FormulaObject::visitVariantsInternal(item, fn, seen);
@@ -1115,7 +1115,7 @@ std::map<std::string, std::string>& class_path_map()
 			seen->pop_back();
 			return;
 		}
-	
+
 		fn(node);
 
 		if(node.is_list()) {
@@ -1782,7 +1782,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		if(static_cast<unsigned>(slot) < property_overrides_.size() && property_overrides_[slot]) {
 			return property_overrides_[slot]->execute(*this);
 		}
-	
+
 		const PropertyEntry& entry = class_->slots()[slot];
 
 		if(entry.getter) {
@@ -2019,7 +2019,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		}
 	}
 
-	namespace 
+	namespace
 	{
 		FormulaCallableDefinitionPtr g_library_definition;
 	}
@@ -2075,7 +2075,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		return g_library_definition;
 	}
 
-	namespace 
+	namespace
 	{
 		struct SlotsLoadingGuard {
 			explicit SlotsLoadingGuard(std::vector<int>& v) : v_(v)

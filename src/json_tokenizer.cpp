@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -28,7 +28,7 @@
 #include "unit_test.hpp"
 #include "string_utils.hpp"
 
-namespace json 
+namespace json
 {
 	Token get_token(const char*& i1, const char* i2)
 	{
@@ -174,7 +174,7 @@ namespace json
 					if(seen_decimal) {
 						TokenizerError error = { "Two decimal points found in number", i1 };
 						throw error;
-					
+
 					}
 
 					seen_decimal = true;

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -115,9 +115,9 @@ namespace KRE
 		*this = *surf.get();
 	}
 
-	bool Surface::registerSurfaceCreator(const std::string& name, 
-		SurfaceCreatorFileFn file_fn, 
-		SurfaceCreatorPixelsFn pixels_fn, 
+	bool Surface::registerSurfaceCreator(const std::string& name,
+		SurfaceCreatorFileFn file_fn,
+		SurfaceCreatorPixelsFn pixels_fn,
 		SurfaceCreatorMaskFn mask_fn,
 		SurfaceCreatorFormatFn format_fn)
 	{
@@ -145,21 +145,21 @@ namespace KRE
 			get_surface_cache()[filename] = surface;
 			surface->init();
 			return surface;
-		} 
+		}
 		auto surf = std::get<0>(create_fn_tuple)(filename, fmt, flags, convert);
 		surf->name_ = filename;
 		surf->init();
 		return surf;
 	}
 
-	SurfacePtr Surface::create(int width, 
-		int height, 
-		int bpp, 
-		int row_pitch, 
-		uint32_t rmask, 
-		uint32_t gmask, 
-		uint32_t bmask, 
-		uint32_t amask, 
+	SurfacePtr Surface::create(int width,
+		int height,
+		int bpp,
+		int row_pitch,
+		uint32_t rmask,
+		uint32_t gmask,
+		uint32_t bmask,
+		uint32_t amask,
 		const void* pixels)
 	{
 		// XXX no caching as default?
@@ -173,12 +173,12 @@ namespace KRE
 		return surf;
 	}
 
-	SurfacePtr Surface::create(int width, 
-		int height, 
-		int bpp, 
-		uint32_t rmask, 
-		uint32_t gmask, 
-		uint32_t bmask, 
+	SurfacePtr Surface::create(int width,
+		int height,
+		int bpp,
+		uint32_t rmask,
+		uint32_t gmask,
+		uint32_t bmask,
 		uint32_t amask)
 	{
 		// XXX no caching as default?
@@ -337,7 +337,7 @@ namespace KRE
 					case 4: p[0] = color.r_int(); p[1] = color.g_int(); p[2] = color.b_int(); p[3] = color.a_int(); break;
 				}
 			}
-		}		
+		}
 	}
 
 	Color Surface::getColorAt(int x, int y) const
@@ -390,7 +390,7 @@ namespace KRE
 		return getColorHistogram(flags).size();
 	}
 
-	namespace 
+	namespace
 	{
 		std::map<FileFilterType, file_filter>& get_file_filter_map()
 		{
@@ -454,22 +454,22 @@ namespace KRE
 	}
 
 	bool Surface::isAlpha(unsigned x, unsigned y) const
-	{ 
+	{
 		ASSERT_LOG(alpha_map_ != nullptr && alpha_map_->size() > 0, "No alpha map found.");
 		ASSERT_LOG(x + y* width() < static_cast<int>(alpha_map_->size()), "Index exceeds alpha map size.");
-		return (*alpha_map_)[y*width()+x]; 
+		return (*alpha_map_)[y*width()+x];
 	}
 
-	std::vector<bool>::const_iterator Surface::getAlphaRow(int x, int y) const 
-	{ 
+	std::vector<bool>::const_iterator Surface::getAlphaRow(int x, int y) const
+	{
 		ASSERT_LOG(alpha_map_ != nullptr && alpha_map_->size() > 0, "No alpha map found.");
 		ASSERT_LOG(x + y* width() < static_cast<int>(alpha_map_->size()), "Index exceeds alpha map size.");
-		return alpha_map_->begin() + y * width() + x; 
+		return alpha_map_->begin() + y * width() + x;
 	}
 
-	std::vector<bool>::const_iterator Surface::endAlpha() const 
-	{ 
-		return alpha_map_->end(); 
+	std::vector<bool>::const_iterator Surface::endAlpha() const
+	{
+		return alpha_map_->end();
 	}
 
 	void Surface::iterateOverSurface(surface_iterator_fn fn)
@@ -486,9 +486,9 @@ namespace KRE
 	{
 		SurfaceLock lck(shared_from_this());
 		auto pf = getPixelFormat();
-		if(pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX1LSB 
-			|| pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX1MSB 
-			|| pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX4LSB 
+		if(pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX1LSB
+			|| pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX1MSB
+			|| pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX4LSB
 			|| pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX4MSB) {
 			int cnt = (pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX1LSB || pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX1MSB) ? 8 : 2;
 			for(int y = sy; y != sh; ++y) {
@@ -602,7 +602,7 @@ namespace KRE
 					break;
 				}
 			}
-			
+
 		}
 
 		if(borders != nullptr) {

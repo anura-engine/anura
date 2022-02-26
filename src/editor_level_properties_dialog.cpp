@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -46,7 +46,7 @@ namespace editor_dialogs
 {
 	using std::placeholders::_1;
 
-	namespace 
+	namespace
 	{
 		void set_segmented_level_width(EditorLevelPropertiesDialog* d, editor* e, bool value)
 		{
@@ -84,13 +84,13 @@ namespace editor_dialogs
 					lvl->set_segment_height(0);
 				}
 			}
-	
+
 			d->init();
 		}
 	}
 
 	EditorLevelPropertiesDialog::EditorLevelPropertiesDialog(editor& e)
-	  : Dialog(KRE::WindowManager::getMainWindow()->width()/2 - 300, KRE::WindowManager::getMainWindow()->height()/2 - 220, 600, 440), 
+	  : Dialog(KRE::WindowManager::getMainWindow()->width()/2 - 300, KRE::WindowManager::getMainWindow()->height()/2 - 220, 600, 440),
 	  editor_(e)
 	{
 		setClearBgAmount(255);
@@ -125,7 +125,7 @@ namespace editor_dialogs
 		}
 		g.reset(new Grid(2));
 		g->addCol(WidgetPtr(new Label("Background", KRE::Color::colorWhite())))
-		  .addCol(WidgetPtr(new Button(WidgetPtr(new Label(background_id, KRE::Color::colorWhite())), 
+		  .addCol(WidgetPtr(new Button(WidgetPtr(new Label(background_id, KRE::Color::colorWhite())),
 			std::bind(&EditorLevelPropertiesDialog::changeBackground, this))));
 		addWidget(g);
 

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -41,7 +41,7 @@
 #include "variant.hpp"
 #include "variant_utils.hpp"
 
-namespace 
+namespace
 {
 	//a cache key with background name and palette ID.
 	typedef std::pair<std::string, int> cache_key;
@@ -134,7 +134,7 @@ std::vector<std::string> Background::getAvailableBackgrounds()
 	return result;
 }
 
-Background::Background(variant node, int palette) 
+Background::Background(variant node, int palette)
 	: palette_(palette),
 	  top_rect_(),
 	  bot_rect_()
@@ -196,7 +196,7 @@ Background::Background(variant node, int palette)
 				std::string blend_mode = layer_node["mode"].as_string_default();
 				if(blend_mode == "GL_MAX" || blend_mode == "MAX") {
 					bg->setBlendEquation(BlendEquation(BlendEquationConstants::BE_MAX));
-				} else if(blend_mode == "GL_MIN" || blend_mode == "MIN") { 
+				} else if(blend_mode == "GL_MIN" || blend_mode == "MIN") {
 					bg->setBlendEquation(BlendEquation(BlendEquationConstants::BE_MIN));
 				} else {
 					bg->setBlendEquation(BlendEquation(BlendEquationConstants::BE_ADD));
@@ -205,7 +205,7 @@ Background::Background(variant node, int palette)
 				bg->setBlendEquation(BlendEquation(layer_node["mode"]));
 			}
 		}
-		
+
 		bg->color = Color(layer_node, DecodingHint::DECIMAL);
 		bg->setColor(bg->color);
 
@@ -345,7 +345,7 @@ void Background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 	drawLayers(x, y, area, opaque_areas, rotation, xdelta, ydelta, cycle);
 }
 
-namespace 
+namespace
 {
 	void calculate_draw_areas(rect area, std::vector<rect>::const_iterator opaque1, std::vector<rect>::const_iterator opaque2, std::vector<rect>* areas) {
 		if(opaque1 == opaque2) {

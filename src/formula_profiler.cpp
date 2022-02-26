@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -148,7 +148,7 @@ class FrameDetailsWidget : public Widget
 
 		if(id_to_color_.count(node->id) == 0) {
 			Color color;
-			
+
 			if(node->id == nullptr) {
 				color = Color("gray");
 			} else if(strcmp(node->id,"DRAW") == 0) {
@@ -1062,9 +1062,9 @@ ffl::IntrusivePtr<SoundVisualizerWidget> g_sound_visualizer_widget;
 namespace formula_profiler
 {
 	bool profiler_on = false;
-	namespace 
+	namespace
 	{
-		struct InstrumentationRecord 
+		struct InstrumentationRecord
 		{
 			InstrumentationRecord() : time_ns(0), nsamples(0)
 			{}
@@ -1165,7 +1165,7 @@ namespace formula_profiler
 
 	EventCallStackType event_call_stack;
 
-	namespace 
+	namespace
 	{
 		bool handler_disabled = false;
 		std::string output_fname;

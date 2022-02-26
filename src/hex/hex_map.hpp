@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,7 +36,7 @@
 
 namespace hex
 {
-	struct ImageHolder 
+	struct ImageHolder
 	{
 		std::string name;
 		int layer;
@@ -67,7 +67,7 @@ namespace hex
 		const std::string& getModString() const { return mod_str_; }
 		const std::string& getFullTypeString() const { return full_type_str_; }
 		const HexObject* getTileAt(int x, int y) const;
-		const HexObject* getTileAt(const point& p) const; 
+		const HexObject* getTileAt(const point& p) const;
 		bool hasFlag(const std::string& flag) const { return flags_.find(flag) != flags_.end() || temp_flags_.find(flag) != temp_flags_.end(); }
 		void addFlag(const std::string& flag) { flags_.emplace(flag); }
 		void addTempFlag(const std::string& flag) const { temp_flags_.emplace(flag); }
@@ -113,9 +113,9 @@ namespace hex
 		static HexMapPtr create(const std::string& filename);
 		static HexMapPtr create(const variant& v);
 
-		void setRenderable(MapNodePtr renderable) { 
-			renderable_ = renderable; 
-			changed_ = true; 
+		void setRenderable(MapNodePtr renderable) {
+			renderable_ = renderable;
+			changed_ = true;
 		}
 		void process();
 		void surrenderReferences(GarbageCollector* collector) override;

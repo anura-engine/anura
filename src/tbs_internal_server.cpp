@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -53,7 +53,7 @@ namespace tbs
 {
 	using std::placeholders::_1;
 
-	namespace 
+	namespace
 	{
 		internal_server_ptr server_ptr;
 	}
@@ -69,9 +69,9 @@ namespace tbs
 	{
 	}
 
-	void internal_server::send_request(const variant& request, 
+	void internal_server::send_request(const variant& request,
 		int session_id,
-		game_logic::MapFormulaCallablePtr callable, 
+		game_logic::MapFormulaCallablePtr callable,
 		std::function<void(const std::string&)> handler)
 	{
 		ASSERT_LOG(server_ptr != nullptr, "Internal server pointer is nullptr");
@@ -79,9 +79,9 @@ namespace tbs
 		server_ptr->write_queue(send_fn, request, session_id);
 	}
 
-	void internal_server::send_msg(const variant& resp, 
+	void internal_server::send_msg(const variant& resp,
 		int session_id,
-		std::function<void(const std::string&)> handler, 
+		std::function<void(const std::string&)> handler,
 		game_logic::MapFormulaCallablePtr callable)
 	{
 		if(handler) {
@@ -137,7 +137,7 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 	memset(&child_args[0], 0, command_line_params.size()+1);
 	memcpy(&child_args[0], &command_line_params[0], command_line_params.size());
 
-	STARTUPINFOA siStartupInfo; 
+	STARTUPINFOA siStartupInfo;
 	PROCESS_INFORMATION piProcessInfo;
 	SECURITY_ATTRIBUTES saFileSecurityAttributes;
 	memset(&siStartupInfo, 0, sizeof(siStartupInfo));
@@ -147,10 +147,10 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 	saFileSecurityAttributes.lpSecurityDescriptor = NULL;
 	saFileSecurityAttributes.bInheritHandle = true;
 	child_stderr = siStartupInfo.hStdError = CreateFileA("stderr_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	ASSERT_LOG(siStartupInfo.hStdError != INVALID_HANDLE_VALUE, 
+	ASSERT_LOG(siStartupInfo.hStdError != INVALID_HANDLE_VALUE,
 		"Unable to open stderr_server.txt for child process.");
 	child_stdout = siStartupInfo.hStdOutput = CreateFileA("stdout_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	ASSERT_LOG(siStartupInfo.hStdOutput != INVALID_HANDLE_VALUE, 
+	ASSERT_LOG(siStartupInfo.hStdOutput != INVALID_HANDLE_VALUE,
 		"Unable to open stdout_server.txt for child process.");
 	siStartupInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
 	siStartupInfo.dwFlags = STARTF_USESTDHANDLES;
@@ -246,7 +246,7 @@ void terminate_utility_process(bool* complete=nullptr)
 	HANDLE local_child_stdout = child_stdout;
 	std::string named_semaphore = g_termination_semaphore_name;
 	boost::interprocess::named_semaphore* sem = g_termination_semaphore;
-	
+
 	background_task_pool::submit([=]() {
 		WaitForSingleObject(local_child_process, INFINITE);
 		CloseHandle(local_child_process);
@@ -259,7 +259,7 @@ void terminate_utility_process(bool* complete=nullptr)
 
 		boost::interprocess::named_semaphore::remove(named_semaphore.c_str());
 		delete sem;
-	}, 
+	},
 
 	[=]() {
 		if(complete != nullptr) {
@@ -519,7 +519,7 @@ void terminate_utility_process(bool* complete=nullptr)
 				send_fn,
 				std::bind(&internal_server::finish_socket, this, send_fn, _1),
 				std::bind(&internal_server::create_socket_info, server_ptr.get(), send_fn),
-				session_id, 
+				session_id,
 				request);
 		}
 		io_service_.poll();

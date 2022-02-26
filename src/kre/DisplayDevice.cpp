@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,7 +38,7 @@
 
 namespace KRE
 {
-	namespace 
+	namespace
 	{
 		PREF_BOOL(kre_allow_hardware_attribute_set, false, "Allows hardware attribute sets in the rendering engine");
 
@@ -51,7 +51,7 @@ namespace KRE
 				&& equal(l.cbegin(), l.cend(), r.cbegin(),
 					[](std::string::value_type l1, std::string::value_type r1)
 						{ return toupper(l1) == toupper(r1); });
-		}	
+		}
 
 		typedef std::map<std::string, std::function<DisplayDevicePtr(WindowPtr)>> DisplayDeviceRegistry;
 		DisplayDeviceRegistry& get_display_registry()
@@ -85,7 +85,7 @@ namespace KRE
 	{
 		ASSERT_LOG(!get_display_registry().empty(), "No display device drivers registered.");
 		auto it = get_display_registry().find(type);
-		if(it == get_display_registry().end()) {			
+		if(it == get_display_registry().end()) {
 			LOG_WARN("Requested display driver '" << type << "' not found, using default: " << get_display_registry().begin()->first);
 			current_display_device() = get_display_registry().begin()->second(parent);
 			return current_display_device();
@@ -136,18 +136,18 @@ namespace KRE
 		return std::make_shared<HardwareAttributeImpl>(parent);
 	}
 
-	RenderTargetPtr DisplayDevice::renderTargetInstance(int width, int height, 
-		int color_plane_count, 
-		bool depth, 
-		bool stencil, 
-		bool use_multi_sampling, 
+	RenderTargetPtr DisplayDevice::renderTargetInstance(int width, int height,
+		int color_plane_count,
+		bool depth,
+		bool stencil,
+		bool use_multi_sampling,
 		int multi_samples)
 	{
-		return getCurrent()->handleCreateRenderTarget(width, height, 
-			color_plane_count, 
-			depth, 
-			stencil, 
-			use_multi_sampling, 
+		return getCurrent()->handleCreateRenderTarget(width, height,
+			color_plane_count,
+			depth,
+			stencil,
+			use_multi_sampling,
 			multi_samples);
 	}
 

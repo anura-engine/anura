@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -37,9 +37,9 @@
 #include "widget_settings_dialog.hpp"
 #include "widget_factory.hpp"
 
-namespace gui 
+namespace gui
 {
-	namespace 
+	namespace
 	{
 		const int default_hpadding = 10;
 		const int default_vpadding = 4;
@@ -81,7 +81,7 @@ variant Button::getColorScheme()
 	Button::Button(WidgetPtr label, std::function<void ()> onclick, BUTTON_STYLE button_style, BUTTON_RESOLUTION buttonResolution)
 	  : label_(label), onclick_(onclick), button_resolution_(buttonResolution), button_style_(button_style),
 		down_(false), hpadding_(default_hpadding), vpadding_(default_vpadding)
-	
+
 	{
 		setEnvironment();
 		if(g_color_scheme.is_null() == false) {
@@ -92,7 +92,7 @@ variant Button::getColorScheme()
 		setup();
 	}
 
-	Button::Button(const variant& v, game_logic::FormulaCallable* e) 
+	Button::Button(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v,e), down_(false)
 	{
 		variant label_var = v["label"];
@@ -107,7 +107,7 @@ variant Button::getColorScheme()
 		if(on_click_value.is_function()) {
 			ASSERT_LOG(on_click_value.min_function_arguments() == 0, "on_click button function should take 0 arguments: " << v.debug_location());
 			click_handler_fn_ = on_click_value;
-		} else { 
+		} else {
 			click_handler_ = getEnvironment()->createFormula(on_click_value);
 		}
 
@@ -199,7 +199,7 @@ variant Button::getColorScheme()
 			focus_button_image_set_ = FramedGuiElement::get("regular_button_focus");
 		}
 		current_button_image_set_ = normal_button_image_set_;
-	
+
 		setLabel(label_);
 	}
 
@@ -210,10 +210,10 @@ variant Button::getColorScheme()
 	}
 
 	void Button::doExecute()
-	{ 
-		if(onclick_) { 
+	{
+		if(onclick_) {
 			onclick_();
-		} 
+		}
 	}
 
 	void Button::setLabel(WidgetPtr label)
@@ -228,14 +228,14 @@ variant Button::getColorScheme()
 	{
 		label_->setLoc(width()/2 - label_->width()/2,height()/2 - label_->height()/2);
 
-		const KRE::Color& col = current_button_image_set_ == normal_button_image_set_ 
-			? normal_color_ 
+		const KRE::Color& col = current_button_image_set_ == normal_button_image_set_
+			? normal_color_
 			: (current_button_image_set_ == focus_button_image_set_ ? focus_color_ : depressed_color_);
 
 		current_button_image_set_->blit(x(),y(),width(),height(), button_resolution_ != 0, col);
 
-		const KRE::Color& text_col = current_button_image_set_ == normal_button_image_set_ 
-			? text_normal_color_ 
+		const KRE::Color& text_col = current_button_image_set_ == normal_button_image_set_
+			? text_normal_color_
 			: (current_button_image_set_ == focus_button_image_set_ ? text_focus_color_ : text_depressed_color_);
 
 		KRE::Canvas::ColorManager cm(text_col);

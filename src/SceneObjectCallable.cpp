@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -74,7 +74,7 @@ namespace graphics
 			if(ea.z == 0) {
 				if(ea.y == 0) {
 					return variant(ea.x);
-				} 
+				}
 				return variant(&v);
 			}
 			v.emplace_back(ea.z);

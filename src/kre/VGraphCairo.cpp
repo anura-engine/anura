@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -79,7 +79,7 @@ namespace KRE
 		class MoveToInstruction : public PathInstruction
 		{
 		public:
-			MoveToInstruction(const double x, const double y, bool relative=false) 
+			MoveToInstruction(const double x, const double y, bool relative=false)
 				: x_(x), y_(y), relative_(relative) {
 			}
 			void execute(cairo_t* context) override {
@@ -102,7 +102,7 @@ namespace KRE
 		class LineToInstruction : public PathInstruction
 		{
 		public:
-			LineToInstruction(const double x, const double y, bool relative=false) 
+			LineToInstruction(const double x, const double y, bool relative=false)
 				: x_(x), y_(y), relative_(relative) {
 			}
 			void execute(cairo_t* context) override {
@@ -125,7 +125,7 @@ namespace KRE
 		class ArcInstruction : public PathInstruction
 		{
 		public:
-			ArcInstruction(const double x, const double y, const double radius, const double start_angle, const double end_angle, bool negative=false) 
+			ArcInstruction(const double x, const double y, const double radius, const double start_angle, const double end_angle, bool negative=false)
 				: x_(x), y_(y), radius_(radius), start_angle_(start_angle), end_angle_(end_angle), negative_(negative) {
 			}
 			void execute(cairo_t* context) override {
@@ -151,7 +151,7 @@ namespace KRE
 		class CubicCurveInstruction : public PathInstruction
 		{
 		public:
-			CubicCurveInstruction(const double x1, const double y1, const double x2, const double y2, const double ex, const double ey, bool relative=false) 
+			CubicCurveInstruction(const double x1, const double y1, const double x2, const double y2, const double ex, const double ey, bool relative=false)
 				: cp_x1_(x1), cp_y1_(y1), cp_x2_(x2), cp_y2_(y2), ex_(ex), ey_(ey), relative_(relative) {
 			}
 			void execute(cairo_t* context) override {
@@ -181,7 +181,7 @@ namespace KRE
 		class QuadraticCurveInstruction : public PathInstruction
 		{
 		public:
-			QuadraticCurveInstruction(const double x1, const double y1, const double ex, const double ey, bool relative=false) 
+			QuadraticCurveInstruction(const double x1, const double y1, const double ex, const double ey, bool relative=false)
 				: cp_x1_(x1), cp_y1_(y1), ex_(ex), ey_(ey), relative_(relative) {
 			}
 			void execute(cairo_t* context) override {
@@ -268,7 +268,7 @@ namespace KRE
 			void Arc(const double cx, const double cy, const double radius, const double start_angle, const double end_angle, bool negative=false) override {
 				path_instructions_.emplace_back(new ArcInstruction(cx, cy, radius, start_angle, end_angle, negative));
 			}
-				
+
 			// Adds a Cubic Bezier curve to the current path from the current position to the end position
 			// (ex,ey) using the control points (x1,y1) and (x2,y2)
 			// If relative is true then the curve is drawn with all positions relative to the current point.
@@ -421,12 +421,12 @@ namespace KRE
 		{
 			// XXX
 			//auto pattern = std::dynamic_pointer_cast<CairoPattern>(p);
-			//pattern = 
+			//pattern =
 		}
 
 		PatternPtr CairoContext::GetSource() const
 		{
-			// XXX 
+			// XXX
 			return PatternPtr();
 		}
 
@@ -516,7 +516,7 @@ namespace KRE
 			return offset;
 		}
 
-				
+
 		void CairoContext::Paint(const double alpha)
 		{
 			cairo_paint_with_alpha(context_, alpha);
@@ -622,76 +622,76 @@ namespace KRE
 			cpath->execute(context_);
 		}
 
-		void CairoContext::preRender(const WindowPtr& wnd) 
+		void CairoContext::preRender(const WindowPtr& wnd)
 		{
 			tex_->update2D(0, 0, 0, width(), height(), cairo_image_surface_get_width(surface_), cairo_image_surface_get_data(surface_));
 		}
 
-		void CairoContext::PathExtents(double& x1, double& y1, double& x2, double& y2) 
+		void CairoContext::PathExtents(double& x1, double& y1, double& x2, double& y2)
 		{
 			cairo_path_extents(context_, &x1, &y1, &x2, &y2);
 		}
 
-		void CairoContext::translate(double tx, double ty) 
+		void CairoContext::translate(double tx, double ty)
 		{
 			cairo_translate(context_, tx, ty);
 		}
 
-		void CairoContext::scale(double sx, double sy) 
+		void CairoContext::scale(double sx, double sy)
 		{
 			cairo_scale(context_, sx, sy);
 		}
 
-		void CairoContext::rotate(double rad) 
+		void CairoContext::rotate(double rad)
 		{
 			cairo_rotate(context_, rad);
 		}
 
-		void CairoContext::setMatrix(const MatrixPtr& m) 
+		void CairoContext::setMatrix(const MatrixPtr& m)
 		{
 			auto mat = std::dynamic_pointer_cast<CairoMatrix>(m);
 			ASSERT_LOG(mat != nullptr, "Matrix given to setMatrix is not an instance of CairoMatrix.");
 			cairo_set_matrix(context_, mat->get());
 		}
 
-		MatrixPtr CairoContext::getMatrix() const 
+		MatrixPtr CairoContext::getMatrix() const
 		{
 			cairo_matrix_t mat;
 			cairo_get_matrix(context_, &mat);
 			return std::make_shared<CairoMatrix>(mat);
 		}
 
-		void CairoContext::transform(const MatrixPtr& m) 
+		void CairoContext::transform(const MatrixPtr& m)
 		{
 			auto mat = std::dynamic_pointer_cast<CairoMatrix>(m);
 			ASSERT_LOG(mat != nullptr, "Matrix given to transform is not an instance of CairoMatrix.");
 			cairo_transform(context_, mat->get());
 		}
 
-		void CairoContext::setIdentityMatrix() 
+		void CairoContext::setIdentityMatrix()
 		{
 			cairo_identity_matrix(context_);
 		}
 
-		geometry::Point<double> CairoContext::userToDevice(double x, double y) 
+		geometry::Point<double> CairoContext::userToDevice(double x, double y)
 		{
 			cairo_user_to_device(context_, &x, &y);
 			return geometry::Point<double>(x, y);
 		}
 
-		geometry::Point<double> CairoContext::userToDeviceDistance(double x, double y) 
+		geometry::Point<double> CairoContext::userToDeviceDistance(double x, double y)
 		{
 			cairo_user_to_device_distance(context_, &x, &y);
 			return geometry::Point<double>(x, y);
 		}
 
-		geometry::Point<double> CairoContext::deviceToUser(double x, double y) 
+		geometry::Point<double> CairoContext::deviceToUser(double x, double y)
 		{
 			cairo_device_to_user(context_, &x, &y);
 			return geometry::Point<double>(x, y);
 		}
 
-		geometry::Point<double> CairoContext::deviceToUserDistance(double x, double y) 
+		geometry::Point<double> CairoContext::deviceToUserDistance(double x, double y)
 		{
 			cairo_device_to_user_distance(context_, &x, &y);
 			return geometry::Point<double>(x, y);
@@ -712,71 +712,71 @@ namespace KRE
 		{
 		}
 
-		void CairoMatrix::init(double xx, double yx, double xy, double yy, double x0, double y0) 
+		void CairoMatrix::init(double xx, double yx, double xy, double yy, double x0, double y0)
 		{
 			cairo_matrix_init(&matrix_, xx, yy, xy, yy, x0, y0);
 		}
 
-		void CairoMatrix::initIdentity() 
+		void CairoMatrix::initIdentity()
 		{
 			cairo_matrix_init_identity(&matrix_);
 		}
 
-		void CairoMatrix::initTranslate(double x0, double y0) 
+		void CairoMatrix::initTranslate(double x0, double y0)
 		{
 			cairo_matrix_init_translate(&matrix_, x0, y0);
 		}
 
-		void CairoMatrix::initScale(double xs, double ys) 
+		void CairoMatrix::initScale(double xs, double ys)
 		{
 			cairo_matrix_init_scale(&matrix_, xs, ys);
 		}
 
-		void CairoMatrix::initRotation(double rad) 
+		void CairoMatrix::initRotation(double rad)
 		{
 			cairo_matrix_init_rotate(&matrix_, rad);
 		}
 
-		void CairoMatrix::translate(double tx, double ty) 
+		void CairoMatrix::translate(double tx, double ty)
 		{
 			cairo_matrix_translate(&matrix_, tx, ty);
 		}
 
-		void CairoMatrix::scale(double sx, double sy) 
+		void CairoMatrix::scale(double sx, double sy)
 		{
 			cairo_matrix_scale(&matrix_, sx, sy);
 		}
 
-		void CairoMatrix::rotate(double rad) 
+		void CairoMatrix::rotate(double rad)
 		{
 			cairo_matrix_rotate(&matrix_, rad);
 		}
 
-		void CairoMatrix::invert() 
+		void CairoMatrix::invert()
 		{
 			cairo_matrix_invert(&matrix_);
 		}
 
-		void CairoMatrix::multiply(const MatrixPtr& a) 
+		void CairoMatrix::multiply(const MatrixPtr& a)
 		{
 			cairo_matrix_t new_mat;
 			cairo_matrix_multiply(&new_mat, &matrix_, &std::dynamic_pointer_cast<CairoMatrix>(a)->matrix_);
 			matrix_ = new_mat;
 		}
 
-		geometry::Point<double> CairoMatrix::transformDistance(double x, double y) 
+		geometry::Point<double> CairoMatrix::transformDistance(double x, double y)
 		{
 			cairo_matrix_transform_distance(&matrix_, &x, &y);
 			return geometry::Point<double>(x, y);
 		}
 
-		geometry::Point<double> CairoMatrix::transformPoint(double x, double y) 
+		geometry::Point<double> CairoMatrix::transformPoint(double x, double y)
 		{
 			cairo_matrix_transform_point(&matrix_, &x, &y);
 			return geometry::Point<double>(x, y);
 		}
 
-		MatrixPtr CairoMatrix::clone() 
+		MatrixPtr CairoMatrix::clone()
 		{
 			return std::make_shared<CairoMatrix>(*this);
 		}

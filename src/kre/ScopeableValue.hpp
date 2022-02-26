@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -56,7 +56,7 @@ namespace KRE
 		bool isBlendModeSet() const { return blend_mode_set_; }
 		const BlendMode& getBlendMode() const { return blend_mode_; }
 		void setBlendMode(const BlendMode& bm) { blend_mode_ = bm; blend_mode_set_ = true; }
-		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.set(src, dst); blend_mode_set_ = true; }		
+		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.set(src, dst); blend_mode_set_ = true; }
 		void clearBlendMode() { blend_mode_set_ = false; }
 
 		bool isBlendEnabled() const { return blend_enabled_; }
@@ -87,8 +87,8 @@ namespace KRE
 		void disbleLighting(bool en = true) { use_lighting_ = !en; is_use_lighting_set_ = true; }
 		void clearLighting() { is_use_lighting_set_ = false; use_lighting_ = false; }
 
-		void clear() { 
-			color_set_ = false; 
+		void clear() {
+			color_set_ = false;
 			blend_equation_set_ = false;
 			blend_mode_set_ = false;
 			blend_enabled_ = true;

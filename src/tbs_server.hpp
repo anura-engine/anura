@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -30,7 +30,7 @@
 #include "shared_memory_pipe.hpp"
 #include "tbs_server_base.hpp"
 
-namespace tbs 
+namespace tbs
 {
 	typedef http::web_server::socket_ptr socket_ptr;
 	typedef std::shared_ptr<boost::array<char, 1024> > buffer_ptr;
@@ -40,7 +40,7 @@ namespace tbs
 	public:
 		explicit server(boost::asio::io_service& io_service);
 		virtual ~server();
-	 
+
 		void adopt_ajax_socket(socket_ptr socket, int session_id, const variant& msg);
 
 		static variant get_server_info();

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -122,7 +122,7 @@ namespace formula_profiler
 	void draw();
 	bool handle_sdl_event(const SDL_Event& event, bool claimed);
 
-	struct CustomObjectEventFrame 
+	struct CustomObjectEventFrame
 	{
 		const CustomObjectType* type;
 		int event_id;

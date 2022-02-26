@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -26,7 +26,7 @@
 #include <string>
 #include "variant.hpp"
 
-namespace json 
+namespace json
 {
 	void set_file_contents(const std::string& path, const std::string& contents);
 	std::string get_file_contents(const std::string& path);
@@ -37,7 +37,7 @@ namespace json
 	variant parse_from_file_or_die(const std::string& fname, JSON_PARSE_OPTIONS options=JSON_PARSE_OPTIONS::USE_PREPROCESSOR);
 	bool file_exists_and_is_valid(const std::string& fname);
 
-	struct ParseError 
+	struct ParseError
 	{
 		explicit ParseError(const std::string& msg);
 		ParseError(const std::string& msg, const std::string& filename, std::ptrdiff_t line, std::ptrdiff_t col);

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -66,7 +66,7 @@ namespace KRE
 	{
 		struct CameraScope
 		{
-			CameraScope(const CameraPtr& cam) 
+			CameraScope(const CameraPtr& cam)
 				: old_cam(nullptr)
 			{
 				if(cam) {
@@ -97,7 +97,7 @@ namespace KRE
 			{
 				set_global_model_matrix(last_matrix);
 			}
-			glm::mat4 last_matrix;			
+			glm::mat4 last_matrix;
 		};
 	}
 
@@ -140,19 +140,19 @@ namespace KRE
 		}), objects_.end());
 	}
 
-	void SceneTree::setPosition(const glm::vec3& position) 
+	void SceneTree::setPosition(const glm::vec3& position)
 	{
 		position_ = position;
 		model_changed_ = true;
 	}
 
-	void SceneTree::setPosition(float x, float y, float z) 
+	void SceneTree::setPosition(float x, float y, float z)
 	{
 		position_ = glm::vec3(x, y, z);
 		model_changed_ = true;
 	}
 
-	void SceneTree::setPosition(int x, int y, int z) 
+	void SceneTree::setPosition(int x, int y, int z)
 	{
 		position_ = glm::vec3(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
 		model_changed_ = true;
@@ -176,25 +176,25 @@ namespace KRE
 		model_changed_ = true;
 	}
 
-	void SceneTree::setRotation(float angle, const glm::vec3& axis) 
+	void SceneTree::setRotation(float angle, const glm::vec3& axis)
 	{
 		rotation_ = glm::angleAxis(glm::radians(angle), axis);
 		model_changed_ = true;
 	}
 
-	void SceneTree::setRotation(const glm::quat& rot) 
+	void SceneTree::setRotation(const glm::quat& rot)
 	{
 		rotation_ = rot;
 		model_changed_ = true;
 	}
 
-	void SceneTree::setScale(float xs, float ys, float zs) 
+	void SceneTree::setScale(float xs, float ys, float zs)
 	{
 		scale_ = glm::vec3(xs, ys, zs);
 		model_changed_ = true;
 	}
 
-	void SceneTree::setScale(const glm::vec3& scale) 
+	void SceneTree::setScale(const glm::vec3& scale)
 	{
 		scale_ = scale;
 		model_changed_ = true;

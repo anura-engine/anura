@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -75,7 +75,7 @@ namespace scrollable
 	private:
 		bool handleMouseMotion(bool claimed, const point& p, unsigned keymod, bool in_rect) override;
 		bool handleMouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect) override;
-		bool handleMouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect) override;	
+		bool handleMouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect) override;
 		bool handleMouseWheel(bool claimed, const point& p, const point& delta, int direction, bool in_rect) override;
 
 		void init();

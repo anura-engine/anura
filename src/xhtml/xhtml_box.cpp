@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -250,7 +250,7 @@ namespace xhtml
 				handlePostChildLayout(eng, child);
 			}
 		}
-		
+
 		handleLayout(eng, containing);
 		//layoutAbsolute(eng, containing);
 
@@ -273,7 +273,7 @@ namespace xhtml
 		if(isBlockBox() && styles != nullptr) {
 			auto css_h = styles->getHeight();
 			if(!css_h->isAuto()) {
-				setContentHeight(css_h->getLength().compute(containing.content_.height));				
+				setContentHeight(css_h->getLength().compute(containing.content_.height));
 			}
 		}
 
@@ -301,7 +301,7 @@ namespace xhtml
 	}
 
 	void Box::calculateHorzMPB(FixedPoint containing_width)
-	{		
+	{
 		auto styles = getStyleNode();
 		if(styles == nullptr) {
 			return;
@@ -327,7 +327,7 @@ namespace xhtml
 	void Box::render(const point& offset) const
 	{
 		point offs = point(dimensions_.content_.x, dimensions_.content_.y);
-		
+
 		if(node_ != nullptr && node_->getPosition() == Position::RELATIVE_POS) {
 			if(getStyleNode()->getLeft()->isAuto()) {
 				if(!getStyleNode()->getRight()->isAuto()) {
@@ -380,7 +380,7 @@ namespace xhtml
 						node->setModelMatrix(glm::inverse(combined_matrix));
 					}
 				});
-				
+
 			}
 		}
 
@@ -430,7 +430,7 @@ namespace xhtml
 				if(rb != nullptr) {
 					rh = getRoot()->getLayoutDimensions();
 				}
-				
+
 				scrollable::ScrollbarPtr scrollbar = node->getScrollbar(scrollable::Scrollbar::Direction::VERTICAL);
 				if(ovf == Overflow::SCROLL || (ovf == Overflow::AUTO && (precss_content_height_ > box_height || (y + h) > rh.y))) {
 					const auto scale = LayoutEngine::getFixedPointScaleFloat();
@@ -548,7 +548,7 @@ namespace xhtml
 
 		//const int x = offset.x / LayoutEngine::getFixedPointScale();
 		//const int y = offset.y / LayoutEngine::getFixedPointScale();
-		
+
 		auto filters = node->getFilters()->getFilters();
 
 		//if(!filters.empty()) {
@@ -579,8 +579,8 @@ namespace xhtml
 					auto rt = RenderTarget::create(w, h);
 					rt->setShader(filter_shader);
 					rt->setClearColor(Color(0,0,0,0));
-					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast, 
-						u_grayscale, u_hue_rotate, u_invert, u_opacity, 
+					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast,
+						u_grayscale, u_hue_rotate, u_invert, u_opacity,
 						u_saturate](ShaderProgramPtr shader) {
 						shader->setUniformValue(u_blur, 0);
 						shader->setUniformValue(u_sepia, 0.0f);
@@ -600,8 +600,8 @@ namespace xhtml
 					auto rt = RenderTarget::create(w, h);
 					rt->setShader(filter_shader);
 					rt->setClearColor(Color(0,0,0,0));
-					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast, 
-						u_grayscale, u_hue_rotate, u_invert, u_opacity, 
+					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast,
+						u_grayscale, u_hue_rotate, u_invert, u_opacity,
 						u_saturate](ShaderProgramPtr shader) {
 						shader->setUniformValue(u_blur, 0);
 						shader->setUniformValue(u_sepia, 0.0f);
@@ -621,8 +621,8 @@ namespace xhtml
 					auto rt = RenderTarget::create(w, h);
 					rt->setShader(filter_shader);
 					rt->setClearColor(Color(0,0,0,0));
-					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast, 
-						u_grayscale, u_hue_rotate, u_invert, u_opacity, 
+					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast,
+						u_grayscale, u_hue_rotate, u_invert, u_opacity,
 						u_saturate](ShaderProgramPtr shader) {
 						shader->setUniformValue(u_blur, 0);
 						shader->setUniformValue(u_sepia, 0.0f);
@@ -642,8 +642,8 @@ namespace xhtml
 					auto rt = RenderTarget::create(w, h);
 					rt->setShader(filter_shader);
 					rt->setClearColor(Color(0,0,0,0));
-					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast, 
-						u_grayscale, u_hue_rotate, u_invert, u_opacity, 
+					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast,
+						u_grayscale, u_hue_rotate, u_invert, u_opacity,
 						u_saturate](ShaderProgramPtr shader) {
 						shader->setUniformValue(u_blur, 0);
 						shader->setUniformValue(u_sepia, 0.0f);
@@ -663,8 +663,8 @@ namespace xhtml
 					auto rt = RenderTarget::create(w, h);
 					rt->setShader(filter_shader);
 					rt->setClearColor(Color(0,0,0,0));
-					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast, 
-						u_grayscale, u_hue_rotate, u_invert, u_opacity, 
+					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast,
+						u_grayscale, u_hue_rotate, u_invert, u_opacity,
 						u_saturate](ShaderProgramPtr shader) {
 						shader->setUniformValue(u_blur, 0);
 						shader->setUniformValue(u_sepia, 0.0f);
@@ -684,8 +684,8 @@ namespace xhtml
 					auto rt = RenderTarget::create(w, h);
 					rt->setShader(filter_shader);
 					rt->setClearColor(Color(0,0,0,0));
-					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast, 
-						u_grayscale, u_hue_rotate, u_invert, u_opacity, 
+					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast,
+						u_grayscale, u_hue_rotate, u_invert, u_opacity,
 						u_saturate](ShaderProgramPtr shader) {
 						shader->setUniformValue(u_blur, 0);
 						shader->setUniformValue(u_sepia, 0.0f);
@@ -705,8 +705,8 @@ namespace xhtml
 					auto rt = RenderTarget::create(w, h);
 					rt->setShader(filter_shader);
 					rt->setClearColor(Color(0,0,0,0));
-					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast, 
-						u_grayscale, u_hue_rotate, u_invert, u_opacity, 
+					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast,
+						u_grayscale, u_hue_rotate, u_invert, u_opacity,
 						u_saturate](ShaderProgramPtr shader) {
 						shader->setUniformValue(u_blur, 0);
 						shader->setUniformValue(u_sepia, filter->getComputedLength());
@@ -726,8 +726,8 @@ namespace xhtml
 					auto rt = RenderTarget::create(w, h);
 					rt->setShader(filter_shader);
 					rt->setClearColor(Color(0,0,0,0));
-					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast, 
-						u_grayscale, u_hue_rotate, u_invert, u_opacity, 
+					filter_shader->setUniformDrawFunction([filter, u_blur, u_sepia, u_brightness, u_contrast,
+						u_grayscale, u_hue_rotate, u_invert, u_opacity,
 						u_saturate](ShaderProgramPtr shader) {
 						shader->setUniformValue(u_blur, 0);
 						shader->setUniformValue(u_sepia, 0.0f);
@@ -770,8 +770,8 @@ namespace xhtml
 					auto rt = RenderTarget::create(w, h);
 					rt->setShader(filter_shader);
 					rt->setClearColor(Color(0,0,0,0));
-					filter_shader->setUniformDrawFunction([filter, w, u_blur, u_sepia, u_brightness, u_contrast, 
-						u_grayscale, u_hue_rotate, u_invert, u_opacity, 
+					filter_shader->setUniformDrawFunction([filter, w, u_blur, u_sepia, u_brightness, u_contrast,
+						u_grayscale, u_hue_rotate, u_invert, u_opacity,
 						u_saturate, blur_two, blur_tho, u_gaussian](ShaderProgramPtr shader) {
 						shader->setUniformValue(u_blur, 1);
 						shader->setUniformValue(blur_two, 1.0f / (static_cast<float>(w) - 1.0f));
@@ -795,7 +795,7 @@ namespace xhtml
 				case CssFilterId::DROP_SHADOW: {
 					/*auto& shadow = filter->getShadow();
 					if(shadow == nullptr || shadow->getBlur().compute() == 0) {
-						continue;					
+						continue;
 					}
 
 					// 1) Render alpha map to texture.

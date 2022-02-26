@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -166,7 +166,7 @@ namespace css
 	enum class Side {
 		TOP,
 		LEFT,
-		BOTTOM, 
+		BOTTOM,
 		RIGHT,
 	};
 
@@ -247,7 +247,7 @@ namespace css
 	public:
 		TimingFunction() : ttfn_(CssTransitionTimingFunction::CUBIC_BEZIER), nintervals_(0), poc_(StepChangePoint::END), p1_(0.25f, 0.1f), p2_(0.25f, 1.0f) {}
 		// for cubic-bezier
-		explicit TimingFunction(float x1, float y1, float x2, float y2) 
+		explicit TimingFunction(float x1, float y1, float x2, float y2)
 			: ttfn_(CssTransitionTimingFunction::CUBIC_BEZIER), nintervals_(0), poc_(StepChangePoint::END), p1_(x1, y1), p2_(x2, y2) {}
 		// for step function
 		explicit TimingFunction(int nintervals, StepChangePoint poc)
@@ -266,7 +266,7 @@ namespace css
 		glm::vec2 p2_;
 	};
 
-	struct StyleTransition 
+	struct StyleTransition
 	{
 		StyleTransition() : duration(0), ttfn(), delay() {}
 		StyleTransition(float dura, TimingFunction fn, float del) : duration(dura), ttfn(fn), delay(del) {}
@@ -279,11 +279,11 @@ namespace css
 	class Style : public std::enable_shared_from_this<Style>
 	{
 	public:
-		template<typename T> explicit Style(StyleId id, T value) 
-			: id_(id), 
-			  is_important_(false), 
-			  is_inherited_(false), 
-			  stored_enum_(true), 
+		template<typename T> explicit Style(StyleId id, T value)
+			: id_(id),
+			  is_important_(false),
+			  is_inherited_(false),
+			  stored_enum_(true),
 			  enumeration_(static_cast<int>(value)),
 			  transitions_()
 		{}
@@ -297,16 +297,16 @@ namespace css
 		bool isInherited() const { return is_inherited_; }
 		bool operator==(const StylePtr& style) const;
 		bool operator!=(const StylePtr& style) const { return !operator==(style); }
-		template<typename T> T getEnum() const { 
+		template<typename T> T getEnum() const {
 			ASSERT_LOG(stored_enum_ == true, "Requested an enumeration for this style, which isn't an enumerated type.");
-			return static_cast<T>(enumeration_); 
+			return static_cast<T>(enumeration_);
 		}
 		template<typename T> void setEnum(T value) {
 			enumeration_ = static_cast<int>(value);
 			stored_enum_ = true;
 		}
-		template<typename T> std::shared_ptr<T> asType() { 
-			auto ptr = std::dynamic_pointer_cast<T>(shared_from_this()); 
+		template<typename T> std::shared_ptr<T> asType() {
+			auto ptr = std::dynamic_pointer_cast<T>(shared_from_this());
 			ASSERT_LOG(ptr != nullptr, "Could not convert from " << static_cast<int>(id_));
 			return ptr;
 		}
@@ -341,7 +341,7 @@ namespace css
 		void setParam(CssColorParam param);
 		void setColor(const KRE::Color& color);
 		CssColorParam getParam() const { return param_; }
-		const KRE::ColorPtr& getColor() const { return color_; }	
+		const KRE::ColorPtr& getColor() const { return color_; }
 		bool isTransparent() const { return param_ == CssColorParam::CSS_TRANSPARENT; }
 		bool isNone() const { return param_ == CssColorParam::NONE; }
 		bool isValue() const { return param_ == CssColorParam::VALUE; }
@@ -371,7 +371,7 @@ namespace css
 		LU_VMIN,	// 1/100th minimum of viewport width and height
 		LU_VMAX,	// 1/100th maximum of viewport width and height
 	};
-	
+
 	class Length : public Style
 	{
 	public:
@@ -406,7 +406,7 @@ namespace css
 	public:
 		Angle() : value_(0), units_(AngleUnits::DEGREES) {}
 		explicit Angle(float angle, AngleUnits units) : value_(angle), units_(units) {}
-		explicit Angle(float angle, const std::string& units);		
+		explicit Angle(float angle, const std::string& units);
 		float getAngle(AngleUnits units=AngleUnits::DEGREES) const;
 	private:
 		float value_;
@@ -423,7 +423,7 @@ namespace css
 	public:
 		Time() : value_(0), units_(TimeUnits::SECONDS) {}
 		explicit Time(float t, TimeUnits units) : value_(t), units_(units) {}
-		explicit Time(float t, const std::string& units);		
+		explicit Time(float t, const std::string& units);
 		float getTime(TimeUnits units=TimeUnits::SECONDS);
 	private:
 		float value_;
@@ -551,47 +551,47 @@ namespace css
 	{
 	public:
 		MAKE_FACTORY(FontSize);
-		FontSize() 
+		FontSize()
 			: Style(StyleId::FONT_SIZE),
-			  is_absolute_(false), 
-			  absolute_(FontSizeAbsolute::NONE), 
-			  is_relative_(false), 
-			  relative_(FontSizeRelative::NONE), 
-			  is_length_(false), 
+			  is_absolute_(false),
+			  absolute_(FontSizeAbsolute::NONE),
+			  is_relative_(false),
+			  relative_(FontSizeRelative::NONE),
+			  is_length_(false),
 			  length_()
 		{
 		}
-		explicit FontSize(FontSizeAbsolute absvalue) 
+		explicit FontSize(FontSizeAbsolute absvalue)
 			: Style(StyleId::FONT_SIZE),
-			  is_absolute_(true), 
-			  absolute_(absvalue), 
-			  is_relative_(false), 
-			  relative_(FontSizeRelative::NONE), 
-			  is_length_(false), 
+			  is_absolute_(true),
+			  absolute_(absvalue),
+			  is_relative_(false),
+			  relative_(FontSizeRelative::NONE),
+			  is_length_(false),
 			  length_()
 		{
 		}
-		explicit FontSize(const Length& len) 
+		explicit FontSize(const Length& len)
 			: Style(StyleId::FONT_SIZE),
-			  is_absolute_(false), 
-			  absolute_(FontSizeAbsolute::NONE), 
-			  is_relative_(false), 
-			  relative_(FontSizeRelative::NONE), 
-			  is_length_(true), 
+			  is_absolute_(false),
+			  absolute_(FontSizeAbsolute::NONE),
+			  is_relative_(false),
+			  relative_(FontSizeRelative::NONE),
+			  is_length_(true),
 			  length_(len)
 		{
 		}
-		void setFontSize(FontSizeAbsolute absvalue) { 
+		void setFontSize(FontSizeAbsolute absvalue) {
 			disableAll();
 			absolute_ = absvalue;
 			is_absolute_ = true;
 		}
-		void setFontSize(FontSizeRelative rel) { 
+		void setFontSize(FontSizeRelative rel) {
 			disableAll();
 			relative_ = rel;
 			is_relative_ = true;
 		}
-		void setFontSize(const Length& len) { 
+		void setFontSize(const Length& len) {
 			disableAll();
 			length_ = len;
 			is_length_ = true;
@@ -614,7 +614,7 @@ namespace css
 		LEFT,
 		RIGHT,
 	};
-	
+
 	enum class Display {
 		NONE,
 		INLINE,
@@ -770,21 +770,21 @@ namespace css
 	public:
 		MAKE_FACTORY(Clip);
 		Clip() : Style(StyleId::CLIP), auto_(true), rect_() {}
-		explicit Clip(xhtml::FixedPoint left, xhtml::FixedPoint top, xhtml::FixedPoint right, xhtml::FixedPoint bottom) 
+		explicit Clip(xhtml::FixedPoint left, xhtml::FixedPoint top, xhtml::FixedPoint right, xhtml::FixedPoint bottom)
 			: Style(StyleId::CLIP),
-			  auto_(false), 
-			  rect_(left, top, right, bottom) 
+			  auto_(false),
+			  rect_(left, top, right, bottom)
 		{
 		}
 		bool isAuto() const { return auto_; }
 		const xhtml::Rect& getRect() const { return rect_; }
 		void setRect(const xhtml::Rect& r) { rect_ = r; auto_ = false; }
-		void setRect(xhtml::FixedPoint left, xhtml::FixedPoint top, xhtml::FixedPoint right, xhtml::FixedPoint bottom) { 
+		void setRect(xhtml::FixedPoint left, xhtml::FixedPoint top, xhtml::FixedPoint right, xhtml::FixedPoint bottom) {
 			rect_.x = left;
 			rect_.y = top;
 			rect_.width = right;
 			rect_.height = bottom;
-			auto_ = false; 
+			auto_ = false;
 		}
 		bool isEqual(const StylePtr& style) const override;
 		std::string toString(Property p) const override;
@@ -901,7 +901,7 @@ namespace css
 		explicit Quotes(const std::vector<quote_pair> quotes) : Style(StyleId::QUOTES), quotes_(quotes) {}
 		bool isNone() const { return quotes_.empty(); }
 		const std::vector<quote_pair>& getQuotes() const { return quotes_; }
-		const quote_pair& getQuotesAtLevel(int n) { 
+		const quote_pair& getQuotesAtLevel(int n) {
 			if(n < 0) {
 				static quote_pair no_quotes;
 				return no_quotes;
@@ -941,7 +941,7 @@ namespace css
 		MIDDLE,
 		BOTTOM,
 		TEXT_BOTTOM,
-		
+
 		LENGTH,
 	};
 
@@ -1026,7 +1026,7 @@ namespace css
 		ROUND,
 		SPACE,
 	};
-	
+
 	struct BorderImageRepeat : public Style
 	{
 		MAKE_FACTORY(BorderImageRepeat);
@@ -1188,7 +1188,7 @@ namespace css
 		std::shared_ptr<Angle> getAngle() const { return angle_; }
 		std::shared_ptr<Length> getLength() const { return value_; }
 		std::shared_ptr<BoxShadow> getShadow() const { return drop_shadow_; }
-		const std::vector<float>& getGaussian() const; 
+		const std::vector<float>& getGaussian() const;
 		int getKernelRadius() const { return kernel_radius_; }
 		std::string toString() const;
 		// is angle in radians
@@ -1201,7 +1201,7 @@ namespace css
 		CssFilterId id_;
 		//UriStyle uri_;
 		float computed_angle_;
-		float computed_length_;		
+		float computed_length_;
 		std::shared_ptr<Angle> angle_;
 		std::shared_ptr<Length> value_;
 		std::shared_ptr<BoxShadow> drop_shadow_;
@@ -1277,7 +1277,7 @@ namespace css
 			  modified_(false)
 		{
 			for(int n = 0; n != 6; ++n) {
-				matrix_[n] = vals[n]; 
+				matrix_[n] = vals[n];
 			}
 		}
 		std::string toString() const;

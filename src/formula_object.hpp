@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -62,7 +62,7 @@ namespace game_logic
 
 		static void deepDestroy(variant v);
 		static void deepDestroy(variant v, std::set<FormulaObject*>& seen);
-		
+
 		static variant generateDiff(variant a, variant b);
 		void applyDiff(variant delta);
 

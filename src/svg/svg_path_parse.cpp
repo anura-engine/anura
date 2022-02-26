@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -25,9 +25,9 @@
 	From www.w3.org/TR/SVG/implnote.html#PathElementImplementationNotes
 
 The S/s commands indicate that the first control point of the given cubic Bezier segment
-is calculated by reflecting the previous path segments second control point relative to 
-the current point. The exact math is as follows. If the current point is (curx, cury) 
-and the second control point of the previous path segment is (oldx2, oldy2), then the 
+is calculated by reflecting the previous path segments second control point relative to
+the current point. The exact math is as follows. If the current point is (curx, cury)
+and the second control point of the previous path segment is (oldx2, oldy2), then the
 reflected point (i.e., (newx1, newy1), the first control point of the current path segment) is:
 
 (newx1, newy1) = (curx - (oldx2 - curx), cury - (oldy2 - cury))
@@ -83,16 +83,16 @@ namespace KRE
 		{
 		public:
 			move_to_command(bool absolute, double x, double y)
-				: path_command(PathInstruction::MOVETO, absolute), 
-				x_(x), 
-				y_(y) 
+				: path_command(PathInstruction::MOVETO, absolute),
+				x_(x),
+				y_(y)
 			{
 			}
 			virtual ~move_to_command() {}
 		private:
 			void handle_cairo_render(path_cmd_context& ctx) override {
 				if(is_absolute()) {
-					cairo_move_to(ctx.cairo_context(), x_, y_); 
+					cairo_move_to(ctx.cairo_context(), x_, y_);
 				} else {
 					if(!cairo_has_current_point(ctx.cairo_context())) {
 						cairo_move_to(ctx.cairo_context(), 0, 0);
@@ -193,8 +193,8 @@ namespace KRE
 			cubic_bezier_command(bool absolute, bool smooth, double x, double y, double cp1x, double cp1y, double cp2x, double cp2y)
 				: path_command(PathInstruction::CUBIC_BEZIER, absolute),
 				smooth_(smooth),
-				x_(x), y_(y), 
-				cp1x_(cp1x), cp1y_(cp1y), 
+				x_(x), y_(y),
+				cp1x_(cp1x), cp1y_(cp1y),
 				cp2x_(cp2x), cp2y_(cp2y)
 			{
 			}
@@ -237,7 +237,7 @@ namespace KRE
 			quadratic_bezier_command(bool absolute, bool smooth, double x, double y, double cp1x, double cp1y)
 				: path_command(PathInstruction::CUBIC_BEZIER, absolute),
 				smooth_(smooth),
-				x_(x), y_(y), 
+				x_(x), y_(y),
 				cp1x_(cp1x), cp1y_(cp1y)
 			{
 			}
@@ -292,12 +292,12 @@ namespace KRE
 		public:
 			elliptical_arc_command(bool absolute, double x, double y, double rx, double ry, double x_axis_rot, bool large_arc, bool sweep)
 				: path_command(PathInstruction::CUBIC_BEZIER, absolute),
-				  x_(x), 
-                  y_(y), 
-				  rx_(rx), 
-                  ry_(ry), 
-				  large_arc_flag_(large_arc), 
-				  sweep_flag_(sweep) 
+				  x_(x),
+                  y_(y),
+				  rx_(rx),
+                  ry_(ry),
+				  large_arc_flag_(large_arc),
+				  sweep_flag_(sweep)
 			{
 				x_axis_rotation_ = x_axis_rot / 180.0 * M_PI;
 			}
@@ -319,7 +319,7 @@ namespace KRE
 				if(std::abs(x1-x2) < DBL_EPSILON && std::abs(y1-y2) < DBL_EPSILON) {
 					return;
 				}
-			
+
 				const double r1 = (x1-x2)/2.0;
 				const double r2 = (y1-y2)/2.0;
 
@@ -357,7 +357,7 @@ namespace KRE
 				const double k4 = (-y1_prime - yc_prime)/b;
 
 				const double k5 = sqrt(fabs(k1*k1 + k2*k2));
-				if(std::abs(k5) < DBL_EPSILON) { 
+				if(std::abs(k5) < DBL_EPSILON) {
 					return;
 				}
 
@@ -383,12 +383,12 @@ namespace KRE
 					const double y3 = b*std::sin(th1);
 					const double x2 = x3 + a*(t * std::sin(th1));
 					const double y2 = y3 + b*(-t * std::cos(th1));
-					cairo_curve_to(ctx.cairo_context(), 
-						xc + cosp*x1 - sinp*y1, 
-						yc + sinp*x1 + cosp*y1, 
-						xc + cosp*x2 - sinp*y2, 
-						yc + sinp*x2 + cosp*y2, 
-						xc + cosp*x3 - sinp*y3, 
+					cairo_curve_to(ctx.cairo_context(),
+						xc + cosp*x1 - sinp*y1,
+						yc + sinp*x1 + cosp*y1,
+						xc + cosp*x2 - sinp*y2,
+						yc + sinp*x2 + cosp*y2,
+						xc + cosp*x3 - sinp*y3,
 						yc + sinp*x3 + cosp*y3);
 				}
 
@@ -591,10 +591,10 @@ namespace KRE
 				}
 				path_.pop_front();
 				switch(c) {
-					case 'Z': case 'z': 
-						cmds_.emplace_back(new closepath_command()); 
+					case 'Z': case 'z':
+						cmds_.emplace_back(new closepath_command());
 						break;
-					case 'L':  case 'l': 
+					case 'L':  case 'l':
 						match_wsp_star();
 						match_lineto_argument_sequence(c == 'L' ? true : false);
 						break;
@@ -619,7 +619,7 @@ namespace KRE
 						break;
 					default:
 						throw parsing_exception(formatter() << "Unrecognised draw-to symbol: " << c);
-				}			
+				}
 				return true;
 			}
 			bool match_single_coordinate_argument_sequence(PathInstruction ins, bool absolute)
@@ -652,7 +652,7 @@ namespace KRE
 				match_wsp_star();
 				return match_curveto_argument_sequence(absolute, smooth);
 			}
-			bool match_curveto_argument(bool smooth, double& x, double& y, double& cp1x, double& cp1y, double& cp2x, double& cp2y) 
+			bool match_curveto_argument(bool smooth, double& x, double& y, double& cp1x, double& cp1y, double& cp2x, double& cp2y)
 			{
 				if(!smooth) {
 					if(!match_coordinate_pair(cp1x, cp1y)) {
@@ -691,7 +691,7 @@ namespace KRE
 				match_wsp_star();
 				return match_bezierto_argument_sequence(absolute, smooth);
 			}
-			bool match_bezierto_argument(bool smooth, double& x, double& y, double& cp1x, double& cp1y) 
+			bool match_bezierto_argument(bool smooth, double& x, double& y, double& cp1x, double& cp1y)
 			{
 				if(smooth) {
 					cp1x = cp1y = 0;
@@ -735,7 +735,7 @@ namespace KRE
 				match_wsp_star();
 				return match_arcto_argument_sequence(absolute);
 			}
-			bool match_arcto_argument(double& x, double& y, double& rx, double& ry, double& x_axis_rot, bool& large_arc, bool& sweep) 
+			bool match_arcto_argument(double& x, double& y, double& rx, double& ry, double& x_axis_rot, bool& large_arc, bool& sweep)
 			{
 				if(!match_coordinate(rx)) {
 					return false;

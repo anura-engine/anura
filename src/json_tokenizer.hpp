@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -23,31 +23,31 @@
 
 #pragma once
 
-namespace json 
+namespace json
 {
-	struct TokenizerError 
+	struct TokenizerError
 	{
 		const char* msg;
 		const char* loc;
 	};
 
-	struct Token 
+	struct Token
 	{
 		Token() : type(TYPE::NUM_TYPES), begin(0), end(0), translate(false) {}
-		enum class TYPE { 
-			NUMBER, 
-			STRING, 
-			LCURLY, 
+		enum class TYPE {
+			NUMBER,
+			STRING,
+			LCURLY,
 			RCURLY,
-			LSQUARE, 
-			RSQUARE, 
-			COMMA, 
+			LSQUARE,
+			RSQUARE,
+			COMMA,
 			COLON,
-			TRUE_VALUE, 
-			FALSE_VALUE, 
+			TRUE_VALUE,
+			FALSE_VALUE,
 			NULL_VALUE,
 			IDENTIFIER,
-			NUM_TYPES 
+			NUM_TYPES
 		};
 		TYPE type;
 		const char* begin, *end;

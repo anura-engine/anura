@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -49,7 +49,7 @@ namespace game_logic
 	typedef ffl::IntrusivePtr<FormulaExpression> ExpressionPtr;
 	typedef ffl::IntrusivePtr<const FormulaExpression> ConstExpressionPtr;
 
-	struct PinpointedLoc 
+	struct PinpointedLoc
 	{
 		int begin_line, end_line, begin_col, end_col;
 	};
@@ -59,7 +59,7 @@ namespace game_logic
 											 std::string::const_iterator end,
 											 PinpointedLoc* pos_info=0);
 
-	class FormulaExpression : public FormulaCallable 
+	class FormulaExpression : public FormulaCallable
 	{
 	public:
 		variant getValue(const std::string& key) const override { return variant(); }
@@ -163,7 +163,7 @@ namespace game_logic
 		std::string::const_iterator begin_str_, end_str_;
 
 		ConstFormulaCallableDefinitionPtr definition_used_;
-		
+
 		mutable int ntimes_called_;
 
 	};
@@ -265,17 +265,17 @@ namespace game_logic
 		std::vector<variant_type_ptr> variant_types_;
 	public:
 		FormulaFunction() {}
-		FormulaFunction(const std::string& name, 
-			ConstFormulaPtr formula, 
-			ConstFormulaPtr precondition, 
-			const std::vector<std::string>& args, 
-			const std::vector<variant>& default_args, 
-			const std::vector<variant_type_ptr>& variant_types) 
-			: name_(name), 
-			formula_(formula), 
-			precondition_(precondition), 
-			args_(args), 
-			default_args_(default_args), 
+		FormulaFunction(const std::string& name,
+			ConstFormulaPtr formula,
+			ConstFormulaPtr precondition,
+			const std::vector<std::string>& args,
+			const std::vector<variant>& default_args,
+			const std::vector<variant_type_ptr>& variant_types)
+			: name_(name),
+			formula_(formula),
+			precondition_(precondition),
+			args_(args),
+			default_args_(default_args),
 			variant_types_(variant_types)
 		{}
 
@@ -285,9 +285,9 @@ namespace game_logic
 		const std::vector<variant> getDefaultArgs() const { return default_args_; }
 		ConstFormulaPtr getFormula() const { return formula_; }
 		const std::vector<variant_type_ptr>& variantTypes() const { return variant_types_; }
-	};	
+	};
 
-	class FunctionSymbolTable : private boost::noncopyable 
+	class FunctionSymbolTable : private boost::noncopyable
 	{
 		std::map<std::string, FormulaFunction> custom_formulas_;
 		const FunctionSymbolTable* backup_;
@@ -358,7 +358,7 @@ namespace game_logic
 		}
 
 		virtual variant_type_ptr getVariantType() const override;
-	
+
 		variant v_;
 		variant_type_ptr type_override_;
 	};

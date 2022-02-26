@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,7 +27,7 @@
 
 namespace KRE
 {
-	namespace 
+	namespace
 	{
 		// These are purely for 2D
 		std::stack<glm::vec2>& get_translation_stack()
@@ -60,7 +60,7 @@ namespace KRE
 		  pv_(1.0f)
 	{
 		width_ = getWindow()->width();
-		height_ = getWindow()->height();			
+		height_ = getWindow()->height();
 		LOG_DEBUG("canvas dimensions set to: " << width_ << " x " << height_);
 		auto wnd = window_.lock();
 		camera_ = Camera::createInstance("canvas_camera", 0, width_, 0, height_);
@@ -143,11 +143,11 @@ namespace KRE
 			if(size_change_key_ >= 0) {
 				wnd->registerSizeChangeObserver(size_change_key_, [this](int w, int h, int flags) {
 					this->setDimensions(w, h);
-				});	
+				});
 			} else {
 				size_change_key_ = wnd->registerSizeChangeObserver([this](int w, int h, int flags) {
 					this->setDimensions(w, h);
-				});	
+				});
 			}
 		}
 	}

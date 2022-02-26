@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -25,18 +25,18 @@
 #include "widget.hpp"
 #include "framed_gui_element.hpp"
 
-namespace gui 
+namespace gui
 {
-	enum BUTTON_RESOLUTION { 
-		BUTTON_SIZE_NORMAL_RESOLUTION, 
-		BUTTON_SIZE_DOUBLE_RESOLUTION 
+	enum BUTTON_RESOLUTION {
+		BUTTON_SIZE_NORMAL_RESOLUTION,
+		BUTTON_SIZE_DOUBLE_RESOLUTION
 	};
-	//"default" means a visually fat-edged button - the one that gets pressed 
-	// by hitting enter.  This is standard gui lingo, it's what the dialogue 
+	//"default" means a visually fat-edged button - the one that gets pressed
+	// by hitting enter.  This is standard gui lingo, it's what the dialogue
 	// "defaults" to doing when you press return.
-	enum BUTTON_STYLE { 
-		BUTTON_STYLE_NORMAL, 
-		BUTTON_STYLE_DEFAULT 
+	enum BUTTON_STYLE {
+		BUTTON_STYLE_NORMAL,
+		BUTTON_STYLE_DEFAULT
 	};
 
 	//a button widget. Forwards to a given function whenever it is clicked.
@@ -100,7 +100,7 @@ namespace gui
 		game_logic::FormulaPtr click_handler_;
 		variant click_handler_fn_;
 		game_logic::FormulaCallablePtr handler_arg_;
-	
+
 		ConstFramedGuiElementPtr normal_button_image_set_,depressed_button_image_set_,focus_button_image_set_,current_button_image_set_;
 
 		KRE::Color normal_color_, depressed_color_, focus_color_;

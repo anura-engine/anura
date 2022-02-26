@@ -65,7 +65,7 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
     GLint last_array_buffer; glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
     GLint last_element_array_buffer; glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &last_element_array_buffer);
 #if defined(GL_ARB_vertex_array_object)
-	GLint last_vertex_array; 
+	GLint last_vertex_array;
 	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
 #endif
     GLint last_blend_src; glGetIntegerv(GL_BLEND_SRC, &last_blend_src);
@@ -73,7 +73,7 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
     GLint last_blend_equation_rgb; glGetIntegerv(GL_BLEND_EQUATION_RGB, &last_blend_equation_rgb);
     GLint last_blend_equation_alpha; glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &last_blend_equation_alpha);
     GLint last_viewport[4]; glGetIntegerv(GL_VIEWPORT, last_viewport);
-    GLint last_scissor_box[4]; glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box); 
+    GLint last_scissor_box[4]; glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
     GLboolean last_enable_blend = glIsEnabled(GL_BLEND);
     GLboolean last_enable_cull_face = glIsEnabled(GL_CULL_FACE);
     GLboolean last_enable_depth_test = glIsEnabled(GL_DEPTH_TEST);
@@ -131,11 +131,11 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
                 glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
                 glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
                 glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, (GLvoid*)idx_buffer_offset);
-            }			
+            }
             idx_buffer_offset += pcmd->ElemCount;
         }
     }
-	
+
 #if !defined(GL_ARB_vertex_array_object)
 	glDisableVertexAttribArray(g_AttribLocationPosition);
 	glDisableVertexAttribArray(g_AttribLocationUV);

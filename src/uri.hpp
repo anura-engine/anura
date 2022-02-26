@@ -11,7 +11,7 @@
 #include <string>
 #include <algorithm>
 
-namespace uri 
+namespace uri
 {
     struct uri
     {
@@ -37,7 +37,7 @@ namespace uri
 
             // get query start
             iterator_t queryStart = std::find(url.begin(), uriEnd, '?');
-            
+
             iterator_t fragmentStart = std::find(url.begin(), uriEnd, '#');
 
             // protocol
@@ -60,7 +60,7 @@ namespace uri
             iterator_t hostStart = protocolEnd;
             iterator_t pathStart = std::find(hostStart, uriEnd, '/');  // get pathStart
 
-            iterator_t hostEnd = std::find(protocolEnd, 
+            iterator_t hostEnd = std::find(protocolEnd,
                 (pathStart != uriEnd) ? pathStart : queryStart,
                 ':');  // check for port
 
@@ -84,7 +84,7 @@ namespace uri
             if(queryStart != uriEnd) {
                 result.query_string_ = std::string(queryStart, fragmentStart);
             }
-            
+
             if(fragmentStart != uriEnd) {
                 result.fragment_ = std::string(fragmentStart, uriEnd);
             }

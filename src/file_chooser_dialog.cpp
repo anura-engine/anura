@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -99,21 +99,21 @@ namespace sys
 	}
 }
 
-namespace gui 
+namespace gui
 {
 	FileChooserDialog::FileChooserDialog(int x, int y, int w, int h, const filter_list& filters, bool dir_only, const std::string& default_path)
-		: Dialog(x,y,w,h), 
+		: Dialog(x,y,w,h),
 		  abs_default_path_(),
 		  current_path_(),
 		  relative_path_(),
 		  file_name_(),
-		  filters_(filters), 
-		  filter_selection_(0), 
-		  file_open_dialog_(true), 
+		  filters_(filters),
+		  filter_selection_(0),
+		  file_open_dialog_(true),
 		  editor_(),
 		  context_menu_(),
 		  filter_widget_(),
-		  dir_only_(dir_only), 
+		  dir_only_(dir_only),
 		  use_relative_paths_(false)
 	{
 		if(filters_.empty()) {
@@ -122,7 +122,7 @@ namespace gui
 
 		relative_path_ = sys::get_absolute_path("");
 		setDefaultPath(default_path);
-	
+
 		editor_ = new TextEditorWidget(400, 32);
 		editor_->setFontSize(16);
 		//file_text->setOnChangeHandler(std::bind(&file_chooser_dialog::change_text_attribute, this, change_entry, attr));
@@ -133,14 +133,14 @@ namespace gui
 	}
 
 	FileChooserDialog::FileChooserDialog(variant v, game_logic::FormulaCallable* e)
-		: Dialog(v, e), 
+		: Dialog(v, e),
 		  abs_default_path_(),
 		  current_path_(),
 		  relative_path_(),
 		  file_name_(),
  		  filters_(),
-		  filter_selection_(0), 
-		  file_open_dialog_(v["open_dialog"].as_bool(true)), 
+		  filter_selection_(0),
+		  file_open_dialog_(v["open_dialog"].as_bool(true)),
 		  editor_(),
 		  context_menu_(),
 		  filter_widget_(),
@@ -150,7 +150,7 @@ namespace gui
 		if(v.has_key("filters")) {
 			ASSERT_LOG(v["filters"].is_list(), "Expected filters parameter to be a list");
 			for(size_t n = 0; n != v["filters"].num_elements(); ++n) {
-				ASSERT_LOG(v["filters"][n].is_list() && v["filters"][n].num_elements() == 2, 
+				ASSERT_LOG(v["filters"][n].is_list() && v["filters"][n].num_elements() == 2,
 					"Expected inner filter parameter to be a two element list");
 				filters_.push_back(filter_pair(v["filters"][n][0].as_string(), v["filters"][n][1].as_string()));
 			}
@@ -203,10 +203,10 @@ namespace gui
 				const int yy = y() + (height() - hh) / 2;
 
 				DialogPtr d = DialogPtr(new Dialog(xx, yy, ww, hh));
-				WidgetPtr b_okay = new Button(make_font_label(_("OK")), [&d](){ 
+				WidgetPtr b_okay = new Button(make_font_label(_("OK")), [&d](){
 					d->close();
 				});
-				WidgetPtr b_cancel = new Button(make_font_label(_("Cancel")), [&d](){ 
+				WidgetPtr b_cancel = new Button(make_font_label(_("Cancel")), [&d](){
 					d->cancel();
 				});
 				b_okay->setDim(button_width, button_height);
@@ -273,7 +273,7 @@ namespace gui
 			Up one level button
 			Text entry box for typing the file/directory path. i.e. if file exists choose it, if it's a directory
 			  then make it the current_path_;
-		
+
 		*/
 
 		GridPtr g(new Grid(3));
@@ -281,7 +281,7 @@ namespace gui
 		g->addCol(WidgetPtr(new Button(WidgetPtr(new Label("Up", KRE::Color::colorWhite())), std::bind(&FileChooserDialog::upButton, this))));
 		g->addCol(WidgetPtr(new Button(WidgetPtr(new Label("Home", KRE::Color::colorWhite())), std::bind(&FileChooserDialog::homeButton, this))));
 		g->addCol(WidgetPtr(new Button(WidgetPtr(new Label("Add", KRE::Color::colorWhite())), std::bind(&FileChooserDialog::addDirButton, this))));
-		addWidget(g, 30, current_height);	
+		addWidget(g, 30, current_height);
 		current_height += g->height() + hpad;
 
 		GridPtr container(new Grid(dir_only_ ? 1 : 2));
@@ -329,8 +329,8 @@ namespace gui
 
 		if(dir_only_ == false) {
 			DropdownList dl_list;
-			std::transform(filters_.begin(), filters_.end(), 
-				std::back_inserter(dl_list), 
+			std::transform(filters_.begin(), filters_.end(),
+				std::back_inserter(dl_list),
 				std::bind(&filter_list::value_type::first,_1));
 			filter_widget_ = new DropdownWidget(dl_list, width()/2, 20);
 			filter_widget_->setOnSelectHandler(std::bind(&FileChooserDialog::changeFilter, this, _1, _2));
@@ -375,12 +375,12 @@ namespace gui
 		init();
 	}
 
-	void FileChooserDialog::okButton() 
+	void FileChooserDialog::okButton()
 	{
 		close();
 	}
 
-	void FileChooserDialog::cancelButton() 
+	void FileChooserDialog::cancelButton()
 	{
 		cancel();
 		close();
@@ -525,13 +525,13 @@ namespace gui
 	{
 		if(use_relative_paths_) {
 			return sys::compute_relative_path(relative_path_, current_path_);
-		} 
+		}
 		return current_path_;
 	}
 
-	void FileChooserDialog::useRelativePaths(bool val, const std::string& rel_path) 
-	{ 
-		use_relative_paths_ = val; 
+	void FileChooserDialog::useRelativePaths(bool val, const std::string& rel_path)
+	{
+		use_relative_paths_ = val;
 		relative_path_ = sys::get_absolute_path(rel_path);
 		if(editor_) {
 			editor_->setText(getPath());

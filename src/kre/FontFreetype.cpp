@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -60,7 +60,7 @@ namespace KRE
 			static FT_Library library = nullptr;
 			if(library == nullptr) {
 				FT_Error error = FT_Init_FreeType(&library);
-				ASSERT_LOG(error == 0, "Unable to initialise freetype library: " << error);				
+				ASSERT_LOG(error == 0, "Unable to initialise freetype library: " << error);
 			}
 			return library;
 		}
@@ -105,10 +105,10 @@ namespace KRE
 		{
 			// XXX starting off with a basic way of rendering glyphs.
 			// It'd be better to render all the glyphs to a texture,
-			// then use a VBO to store texture co-ords for indivdual glyphs and 
-			// vertex co-ords where to place them. Thus we could always use the 
+			// then use a VBO to store texture co-ords for indivdual glyphs and
+			// vertex co-ords where to place them. Thus we could always use the
 			// same texture for a particular font.
-			// More advanded ideas involve decomposing glyph outlines, triangulating 
+			// More advanded ideas involve decomposing glyph outlines, triangulating
 			// and storing those in a VBO for rendering.
 			auto lib = get_ft_library();
 			FT_Error error = FT_New_Face(lib, fnt_path_.c_str(), 0, &face_);
@@ -118,10 +118,10 @@ namespace KRE
 			ASSERT_LOG(error == 0, "Error setting character size, file: " << fnt_name << ", error was: " << error);
 			has_kerning_ = FT_HAS_KERNING(face_) ? true : false;
 			std::ostringstream debug_ss;
-			debug_ss << "Loaded font '" << fnt_ << "'\n\tfamily name: '" << face_->family_name 
+			debug_ss << "Loaded font '" << fnt_ << "'\n\tfamily name: '" << face_->family_name
 				<< "'\n\tnumber of glyphs: " << face_->num_glyphs
-				<< "\n\tunits per EM: " << face_->units_per_EM 
-				<< "\n\thas_kerning: " 
+				<< "\n\tunits per EM: " << face_->units_per_EM
+				<< "\n\thas_kerning: "
 				<< (has_kerning_ ? "true" : "false");
 			LOG_DEBUG(debug_ss.str());
 
@@ -152,7 +152,7 @@ namespace KRE
 				}
 			}
 		}
-		~FreetypeImpl() 
+		~FreetypeImpl()
 		{
 			if(face_) {
 				FT_Done_Face(face_);
@@ -253,7 +253,7 @@ namespace KRE
 			path.emplace_back(pen.x, pen.y);
 			return path;
 		}
-		
+
 		// text is a utf-8 string, path is expected to have at least has many data points as there
 		// are codepoints in the string. path should be in units consist with FT_Pos
 		// N.B. the origin of the Renderable object created is the baseline of the font
@@ -272,7 +272,7 @@ namespace KRE
 			if(!glyphs_to_add.empty()) {
 				addGlyphsToTexture(glyphs_to_add);
 			}
-			
+
 			if(font_renderable == nullptr) {
 				font_renderable = std::make_shared<FontRenderable>();
 				font_renderable->setTexture(font_texture_);
@@ -295,7 +295,7 @@ namespace KRE
 					}
 				}
 				GlyphInfo& gi = it->second;
-				
+
 				width += gi.width;
 				height = std::max(height, static_cast<int>(gi.height));
 
@@ -365,7 +365,7 @@ namespace KRE
 			all_glyphs_added_ = true;
 		}
 
-		void addGlyphsToTexture(const std::vector<char32_t>& glyphs) override 
+		void addGlyphsToTexture(const std::vector<char32_t>& glyphs) override
 		{
 			/*const FT_Matrix shear = { // xx xy || yx yy
 				1 << 16, static_cast<int>(13566.0f/size_),
@@ -406,7 +406,7 @@ namespace KRE
 				if(gi.width + next_font_x_ > surface_width) {
 					next_font_x_ = 0;
 					next_font_y_ += last_line_height_;
-					ASSERT_LOG(next_font_y_ < surface_height, "This font would exceed to maximum surface size. " 
+					ASSERT_LOG(next_font_y_ < surface_height, "This font would exceed to maximum surface size. "
 						<< surface_width << "x" << surface_height << ", number of glyphs: " << glyph_info_.size());
 				}
 				gi.tex_x = next_font_x_;
@@ -469,7 +469,7 @@ namespace KRE
 	};
 
 
-		FontDriverRegistrar freeytype_font_impl("freetype", [](const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture){ 
+		FontDriverRegistrar freeytype_font_impl("freetype", [](const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture){
 			return std::unique_ptr<FreetypeImpl>(new FreetypeImpl(fnt_name, fnt_path, size, color, init_texture));
 		});
 }

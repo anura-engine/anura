@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -60,9 +60,9 @@ namespace {
 	}
 }
 
-namespace tbs 
+namespace tbs
 {
-	namespace 
+	namespace
 	{
 		boost::asio::io_service* g_service;
 		int g_listening_port = -1;
@@ -173,8 +173,8 @@ namespace tbs
 		timer_.async_wait(std::bind(&web_server::heartbeat, this, std::placeholders::_1));
 	}
 
-	void web_server::handleGet(socket_ptr socket, 
-		const std::string& url, 
+	void web_server::handleGet(socket_ptr socket,
+		const std::string& url,
 		const std::map<std::string, std::string>& args)
 	{
 		if(url == "/tbs_monitor") {
@@ -206,7 +206,7 @@ namespace tbs
 	ffl::IntrusivePtr<http_client> g_game_server_http_client_to_matchmaking_server;
 }
 
-namespace 
+namespace
 {
 	struct code_modified_exception {};
 
@@ -338,7 +338,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 		  },
 		  [](size_t a, size_t b, bool c) {
 		  });
-		
+
 		while(!complete) {
 			client.process();
 		}
@@ -369,7 +369,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 			m[variant("error")] = variant(e.message);
 			tbs::web_server::set_debug_state(variant(&m));
 		}
-	
+
 		try {
 			io_service.run();
 		} catch(code_modified_exception&) {

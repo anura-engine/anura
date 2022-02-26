@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -59,15 +59,15 @@ namespace KRE
 	class StencilSettings
 	{
 	public:
-		StencilSettings(bool en, 
-			StencilFace face, 
-			StencilFunc func, 
-			unsigned ref_mask, 
-			int ref, 
+		StencilSettings(bool en,
+			StencilFace face,
+			StencilFunc func,
+			unsigned ref_mask,
+			int ref,
 			unsigned mask,
 			StencilOperation sfail,
 			StencilOperation dpfail,
-			StencilOperation dppass) 
+			StencilOperation dppass)
 			: enabled_(en),
 			face_(face),
 			func_(func),
@@ -85,7 +85,7 @@ namespace KRE
 		void setMask(unsigned mask) { mask_ = mask; }
 		unsigned mask() const { return mask_; }
 		int ref() const { return ref_; }
-		unsigned ref_mask() const { return ref_mask_; } 
+		unsigned ref_mask() const { return ref_mask_; }
 		StencilOperation sfail() const { return sfail_; }
 		StencilOperation dpfail() const { return dpfail_; }
 		StencilOperation dppass() const { return dppass_; }

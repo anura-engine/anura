@@ -36,7 +36,7 @@ namespace KRE
 		typedef std::vector<rect>::const_iterator const_iterator;
 
 		Packer(const std::vector<SurfaceAreas>& inp, int max_width, int max_height);
-		
+
 		SurfacePtr getOutputSurface() { return outp_; }
 
 		const_iterator begin() const { return out_rects_.begin(); }

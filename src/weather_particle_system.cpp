@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -35,7 +35,7 @@
 WeatherParticleSystemFactory::WeatherParticleSystemFactory (variant node)
  : info(node)
 {
-	
+
 }
 
 ParticleSystemPtr WeatherParticleSystemFactory::create(const Entity& e) const
@@ -72,7 +72,7 @@ WeatherParticleSystem::WeatherParticleSystem(const Entity& e, const WeatherParti
 void WeatherParticleSystem::process(const Entity& e)
 {
 	++cycle_;
-	
+
 	for(particle& p : particles_)
 	{
 		p.pos[0] = static_cast<float>(static_cast<int>(p.pos[0]+direction[0] * p.velocity) % info_.repeat_period);
@@ -119,10 +119,10 @@ BEGIN_DEFINE_CALLABLE(WeatherParticleSystem, ParticleSystem)
 	DEFINE_FIELD(velocity_x, "decimal|int")
 		return variant(decimal(obj.direction[0]));
 	DEFINE_SET_FIELD
-		obj.direction[0] = value.as_float();	
+		obj.direction[0] = value.as_float();
 
 	DEFINE_FIELD(velocity_y, "decimal|int")
 		return variant(decimal(obj.direction[1]));
 	DEFINE_SET_FIELD
-		obj.direction[1] = value.as_float();	
+		obj.direction[1] = value.as_float();
 END_DEFINE_CALLABLE(WeatherParticleSystem)

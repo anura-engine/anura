@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -100,7 +100,7 @@ void get_files_in_dir(const std::string& sdirectory,
 					  FILE_NAME_MODE mode)
 {
     AAssetManager* assetManager = GetJavaAssetManager();
-    AAssetDir* assetDir; 
+    AAssetDir* assetDir;
 	std::string directory(sdirectory);
 	int len = directory.length()-1;
 	if(directory[len] == '/') {
@@ -235,7 +235,7 @@ bool do_file_exists(const std::string& fname)
 		//LOG("do_file_exists(): exists(1)");
         return true;
 	}
-	
+
 	//LOG("do_file_exists(): check assets1");
 	AAssetManager* assetManager = GetJavaAssetManager();
 	//LOG("do_file_exists(): check assets2");

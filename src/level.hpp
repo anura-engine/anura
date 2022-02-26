@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -58,7 +58,7 @@
 class Level;
 typedef ffl::IntrusivePtr<Level> LevelPtr;
 
-class CurrentLevelScope 
+class CurrentLevelScope
 {
 	LevelPtr old_;
 public:
@@ -491,7 +491,7 @@ private:
 	bool set_screen_resolution_on_entry_;
 
 	variant vars_;
-	
+
 	LevelSolidMap solid_;
 	LevelSolidMap standable_;
 

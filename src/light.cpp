@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -31,7 +31,7 @@
 #include "light.hpp"
 #include "variant_utils.hpp"
 
-namespace 
+namespace
 {
 	int fade_length = 64;
 }
@@ -45,13 +45,13 @@ LightPtr Light::createLight(const CustomObject& obj, variant node)
 	}
 }
 
-Light::Light(const CustomObject& obj, variant node) 
-	: SceneObjectCallable(node), 
+Light::Light(const CustomObject& obj, variant node)
+	: SceneObjectCallable(node),
 	obj_(obj)
 {
 }
 
-Light::~Light() 
+Light::~Light()
 {
 }
 
@@ -61,16 +61,16 @@ BEGIN_DEFINE_CALLABLE(Light, SceneObjectCallable)
 END_DEFINE_CALLABLE(Light)
 
 CircleLight::CircleLight(const CustomObject& obj, variant node)
-  : Light(obj, node), 
-  center_(obj.getMidpoint()), 
+  : Light(obj, node),
+  center_(obj.getMidpoint()),
   radius_(node["radius"].as_int())
 {
 	init();
 }
 
 CircleLight::CircleLight(const CustomObject& obj, int radius)
-  : Light(obj, variant()), 
-  center_(obj.getMidpoint()), 
+  : Light(obj, variant()),
+  center_(obj.getMidpoint()),
   radius_(radius)
 {
 	init();

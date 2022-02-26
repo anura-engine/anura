@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2015-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -31,7 +31,7 @@ namespace xhtml
 	{
 	}
 
-	std::string LineBox::toString() const 
+	std::string LineBox::toString() const
 	{
 		std::ostringstream ss;
 		auto xy = getSceneTree()->getPosition();
@@ -65,15 +65,15 @@ namespace xhtml
 	{
 	}
 
-	void LineBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const 
+	void LineBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
 	}
 
-	void LineBox::handleRenderBackground(const KRE::SceneTreePtr& scene_tree, const point& offset) const 
+	void LineBox::handleRenderBackground(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
 	}
 
-	void LineBox::handleRenderBorder(const KRE::SceneTreePtr& scene_tree, const point& offset) const 
+	void LineBox::handleRenderBorder(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
 	}
 

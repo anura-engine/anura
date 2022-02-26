@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -125,19 +125,19 @@ namespace xhtml
 		}
 
 
-		KRE::StencilSettings& get_stencil_mask_settings() 
+		KRE::StencilSettings& get_stencil_mask_settings()
 		{
-			static KRE::StencilSettings ss(true, 
-				KRE::StencilFace::FRONT_AND_BACK, 
-				KRE::StencilFunc::NOT_EQUAL, 
-				0xff, 0x00, 0xff, 
-				KRE::StencilOperation::INCREMENT, 
-				KRE::StencilOperation::KEEP, 
+			static KRE::StencilSettings ss(true,
+				KRE::StencilFace::FRONT_AND_BACK,
+				KRE::StencilFunc::NOT_EQUAL,
+				0xff, 0x00, 0xff,
+				KRE::StencilOperation::INCREMENT,
+				KRE::StencilOperation::KEEP,
 				KRE::StencilOperation::KEEP);
 			return ss;
 		}
 
-		
+
 		void calculate_ellipse_quadrant(std::vector<glm::vec2>* res, int divisions, float rx, float ry, float x_start, float x_end, float x_offset, float y_offset)
 		{
 			// divisions is the number of increments along the x-axis to use.
@@ -163,9 +163,9 @@ namespace xhtml
 			}
 		}
 
-		void calculate_border_shape(std::vector<glm::vec2>* res, 
-			const std::array<FixedPoint, 4>& horiz_radius, 
-			const std::array<FixedPoint, 4>& vert_radius, 
+		void calculate_border_shape(std::vector<glm::vec2>* res,
+			const std::array<FixedPoint, 4>& horiz_radius,
+			const std::array<FixedPoint, 4>& vert_radius,
 			float left, float top, float right, float bottom)
 		{
 			// res The result, i.e. where vertices go.
@@ -225,17 +225,17 @@ namespace xhtml
 					//roughly estimate number of divisions
 					const int ndivisions = std::max(10, std::max(static_cast<int>(rx)/2, static_cast<int>(ry)/2));
 
-					calculate_ellipse_quadrant(res, ndivisions, 
-						rx, ry * quadrant[corner].t, 
-						(corner % 2) ? 0 : quadrant[corner].s * rx , (corner % 2) ? rx * quadrant[corner].s : 0, 
-						corners[corner].x - rx * quadrant[corner].s, 
+					calculate_ellipse_quadrant(res, ndivisions,
+						rx, ry * quadrant[corner].t,
+						(corner % 2) ? 0 : quadrant[corner].s * rx , (corner % 2) ? rx * quadrant[corner].s : 0,
+						corners[corner].x - rx * quadrant[corner].s,
 						corners[corner].y - ry * quadrant[corner].t);
 				}
 			}
 		}
 
-		KRE::RenderablePtr create_border_mask(const std::array<FixedPoint, 4>& horiz_radius, 
-			const std::array<FixedPoint, 4>& vert_radius, 
+		KRE::RenderablePtr create_border_mask(const std::array<FixedPoint, 4>& horiz_radius,
+			const std::array<FixedPoint, 4>& vert_radius,
 			int left, int top, int right, int bottom)
 		{
 			std::shared_ptr<SimpleRenderable> sr = std::make_shared<SimpleRenderable>(KRE::DrawMode::TRIANGLE_FAN);
@@ -250,7 +250,7 @@ namespace xhtml
 
 			std::vector<glm::vec2> vertices;
 			vertices.reserve(20*4);
-			
+
 			// Place center as first vertex
 			vertices.emplace_back(cx, cy);
 
@@ -264,23 +264,23 @@ namespace xhtml
 		}
 	}
 
-	BgBoxShadow::BgBoxShadow() 
-		: x_offset(0), 
-		  y_offset(0), 
-		  blur_radius(0), 
-		  spread_radius(0), 
-		  inset(false), 
+	BgBoxShadow::BgBoxShadow()
+		: x_offset(0),
+		  y_offset(0),
+		  blur_radius(0),
+		  spread_radius(0),
+		  inset(false),
 		  color(std::make_shared<KRE::Color>(KRE::Color::colorBlack()))
 	{
 	}
 
-	BgBoxShadow::BgBoxShadow(FixedPoint x, FixedPoint y, FixedPoint blur, FixedPoint spread, bool ins, const KRE::ColorPtr& col) 
-		: x_offset(x), 
-		  y_offset(y), 
-		  blur_radius(blur), 
-		  spread_radius(spread), 
-		  inset(ins), 
-		  color(col) 
+	BgBoxShadow::BgBoxShadow(FixedPoint x, FixedPoint y, FixedPoint blur, FixedPoint spread, bool ins, const KRE::ColorPtr& col)
+		: x_offset(x),
+		  y_offset(y),
+		  blur_radius(blur),
+		  spread_radius(spread),
+		  inset(ins),
+		  color(col)
 	{
 	}
 
@@ -299,11 +299,11 @@ namespace xhtml
 			auto& shadows = styles_->getBoxShadow()->getShadows();
 			for(auto it = shadows.crbegin(); it != shadows.crend(); ++it) {
 				auto& shadow = *it;
-				box_shadows_.emplace_back(shadow.getX().compute(), 
-					shadow.getY().compute(), 
-					shadow.getBlur().compute(), 
-					shadow.getSpread().compute(), 
-					shadow.inset(), 
+				box_shadows_.emplace_back(shadow.getX().compute(),
+					shadow.getY().compute(),
+					shadow.getBlur().compute(),
+					shadow.getSpread().compute(),
+					shadow.inset(),
 					shadow.getColor().compute());
 			}
 		}
@@ -355,11 +355,11 @@ namespace xhtml
 		using namespace KRE;
 
 		// XXX We should be using the shape generated via clipping.
-		const int box_width = (dims.content_.width 
-			+ dims.border_.right + dims.padding_.right 
+		const int box_width = (dims.content_.width
+			+ dims.border_.right + dims.padding_.right
 			+ dims.border_.left + dims.padding_.left) / LayoutEngine::getFixedPointScale();
-		const int box_height = (dims.content_.height 
-			+ dims.border_.top + dims.padding_.top 
+		const int box_height = (dims.content_.height
+			+ dims.border_.top + dims.padding_.top
 			+ dims.border_.bottom + dims.padding_.bottom ) / LayoutEngine::getFixedPointScale();
 
 		RenderablePtr new_clip_shape = nullptr;
@@ -377,7 +377,7 @@ namespace xhtml
 				const float spread_width = static_cast<float>(box_width) + 2 * ssr;
 				const float spread_height = static_cast<float>(box_height) + 2 * ssr;
 
-				if(std::abs(shadow.blur_radius) < FLT_EPSILON 
+				if(std::abs(shadow.blur_radius) < FLT_EPSILON
 					|| !KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
 					rectf box_size(0, 0, spread_width, spread_height);
 					SolidRenderablePtr box = std::make_shared<SolidRenderable>(box_size, shadow.color);
@@ -388,13 +388,13 @@ namespace xhtml
 						new_clip_shape->setScale(scalew, scaleh);
 						box->setClipSettings(get_stencil_mask_settings(), new_clip_shape);
 					}
-					box->setPosition((shadow.x_offset) / LayoutEngine::getFixedPointScaleFloat() - ssr, 
+					box->setPosition((shadow.x_offset) / LayoutEngine::getFixedPointScaleFloat() - ssr,
 						(shadow.y_offset) / LayoutEngine::getFixedPointScaleFloat() - ssr);
 					scene_tree->addObject(box);
 				} else {
 					const int gaussian_radius = 7;
-				
-					const int width = static_cast<int>(spread_width + gaussian_radius * 4); 
+
+					const int width = static_cast<int>(spread_width + gaussian_radius * 4);
 					const int height = static_cast<int>(spread_height + gaussian_radius * 4);
 
 					auto shader_blur = ShaderProgram::createGaussianShader(gaussian_radius)->clone();
@@ -430,7 +430,7 @@ namespace xhtml
 					}
 					rt_blur_h->setCamera(rt_cam);
 					rt_blur_h->setShader(shader_blur);
-					shader_blur->setUniformDrawFunction([blur_two, blur_tho, width, gaussian, u_gaussian](ShaderProgramPtr shader){ 
+					shader_blur->setUniformDrawFunction([blur_two, blur_tho, width, gaussian, u_gaussian](ShaderProgramPtr shader){
 						shader->setUniformValue(u_gaussian, &gaussian[0]);
 						shader->setUniformValue(blur_two, 1.0f / (width - 1.0f));
 						shader->setUniformValue(blur_tho, 0.0f);
@@ -447,13 +447,13 @@ namespace xhtml
 						wnd->render(rt_blur_h.get());
 					}
 					rt_blur_v->setShader(shader_blur);
-					shader_blur->setUniformDrawFunction([blur_two, blur_tho, height, gaussian, u_gaussian](ShaderProgramPtr shader){ 
+					shader_blur->setUniformDrawFunction([blur_two, blur_tho, height, gaussian, u_gaussian](ShaderProgramPtr shader){
 						shader->setUniformValue(u_gaussian, &gaussian[0]);
 						shader->setUniformValue(blur_two, 0.0f);
 						shader->setUniformValue(blur_tho, 1.0f / (height - 1.0f));
 					});
 
-					rt_blur_v->setPosition((shadow.x_offset) / LayoutEngine::getFixedPointScaleFloat() - ssr - gaussian_radius * 2, 
+					rt_blur_v->setPosition((shadow.x_offset) / LayoutEngine::getFixedPointScaleFloat() - ssr - gaussian_radius * 2,
 						(shadow.y_offset) / LayoutEngine::getFixedPointScaleFloat() - ssr - gaussian_radius * 2);
 					scene_tree->addObject(rt_blur_v);
 				}
@@ -481,7 +481,7 @@ namespace xhtml
 			case BackgroundClip::BORDER_BOX:
 				// don't do anything unless border-radius is specified
 				if(has_border_radius_) {
-					clip_shape = create_border_mask(border_radius_horiz_, border_radius_vert_, 0, 0, rw, rh);					
+					clip_shape = create_border_mask(border_radius_horiz_, border_radius_vert_, 0, 0, rw, rh);
 				}
 				break;
 			case BackgroundClip::PADDING_BOX:
@@ -498,7 +498,7 @@ namespace xhtml
 					0,
 					dims.content_.width / LayoutEngine::getFixedPointScale(),
 					dims.content_.height / LayoutEngine::getFixedPointScale()));
-				clip_shape->setPosition((dims.padding_.left + dims.border_.left)/LayoutEngine::getFixedPointScale(), 
+				clip_shape->setPosition((dims.padding_.left + dims.border_.left)/LayoutEngine::getFixedPointScale(),
 					(dims.padding_.top + dims.border_.top)/LayoutEngine::getFixedPointScale());
 				break;
 		}
@@ -526,7 +526,7 @@ namespace xhtml
 
 			int sw_offs = 0;
 			int sh_offs = 0;
-			
+
 			auto& pos_top = styles_->getBackgroundPosition()[0];
 			auto& pos_left = styles_->getBackgroundPosition()[1];
 			if(pos_left.isPercent()) {
@@ -538,7 +538,7 @@ namespace xhtml
 
 			const int rw_offs = pos_left.compute(rw);
 			const int rh_offs = pos_top.compute(rh);
-			
+
 			const float rxf = static_cast<float>(rx) / LayoutEngine::getFixedPointScaleFloat();
 			const float ryf = static_cast<float>(ry) / LayoutEngine::getFixedPointScaleFloat();
 

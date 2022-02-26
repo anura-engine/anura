@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,7 +39,7 @@ int get_tile_corners(std::vector<tile_corner>* result, const KRE::TexturePtr& t,
 
 	const int width = std::max<int>(t->width(), t->height());
 	if (width == 0) return 0;
-	
+
 	const int xpos = BaseTileSize*(tile_num%(width/BaseTileSize)) + area.x();
 	const int ypos = BaseTileSize*(tile_num/(width/BaseTileSize)) + area.y();
 
@@ -82,7 +82,7 @@ bool is_tile_opaque(const KRE::TexturePtr& t, int tile_num)
 			}
 		}
 	}
-	
+
 	return true;
 }
 
@@ -132,7 +132,7 @@ bool is_tile_solid_color(const KRE::TexturePtr& t, int tile_num, KRE::Color& col
 			}
 		}
 	}
-	
+
 	return true;
 }
 
@@ -164,7 +164,7 @@ rect get_tile_non_alpha_area(const KRE::TexturePtr& t, int tile_num)
 			}
 		}
 	}
-	
+
 	for(int x = 0; x != BaseTileSize && left == -1; ++x) {
 		const int u = xpos + x;
 		for(int y = 0; y != BaseTileSize; ++y) {

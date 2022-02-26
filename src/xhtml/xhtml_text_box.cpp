@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -58,9 +58,9 @@ namespace xhtml
 		std::ostringstream ss;
 		ss << "TextBox: " << getDimensions().content_ << " : " << getDimensions().margin_;
 		ss  << "\n    "
-			<< (line_.offset_.x / LayoutEngine::getFixedPointScaleFloat()) 
-			<< "," 
-			<< (line_.offset_.y / LayoutEngine::getFixedPointScaleFloat()) 
+			<< (line_.offset_.x / LayoutEngine::getFixedPointScaleFloat())
+			<< ","
+			<< (line_.offset_.y / LayoutEngine::getFixedPointScaleFloat())
 			<< ": ";
 		for(auto& word : line_.line_->line) {
 			ss << " " << word.word;
@@ -139,7 +139,7 @@ namespace xhtml
 								++it;
 							}
 						}
-					}					
+					}
 				}
 			} else {
 				// is a box to insert inline with text.
@@ -180,7 +180,7 @@ namespace xhtml
 		}
 
 		eng.setCursor(cursor);
-		
+
 		return lines;
 	}
 
@@ -258,13 +258,13 @@ namespace xhtml
 		// XXX we should implement this fully.
 		switch(va) {
 			case css::CssVerticalAlign::BASELINE:
-				// Align the baseline of the box with the baseline of the parent box. 
-				// If the box does not have a baseline, align the bottom margin edge 
+				// Align the baseline of the box with the baseline of the parent box.
+				// If the box does not have a baseline, align the bottom margin edge
 				// with the parent's baseline.
 				child_y += baseline;
 				break;
 			case css::CssVerticalAlign::MIDDLE:
-				// Align the vertical midpoint of the box with the baseline of the 
+				// Align the vertical midpoint of the box with the baseline of the
 				// parent box plus half the x-height of the parent.
 				child_y += getParent()->getLineHeight()/2 + getParent()->getBaselineOffset();
 				break;
@@ -273,10 +273,10 @@ namespace xhtml
 				child_y += getBottomOffset();
 				break;
 			case css::CssVerticalAlign::SUB:
-				// Lower the baseline of the box to the proper position for subscripts of the 
+				// Lower the baseline of the box to the proper position for subscripts of the
 				// parent's box. (This value has no effect on the font size of the element's text.)
 			case css::CssVerticalAlign::SUPER:
-				// Raise the baseline of the box to the proper position for superscripts of the 
+				// Raise the baseline of the box to the proper position for superscripts of the
 				// parent's box. (This value has no effect on the font size of the element's text.)
 			case css::CssVerticalAlign::TOP:
 				// Align the top of the aligned subtree with the top of the line box.
@@ -352,7 +352,7 @@ namespace xhtml
 		const int kernel_radius = 7;
 
 		for(auto shadow : shadows_) {
-			if(std::abs(shadow.blur) < FLT_EPSILON || 
+			if(std::abs(shadow.blur) < FLT_EPSILON ||
 				!KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
 				// no blur
 				KRE::FontRenderablePtr shadow_font(new KRE::FontRenderable(*fontr));
@@ -361,7 +361,7 @@ namespace xhtml
 				scene_tree->addObject(shadow_font);
 			} else {
 				using namespace KRE;
-				// more complex case where we need to blur, so we render the text to a 
+				// more complex case where we need to blur, so we render the text to a
 				// RenderTarget, then render that to another render target with a blur filter.
 				const float extra_border = (kernel_radius) * 2.0f + 20.0f;
 				const float width = w + extra_border * 2.0f;
@@ -386,7 +386,7 @@ namespace xhtml
 				UniformSetFn old_fn = shadow_font->getShader()->getUniformDrawFunction();
 				shadow_font->getShader()->setUniformDrawFunction([u_ignore_alpha](ShaderProgramPtr shader) {
 					shader->setUniformValue(u_ignore_alpha, 1);
-				});				
+				});
 
 				RenderTargetPtr rt_blur_h = RenderTarget::create(iwidth, iheight);
 				rt_blur_h->getTexture()->setFiltering(-1, Texture::Filtering::LINEAR, Texture::Filtering::LINEAR, Texture::Filtering::POINT);
@@ -401,7 +401,7 @@ namespace xhtml
 				shadow_font->getShader()->setUniformDrawFunction(old_fn);
 				//rt_blur_h->setCamera(rt_cam);
 				rt_blur_h->setShader(shader_blur);
-				shader_blur->setUniformDrawFunction([blur_two, blur_tho, iwidth, gaussian, u_gaussian](ShaderProgramPtr shader){ 
+				shader_blur->setUniformDrawFunction([blur_two, blur_tho, iwidth, gaussian, u_gaussian](ShaderProgramPtr shader){
 					shader->setUniformValue(u_gaussian, &gaussian[0]);
 					shader->setUniformValue(blur_two, 1.0f / (iwidth - 1.0f));
 					shader->setUniformValue(blur_tho, 0.0f);
@@ -418,7 +418,7 @@ namespace xhtml
 					wnd->render(rt_blur_h.get());
 				}
 				rt_blur_v->setShader(shader_blur);
-				shader_blur->setUniformDrawFunction([blur_two, blur_tho, iheight, gaussian, u_gaussian](ShaderProgramPtr shader){ 
+				shader_blur->setUniformDrawFunction([blur_two, blur_tho, iheight, gaussian, u_gaussian](ShaderProgramPtr shader){
 					shader->setUniformValue(u_gaussian, &gaussian[0]);
 					shader->setUniformValue(blur_two, 0.0f);
 					shader->setUniformValue(blur_tho, 1.0f / (iheight - 1.0f));

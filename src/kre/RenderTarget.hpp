@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -84,19 +84,19 @@ namespace KRE
 
 		void onSizeChange(int width, int height, int flags);
 
-		static RenderTargetPtr create(int width, int height, 
-			unsigned color_plane_count=1, 
-			bool depth=false, 
-			bool stencil=false, 
-			bool use_multi_sampling=false, 
+		static RenderTargetPtr create(int width, int height,
+			unsigned color_plane_count=1,
+			bool depth=false,
+			bool stencil=false,
+			bool use_multi_sampling=false,
 			unsigned multi_samples=0);
 		static RenderTargetPtr create(const variant& node);
 	protected:
-		explicit RenderTarget(int width, int height, 
-			int color_plane_count, 
-			bool depth, 
-			bool stencil, 
-			bool use_multi_sampling, 
+		explicit RenderTarget(int width, int height,
+			int color_plane_count,
+			bool depth,
+			bool stencil,
+			bool use_multi_sampling,
 			int multi_samples);
 		explicit RenderTarget(const variant& node);
 	private:

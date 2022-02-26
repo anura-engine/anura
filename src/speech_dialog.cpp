@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -42,7 +42,7 @@
 #include "screen_handling.hpp"
 #include "speech_dialog.hpp"
 
-namespace 
+namespace
 {
 #if defined(MOBILE_BUILD)
 	const int OptionHeight = 70;
@@ -57,20 +57,20 @@ namespace
 }
 
 SpeechDialog::SpeechDialog()
-	: cycle_(0), 
-	  left_side_speaking_(false), 
-	  horizontal_position_(0), 
-	  text_char_(0), 
+	: cycle_(0),
+	  left_side_speaking_(false),
+	  horizontal_position_(0),
+	  text_char_(0),
 	  option_selected_(0),
 #if defined(MOBILE_BUILD)
       joystick_button_pressed_(false),
       joystick_up_pressed_(false),
       joystick_down_pressed_(false),
-#else 
+#else
       joystick_button_pressed_(true),
       joystick_up_pressed_(true),
       joystick_down_pressed_(true),
-#endif 
+#endif
 	  expiration_(-1)
 {
 #if defined(MOBILE_BUILD)
@@ -237,7 +237,7 @@ void SpeechDialog::draw() const
 
 	int speaker_xpos = std::numeric_limits<int>::max();
 	int speaker_ypos = std::numeric_limits<int>::max();
-	
+
 	const int vw = graphics::GameScreen::get().getVirtualWidth();
 	const int vh = graphics::GameScreen::get().getVirtualHeight();
 
@@ -338,7 +338,7 @@ void SpeechDialog::draw() const
 	if(text_.size() > 2 && text_char_ == num_chars() && (cycle_&16)) {
 		ConstGuiSectionPtr down_arrow = GuiSection::get("speech_text_down_arrow");
 		down_arrow->blit(text_area.x2() - down_arrow->width() - 10, text_area.y2() - down_arrow->height() - 10);
-		
+
 	}
 
 	if(text_char_ == num_chars() && options_.empty() == false) {

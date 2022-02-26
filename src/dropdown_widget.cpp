@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -37,21 +37,21 @@
 #include "joystick.hpp"
 #include "module.hpp"
 
-namespace gui 
+namespace gui
 {
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 
-	namespace 
+	namespace
 	{
 		const std::string dropdown_button_image = "dropdown_button";
 	}
 
 	DropdownWidget::DropdownWidget(const DropdownList& list, int width, int height, DropdownType type)
 		: dropdown_height_(100),
-		  list_(list), 
-		  current_selection_(0), 
-		  type_(type), 
+		  list_(list),
+		  current_selection_(0),
+		  type_(type),
 		  editor_(),
 		  dropdown_menu_(),
 		  labels_(),
@@ -88,11 +88,11 @@ namespace gui
 	}
 
 	DropdownWidget::DropdownWidget(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v,e), 
+		: Widget(v,e),
 		  dropdown_height_(100),
-		  list_(), 
-		  current_selection_(0), 
-		  type_(DropdownType::LIST), 
+		  list_(),
+		  current_selection_(0),
+		  type_(DropdownType::LIST),
 		  editor_(),
 		  dropdown_menu_(),
 		  labels_(),
@@ -121,7 +121,7 @@ namespace gui
 		if(v.has_key("color_scheme")) {
 			setColorScheme(v["color_scheme"]);
 		}
-	
+
 		if(v.has_key("button_image")) {
 			dropdown_image_ = GuiSectionWidgetPtr(new GuiSectionWidget(v["button_image"].as_string()));
 			if(v.has_key("focus_button_image")) {
@@ -190,7 +190,7 @@ namespace gui
 		dropdown_image_->setLoc(width() - dropdown_image_->width() - 4, (height() - dropdown_image_->height()) / 2);
 		// go on ask me why there is a +20 in the line below.
 		// because TextEditorWidget uses a magic -20 when setting the width!
-		// The magic +4's are because we want the rectangles drawn around the TextEditorWidget 
+		// The magic +4's are because we want the rectangles drawn around the TextEditorWidget
 		// to match the ones we draw around the dropdown image.
 		editor_->setDim(width() - dropdown_image_size + 20 + 4, dropdown_image_size + 4);
 		editor_->setLoc(-2, -2);
@@ -315,7 +315,7 @@ namespace gui
 		auto canvas = KRE::Canvas::getInstance();
 
 		if(type_ == DropdownType::LIST) {
-			canvas->drawHollowRect(rect(x()-1, y()-1, width()+2, height()+2), 
+			canvas->drawHollowRect(rect(x()-1, y()-1, width()+2, height()+2),
 				hasFocus() ? KRE::Color::colorWhite() : KRE::Color::colorGrey());
 		}
 		canvas->drawHollowRect(rect(x()+width()-height(), y()-1, height()+1, height()+2),
@@ -370,8 +370,8 @@ namespace gui
 		}
 
 		if(hasFocus() && dropdown_menu_) {
-			if(event.type == SDL_KEYDOWN 
-				&& (event.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK) 
+			if(event.type == SDL_KEYDOWN
+				&& (event.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK)
 				|| event.key.keysym.sym == controls::get_keycode(controls::CONTROL_JUMP))) {
 				claimed = true;
 				dropdown_menu_->setVisible(!dropdown_menu_->visible());
@@ -431,7 +431,7 @@ namespace gui
 
 			if(in_widget_ && text_focus_color_) {
 				label_->setColor(*text_focus_color_);
-			}	
+			}
 
 			if(normal_image_.empty() == false) {
 				if(in_widget_) {
@@ -497,7 +497,7 @@ namespace gui
 		if(m.has_key("focus")) {
 			focus_color_.reset(new KRE::Color(m["focus"]));
 		}
-		
+
 		if(m.has_key("text_normal")) {
 			text_normal_color_.reset(new KRE::Color(m["text_normal"]));
 		}
@@ -556,7 +556,7 @@ namespace gui
 		DEFINE_FIELD(type, "string")
 			if(obj.type_ == DropdownType::LIST) {
 				return variant("list");
-			} 
+			}
 			return variant("combobox");
 
 		DEFINE_SET_FIELD

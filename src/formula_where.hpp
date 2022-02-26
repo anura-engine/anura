@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -31,7 +31,7 @@
 namespace game_logic
 {
 	//helper struct which contains info for a where expression.
-	struct WhereVariablesInfo : public FormulaCallable 
+	struct WhereVariablesInfo : public FormulaCallable
 	{
 		explicit WhereVariablesInfo(int nslot) : base_slot(nslot) {}
 		variant getValue(const std::string& key) const override { return variant(); }

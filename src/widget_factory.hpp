@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,7 +27,7 @@
 #include "variant.hpp"
 #include "widget_fwd.hpp"
 
-namespace widget_factory 
+namespace widget_factory
 {
 	std::string convert_type_to_variant_type_name(const std::string& type);
 	gui::WidgetPtr create(const variant& v, game_logic::FormulaCallable* e);

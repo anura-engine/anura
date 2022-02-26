@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -49,7 +49,7 @@ namespace game_logic
 		void set(int nslot, const variant& v) {
 			new (&buf_[nslot*sizeof(variant)]) variant(v);
 		}
-		
+
 		variant getValue(const std::string& key) const override {
 			if(fallback_) {
 				return fallback_->queryValue(key);
@@ -144,7 +144,7 @@ namespace game_logic
 				collector->surrenderVariant(&v);
 			}
 		}
-	
+
 	protected:
 		int baseSlot() const { return base_slot_; }
 		const std::vector<variant>& getValues() const { return values_; }

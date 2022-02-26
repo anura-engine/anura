@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -118,7 +118,7 @@ namespace KRE
 		static TexturePtr createTexture(const SurfacePtr& surface);
 		static TexturePtr createFromImage(const std::string& image_data, const variant& node);
 		static TexturePtr createFromImage(const std::string& image_data, TextureType type=TextureType::TEXTURE_2D, int mipmap_levels=0);
-		
+
 		static TexturePtr createTexture1D(int width, PixelFormat::PF fmt);
 		static TexturePtr createTexture2D(int width, int height, PixelFormat::PF fmt);
 		static TexturePtr createTexture3D(int width, int height, int depth, PixelFormat::PF fmt);
@@ -140,7 +140,7 @@ namespace KRE
 		const geometry::Rect<N> getNormalisedTextureCoords(int n, const geometry::Rect<T>& r) const {
 			const float w = texture_params_[n].w_ratio;
 			const float h = texture_params_[n].h_ratio;
-			return geometry::Rect<N>::from_coordinates(static_cast<N>(r.x())/w, static_cast<N>(r.y())/h, static_cast<N>(r.x2())/w, static_cast<N>(r.y2())/h);		
+			return geometry::Rect<N>::from_coordinates(static_cast<N>(r.x())/w, static_cast<N>(r.y())/h, static_cast<N>(r.x2())/w, static_cast<N>(r.y2())/h);
 		}
 		template<typename N, typename T>
 		const geometry::Rect<N> getNormalizedTextureCoords(int n, const geometry::Rect<T>& r) const {
@@ -246,13 +246,13 @@ namespace KRE
 	protected:
 		explicit Texture(const variant& node, const std::vector<SurfacePtr>& surfaces);
 		explicit Texture(const std::vector<SurfacePtr>& surfaces,
-			TextureType type=TextureType::TEXTURE_2D, 
+			TextureType type=TextureType::TEXTURE_2D,
 			int mipmap_levels=0);
-		explicit Texture(int count, 
-			int width, 
-			int height, 
+		explicit Texture(int count,
+			int width,
+			int height,
 			int depth,
-			PixelFormat::PF fmt, 
+			PixelFormat::PF fmt,
 			TextureType type);
 		Texture(const Texture& other);
 		void addSurface(SurfacePtr surf);
@@ -285,7 +285,7 @@ namespace KRE
 			{
 			}
 			SurfacePtr surface;
-			
+
 			TextureType type;
 			int mipmaps;
 			std::array<AddressMode, 3> address_mode; // u,v,w
@@ -297,13 +297,13 @@ namespace KRE
 			int surface_width;
 			int surface_height;
 
-			// Width/Height/Depth of the created texture -- may be a 
+			// Width/Height/Depth of the created texture -- may be a
 			// different size than the surface if things like only
 			// allowing power-of-two textures is in effect.
 			int width;
 			int height;
 			int depth;
-			
+
 			int unpack_alignment;
 
 			float h_ratio;

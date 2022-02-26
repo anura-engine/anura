@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -67,7 +67,7 @@ namespace graphics
 		glBindTexture(GL_TEXTURE_CUBE_MAP, *tex_id_);
 
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -75,7 +75,7 @@ namespace graphics
 		for(int n = RIGHT_FACE; n != MAX_FACES; ++n) {
 			ASSERT_LOG(node.has_key(directions[n]), "skybox must have " << directions[n] << " attribute");
 			surface s = surface_cache::get(node[directions[n]].as_string());
-			ASSERT_LOG(s->w == s->h, " skybox images must be square: " << directions[n] << " : " << s->w << "," << s->h);			
+			ASSERT_LOG(s->w == s->h, " skybox images must be square: " << directions[n] << " : " << s->w << "," << s->h);
 			glTexImage2D(gl_faces[n], 0, GL_RGB, s->w, s->h, 0, s->format->BytesPerPixel == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, s->pixels);
 		}
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
@@ -114,7 +114,7 @@ namespace graphics
 		glBindTexture(GL_TEXTURE_CUBE_MAP, *tex_id_);
 
 		glm::mat4 mv_inv = camera->view_mat();
-		mv_inv[3][0] = 0; mv_inv[3][1] = 0; mv_inv[3][2] = 0; 
+		mv_inv[3][0] = 0; mv_inv[3][1] = 0; mv_inv[3][2] = 0;
 		mv_inv = glm::inverse(mv_inv);
 		glUniformMatrix4fv(u_mv_inverse_matrix_, 1, GL_FALSE, glm::value_ptr(mv_inv));
 		glm::mat4 p_inv = glm::inverse(camera->projection_mat());
@@ -124,13 +124,13 @@ namespace graphics
 		glUniform4f(u_color_, color_.r(), color_.g(), color_.b(), color_.a());
 
 		const GLfloat cube_verts[] = {
-			 1.0f, -1.0f, 0.0f, 
-			-1.0f, -1.0f, 0.0f, 
-			 1.0f,  1.0f, 0.0f, 
+			 1.0f, -1.0f, 0.0f,
+			-1.0f, -1.0f, 0.0f,
+			 1.0f,  1.0f, 0.0f,
 
-			 1.0f,  1.0f, 0.0f, 
-			-1.0f, -1.0f, 0.0f, 
-			-1.0f,  1.0f, 0.0f, 
+			 1.0f,  1.0f, 0.0f,
+			-1.0f, -1.0f, 0.0f,
+			-1.0f,  1.0f, 0.0f,
 		};
 
 		glEnableVertexAttribArray(a_position_);

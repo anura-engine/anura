@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -30,7 +30,7 @@
 
 class Level;
 
-namespace multiplayer 
+namespace multiplayer
 {
 	struct Error {};
 	int slot();

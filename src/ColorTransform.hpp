@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -63,7 +63,7 @@ namespace KRE
 		void setAddGreen(int ag);
 		void setAddBlue(int ab);
 		void setAddAlpha(int aa);
-		
+
 		void setAddRed(float ar);
 		void setAddGreen(float ag);
 		void setAddBlue(float ab);

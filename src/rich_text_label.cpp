@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,7 +34,7 @@
 
 namespace gui
 {
-	namespace 
+	namespace
 	{
 		void flatten_recursively(const std::vector<variant>& v, std::vector<variant>* result)
 		{
@@ -98,7 +98,7 @@ namespace gui
 
 						while(xpos + label_widget->width() < width() && space_itor != line.end()) {
 							candidate = words;
-						
+
 							space_itor = std::find(space_itor+1, line.end(), ' ');
 
 							words = std::string(line.begin(), space_itor);
@@ -178,7 +178,7 @@ namespace gui
 			//if height isn't given, auto set it.
 			setDim(width(), ypos + line_height);
 		}
-	
+
 		//ypos + line_height);
 		setVirtualHeight(ypos + line_height);
 		setArrowScrollStep(16);

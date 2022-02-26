@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -81,7 +81,7 @@ namespace editor_dialogs
 			addWidget(WidgetPtr(category_button));
 
 			addWidget(generate_grid(category_));
-	
+
 			addWidget(WidgetPtr(facing_button), category_button->x() + category_button->width() + 10, category_button->y());
 		}
 	}
@@ -115,7 +115,7 @@ namespace editor_dialogs
 					preview->setDim(36, 36);
 					preview->setArea(c.preview_frame()->area());
 					ButtonPtr char_button(new Button(WidgetPtr(preview), std::bind(&CharacterEditorDialog::set_character, this, index)));
-	
+
 					std::string tooltip_str = c.node["type"].as_string();
 
 					if(c.help.empty() == false) {
@@ -128,7 +128,7 @@ namespace editor_dialogs
 				} else {
 					borders.push_back(nullptr);
 				}
-	
+
 				++index;
 			}
 
