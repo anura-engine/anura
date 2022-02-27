@@ -180,7 +180,7 @@ public:
 		}
 	}
 
-	variant(variant&& v) {
+	variant(variant&& v) noexcept {
 		registerGlobalVariant(this);
 		type_ = v.type_;
 		value_ = v.value_;
@@ -193,7 +193,7 @@ public:
 		}
 	}
 
-	const variant& operator=(variant&& v)
+	const variant& operator=(variant&& v) noexcept
 	{
 		if(&v != this) {
 			if (type_ > VARIANT_TYPE_DECIMAL) {
