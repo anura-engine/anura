@@ -402,6 +402,7 @@
   <ItemGroup>
     <ClCompile Include="..\imgui\imgui.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">IMGUI_INCLUDE_IMGUI_USER_INL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_INCLUDE_IMGUI_USER_INL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\src\achievements.cpp" />
@@ -788,8 +789,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)\$(Configuration)\$(Platform)\</OutDir>
+    <OutDir>$(SolutionDir)$(Platform)-$(Configuration)\</OutDir>
     <CustomBuildAfterTargets>Link</CustomBuildAfterTargets>
+    <IntDir>$(SolutionDir)build\$(Platform)-$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
@@ -837,23 +839,26 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;HAVE_M_PI;LOW_END_SYSTEM;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0600;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\src;..\..\src\eris;..\..\src\hex;..\..\src\kre;..\..\src\svg;..\..\src\tiled;..\..\src\xhtml;..\..\Box2D;..\..\external\include\windows;..\..\external\include\windows\client\windows\handler;..\..\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;NOMINMAX;LOW_END_SYSTEM;USE_SVG;USE_IMGUI;_WIN32_WINNT=_WIN32_WINNT_WIN10;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_LIB;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\hex;..\src\kre;..\src\svg;..\src\tiled;..\src\xhtml;..\external\include\windows;..\external\include\windows\client\windows\handler;..\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\..\external\lib\$(Platform)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
-      <Command>build_copy_files.bat $(OutputPath)$(TargetFileName) $(SolutionDir) $(Platform)</Command>
+      <Command>build_copy_files.bat $(OutputPath) $(SolutionDir) $(Platform)</Command>
       <Inputs>$(OutputPath)$(TargetFileName)</Inputs>
-      <Outputs>$(SolutionDir)..\..\build-$(Platform)\</Outputs>
+      <Outputs>$(OutputPath)</Outputs>
       <TreatOutputAsContent>true</TreatOutputAsContent>
-      <Message>Copy executable to build directory</Message>
+      <Message>Copy data to build directory</Message>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
