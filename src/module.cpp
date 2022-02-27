@@ -1621,7 +1621,7 @@ static const int ModuleProtocolVersion = 1;
 					}
 
 					sys::remove_file(path_str);
-				} catch(boost::filesystem::filesystem_error& e) {
+				} catch(boost::filesystem::filesystem_error&) {
 					LOG_ERROR("FAILED TO DELETE FILE: " << path_str);
 				}
 			}
@@ -1713,7 +1713,7 @@ static const int ModuleProtocolVersion = 1;
 
 			try {
 				sys::write_file(path_str, contents);
-			} catch(boost::filesystem::filesystem_error& e) {
+			} catch(boost::filesystem::filesystem_error&) {
 				bool fixed = false;
 				try {
 					if(!sys::is_file_writable(path_str)) {
@@ -1721,7 +1721,7 @@ static const int ModuleProtocolVersion = 1;
 						sys::write_file(path_str, contents);
 						fixed = true;
 					}
-				} catch(boost::filesystem::filesystem_error& e) {
+				} catch(boost::filesystem::filesystem_error&) {
 				}
 
 				ASSERT_LOG(fixed, "Could not write file: " << path_str);

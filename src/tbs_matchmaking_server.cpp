@@ -1859,7 +1859,6 @@ public:
 			if(dates != args.end()) {
 				items = util::split(dates->second);
 			} else {
-				char buf[1024];
 				time_t cur_time = time(nullptr);
 				tm* ltime = localtime(&cur_time);
 
