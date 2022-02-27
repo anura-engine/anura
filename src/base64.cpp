@@ -25,7 +25,9 @@
 #include "base64.hpp"
 #include "unit_test.hpp"
 
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wchar-subscripts"
+#endif
 
 namespace base64
 {

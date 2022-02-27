@@ -1099,9 +1099,11 @@ deltax, deltay (can all be estimates).
 Performance suffers if they are wrong; better to make nsites,
 deltax, and deltay too big than too small.  (?) */
 
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #ifndef __clang__
     #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 #endif
 // XXX check about this? ^
 
@@ -1224,7 +1226,9 @@ bool VoronoiDiagramGenerator::voronoi(int triangulate)
 	return true;
 }
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 
 int scomp(const void *p1,const void *p2)
 {

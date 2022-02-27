@@ -25,7 +25,9 @@
 
 #include "unit_test.hpp"
 
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
 
 namespace md5 {
 

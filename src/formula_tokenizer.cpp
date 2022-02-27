@@ -29,7 +29,9 @@
 #include "string_utils.hpp"
 #include "unit_test.hpp"
 
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wchar-subscripts"
+#endif
 
 namespace formula_tokenizer
 {
