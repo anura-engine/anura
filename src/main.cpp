@@ -33,12 +33,6 @@
 #if defined(_MSC_VER)
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
-#if defined(_DEBUG)
-#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
-#else
-#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
-//#pragma comment(linker, "/SUBSYSTEM:WINDOWS")
-#endif
 #endif
 
 #include <boost/lexical_cast.hpp>
