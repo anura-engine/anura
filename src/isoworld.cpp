@@ -21,12 +21,6 @@
 	   distribution.
 */
 
-#if defined(_MSC_VER)
-#include <boost/math/special_functions/round.hpp>
-#define bmround	boost::math::round
-#else
-#define bmround	round
-#endif
 /*
 #include <vector>
 #include "asserts.hpp"

@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <boost/math/special_functions/round.hpp>
-
 #include "geometry.hpp"
 
 template<typename T>
@@ -43,8 +41,8 @@ geometry::Point<T> rotate_point_around_origin(T x1, T y1, float alpha, bool roun
 	float c1 = x1 * cos(alpha) - y1 * sin(alpha);
 	float c2 = y1 * cos(alpha) + x1 * sin(alpha);
 
-	beta.x = static_cast<T>(round ? boost::math::round(c1) : c1);
-	beta.y = static_cast<T>(round ? boost::math::round(c2) : c2);
+	beta.x = static_cast<T>(round ? std::round(c1) : c1);
+	beta.y = static_cast<T>(round ? std::round(c2) : c2);
 
 	return beta;
 }

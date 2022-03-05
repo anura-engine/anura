@@ -47,12 +47,6 @@
 #include <iomanip>
 #include <stack>
 #include <cmath>
-#if defined(_MSC_VER)
-#include <boost/math/special_functions/round.hpp>
-#define bmround	boost::math::round
-#else
-#define bmround	round
-#endif
 
 #include <stdlib.h>
 
@@ -110,14 +104,6 @@
 #include "Cursor.hpp"
 
 #include <boost/regex.hpp>
-#if defined(_MSC_VER) && _MSC_VER < 1800
-#include <boost/math/special_functions/asinh.hpp>
-#include <boost/math/special_functions/acosh.hpp>
-#include <boost/math/special_functions/atanh.hpp>
-using boost::math::asinh;
-using boost::math::acosh;
-using boost::math::atanh;
-#endif
 
 using namespace formula_vm;
 
@@ -1967,7 +1953,7 @@ namespace game_logic
 
 		FUNCTION_DEF(asinh, 1, 1, "asinh(x): Standard arc hyperbolic sine function.")
 			const float ratio = EVAL_ARG(0).as_float();
-			return variant(static_cast<decimal>(asinh(ratio)));
+			return variant(static_cast<decimal>(std::asinh(ratio)));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("int|decimal");
 		FUNCTION_TYPE_DEF
@@ -1976,7 +1962,7 @@ namespace game_logic
 
 		FUNCTION_DEF(acosh, 1, 1, "acosh(x): Standard arc hyperbolic cosine function.")
 			const float ratio = EVAL_ARG(0).as_float();
-			return variant(static_cast<decimal>(acosh(ratio)));
+			return variant(static_cast<decimal>(std::acosh(ratio)));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("int|decimal");
 		FUNCTION_TYPE_DEF
@@ -1985,7 +1971,7 @@ namespace game_logic
 
 		FUNCTION_DEF(atanh, 1, 1, "atanh(x): Standard arc hyperbolic tangent function.")
 			const float ratio = EVAL_ARG(0).as_float();
-			return variant(static_cast<decimal>(atanh(ratio)));
+			return variant(static_cast<decimal>(std::atanh(ratio)));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("int|decimal");
 		FUNCTION_TYPE_DEF
@@ -2028,7 +2014,7 @@ namespace game_logic
 			const float b = EVAL_ARG(1).as_float();
 			const float c = EVAL_ARG(2).as_float();
 			const float d = EVAL_ARG(3).as_float();
-			return variant(static_cast<int64_t>(bmround((atan2(a-c, b-d)*radians_to_degrees+90)*VARIANT_DECIMAL_PRECISION)*-1), variant::DECIMAL_VARIANT);
+			return variant(static_cast<int64_t>(std::round((atan2(a-c, b-d)*radians_to_degrees+90)*VARIANT_DECIMAL_PRECISION)*-1), variant::DECIMAL_VARIANT);
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("int|decimal");
 			ARG_TYPE("int|decimal");
@@ -2092,7 +2078,7 @@ namespace game_logic
 
 		FUNCTION_DEF(round, 1, 1, "Returns the smaller near integer. 3.9 -> 3, 3.3 -> 3, 3 -> 3")
 			const double a = EVAL_ARG(0).as_float();
-			return variant(static_cast<int>(bmround(a)));
+			return variant(static_cast<int>(std::round(a)));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("decimal");
 		FUNCTION_TYPE_DEF
