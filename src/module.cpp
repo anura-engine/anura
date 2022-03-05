@@ -1244,7 +1244,7 @@ static const int ModuleProtocolVersion = 1;
 		}
 
 		client_->process();
-		std::vector<boost::shared_ptr<http_client> > chunk_clients = chunk_clients_;
+		std::vector<std::shared_ptr<http_client> > chunk_clients = chunk_clients_;
 		for(auto c : chunk_clients) {
 			c->process();
 		}
@@ -1289,7 +1289,7 @@ static const int ModuleProtocolVersion = 1;
 		doc_pending_chunks_ = variant();
 	}
 
-	void client::on_chunk_response(std::string chunk_url, variant node, boost::shared_ptr<http_client> client, std::string response)
+	void client::on_chunk_response(std::string chunk_url, variant node, std::shared_ptr<http_client> client, std::string response)
 	{
 		if(g_module_chunk_deflate) {
 			std::vector<char> data(response.begin(), response.end());
@@ -1316,7 +1316,7 @@ static const int ModuleProtocolVersion = 1;
 				operation_ = OPERATION_PENDING_INSTALL;
 			}
 		} else {
-			boost::shared_ptr<http_client> new_client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
+			std::shared_ptr<http_client> new_client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
 			new_client->set_timeout_and_retry();
 
 			variant chunk = chunks_to_get_.back();
@@ -1352,7 +1352,7 @@ static const int ModuleProtocolVersion = 1;
 		chunk_progress_[chunk_url] = received;
 	}
 
-	void client::on_chunk_error(std::string response, std::string url, std::string doc, variant chunk, boost::shared_ptr<http_client> client)
+	void client::on_chunk_error(std::string response, std::string url, std::string doc, variant chunk, std::shared_ptr<http_client> client)
 	{
 		auto progress_itor = chunk_progress_.find(url);
 		if(progress_itor != chunk_progress_.end()) {
@@ -1371,7 +1371,7 @@ static const int ModuleProtocolVersion = 1;
 		}
 		else
 		{
-			boost::shared_ptr<http_client> new_client(new http_client(host_, port_));
+			std::shared_ptr<http_client> new_client(new http_client(host_, port_));
 			new_client->set_timeout_and_retry();
 
 			new_client->send_request(url, doc,
@@ -1589,7 +1589,7 @@ static const int ModuleProtocolVersion = 1;
 				request.add("type", "download_chunk");
 				request.add("chunk_id", chunk["md5"]);
 
-				boost::shared_ptr<http_client> client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
+				std::shared_ptr<http_client> client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
 				client->set_timeout_and_retry();
 
 				const std::string url = g_module_chunk_query + chunk["md5"].as_string();
@@ -2026,4 +2026,3 @@ static const int ModuleProtocolVersion = 1;
 	}
 
 }
-
