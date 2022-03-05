@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <boost/tuple/tuple.hpp>
 #include <deque>
 #include <list>
 
@@ -83,7 +82,7 @@ namespace tbs
 		void queue_msg(int session_id, const std::string& msg, bool has_priority) override;
 
 		std::list<std::pair<send_function, socket_info> > connections_;
-		std::deque<boost::tuple<send_function,variant,int> > msg_queue_;
+		std::deque<std::tuple<send_function,variant,int> > msg_queue_;
 	};
 
 	typedef std::shared_ptr<internal_server> internal_server_ptr;

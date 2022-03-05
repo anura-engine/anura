@@ -537,7 +537,7 @@ void terminate_utility_process(bool* complete=nullptr)
 
 	void internal_server::write_queue(send_function send_fn, const variant& v, int session_id)
 	{
-		msg_queue_.push_back(boost::make_tuple(send_fn,v,session_id));
+		msg_queue_.push_back(std::make_tuple(send_fn,v,session_id));
 	}
 
 	bool internal_server::read_queue(send_function* send_fn, variant* v, int *session_id)
@@ -547,7 +547,7 @@ void terminate_utility_process(bool* complete=nullptr)
 		if(msg_queue_.empty()) {
 			return false;
 		}
-		boost::tie(*send_fn, *v, *session_id) = msg_queue_.front();
+		std::tie(*send_fn, *v, *session_id) = msg_queue_.front();
 		msg_queue_.pop_front();
 		return true;
 	}
