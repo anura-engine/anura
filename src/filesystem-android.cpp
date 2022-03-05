@@ -55,7 +55,7 @@
 #include <vector>
 
 #include <jni.h>
-#include "SDL2/SDL.h"
+#include <SDL2/SDL.h>
 #include <android/asset_manager_jni.h>
 #include <android/log.h>
 #include "SDL_rwops.h"

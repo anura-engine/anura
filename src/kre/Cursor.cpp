@@ -23,7 +23,7 @@
 
 #include "Cursor.hpp"
 #include "Surface.hpp"
-#include "SDL2/SDL.h"
+#include <SDL2/SDL.h>
 
 namespace KRE
 {

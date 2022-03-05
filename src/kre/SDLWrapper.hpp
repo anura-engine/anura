@@ -28,7 +28,7 @@
 #include <string>
 #include <sstream>
 
-#include "SDL2/SDL.h"
+#include <SDL2/SDL.h>
 
 namespace SDL
 {

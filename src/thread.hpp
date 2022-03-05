@@ -27,7 +27,7 @@
 #include <functional>
 #include <list>
 
-#include "SDL2/SDL.h"
+#include <SDL2/SDL.h>
 #include <string>
 
 // Threading primitives wrapper for SDL_Thread.
