@@ -2801,7 +2801,7 @@ namespace {
 			ExpressionPtr optimize() const override {
 
 				WhereExpression* base_where = dynamic_cast<WhereExpression*>(body_.get());
-				if(base_where == NULL) {
+				if(base_where == nullptr) {
 					return ExpressionPtr();
 				}
 

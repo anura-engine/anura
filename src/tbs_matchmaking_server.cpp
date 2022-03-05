@@ -499,7 +499,7 @@ public:
 					variant_builder response; \
 					response.add("type", type); \
 					response.add("message", msg); \
-					response.add("timestamp", static_cast<int>(time(NULL))); \
+					response.add("timestamp", static_cast<int>(time(nullptr))); \
 					send_response(socket, response.build()); \
 				}
 
@@ -507,7 +507,7 @@ public:
 					variant_builder response; \
 					response.add("type", "error"); \
 					response.add("message", msg); \
-					response.add("timestamp", static_cast<int>(time(NULL))); \
+					response.add("timestamp", static_cast<int>(time(nullptr))); \
 					send_response(socket, response.build()); \
 				}
 
@@ -515,7 +515,7 @@ public:
 					variant_builder response; \
 					response.add("type", "message"); \
 					response.add("message", msg); \
-					response.add("timestamp", static_cast<int>(time(NULL))); \
+					response.add("timestamp", static_cast<int>(time(nullptr))); \
 					send_response(socket, response.build()); \
 				}
 
@@ -525,12 +525,12 @@ public:
 		std::map<std::string, std::string>::const_iterator i = env.find("cookie");
 		if(i != env.end()) {
 			const char* cookie_start = strstr(i->second.c_str(), " session=");
-			if(cookie_start != NULL) {
+			if(cookie_start != nullptr) {
 				++cookie_start;
 			} else {
 				cookie_start = strstr(i->second.c_str(), "session=");
 				if(cookie_start != i->second.c_str()) {
-					cookie_start = NULL;
+					cookie_start = nullptr;
 				}
 			}
 
@@ -681,7 +681,7 @@ public:
 						response.add("username", variant(user_full));
 						response.add("info_version", variant(0));
 						response.add("info", account_info);
-						response.add("timestamp", static_cast<int>(time(NULL)));
+						response.add("timestamp", static_cast<int>(time(nullptr)));
 
 						if(remember) {
 							std::string cookie = write_uuid(generate_uuid());
@@ -800,7 +800,7 @@ public:
 						response.add("username", given_user);
 						response.add("info_version", user_info["info_version"].as_int(0));
 						response.add("info", user_info["info"]);
-						response.add("timestamp", static_cast<int>(time(NULL)));
+						response.add("timestamp", static_cast<int>(time(nullptr)));
 
 						if(remember) {
 							std::string cookie = write_uuid(generate_uuid());
@@ -877,7 +877,7 @@ public:
 						response.add("username", variant(display_name));
 						response.add("info", user_info["info"]);
 						response.add("info_version", user_info["info_version"].as_int(0));
-						response.add("timestamp", static_cast<int>(time(NULL)));
+						response.add("timestamp", static_cast<int>(time(nullptr)));
 
 						send_response(socket, response.build());
 
@@ -1206,7 +1206,7 @@ public:
 					msg.add("nick", variant(get_display_name(info.user_id)));
 					msg.add("message", message);
 
-					msg.add("timestamp", variant(static_cast<int>(time(NULL))));
+					msg.add("timestamp", variant(static_cast<int>(time(nullptr))));
 
 					variant v = msg.build();
 
@@ -1403,7 +1403,7 @@ public:
 						variant_builder response;
 						response.add("type", "message");
 						response.add("message", formatter() << itor->second.user_id << " has declined your request to observe their game");
-						response.add("timestamp", static_cast<int>(time(NULL)));
+						response.add("timestamp", static_cast<int>(time(nullptr)));
 						queue_message(*target, response.build());
 					}
 				}
@@ -1778,7 +1778,7 @@ public:
 			variant_builder msg;
 			msg.add("type", "admin_message");
 			msg.add("message", "Executing...");
-			msg.add("timestamp", static_cast<int>(time(NULL)));
+			msg.add("timestamp", static_cast<int>(time(nullptr)));
 			send_msg(socket, "text/json", msg.build().write_json(), "");
 		}
 
@@ -2180,7 +2180,7 @@ private:
 				cstr_argv.push_back(&s[0]);
 			}
 
-			cstr_argv.push_back(NULL);
+			cstr_argv.push_back(nullptr);
 
 			const pid_t pid = fork();
 			if(pid < 0) {

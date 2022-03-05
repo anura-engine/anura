@@ -87,7 +87,7 @@ GarbageCollectible* GarbageCollectible::debugGetObject(void* ptr)
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 GarbageCollectible::GarbageCollectible() : reference_counted_object(), prev_(nullptr), tenure_(0)
@@ -276,7 +276,7 @@ void GarbageCollectorImpl::surrenderVariant(const variant* v, const char* descri
 
 void GarbageCollectorImpl::surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description)
 {
-	if(ptr->get() == NULL) {
+	if(ptr->get() == nullptr) {
 		return;
 	}
 
@@ -540,7 +540,7 @@ void GarbageCollectorAnalyzer::surrenderVariant(const variant* v, const char* de
 
 		auto itor = itemIndexes_.find(v->get_addr());
 		if(itor != itemIndexes_.end()) {
-			graph_.addEdge(currentIndex_, itor->second, description == NULL ? std::string("(variant)") : std::string(description));
+			graph_.addEdge(currentIndex_, itor->second, description == nullptr ? std::string("(variant)") : std::string(description));
 		}
 	}
 	break;
@@ -556,7 +556,7 @@ void GarbageCollectorAnalyzer::surrenderPtrInternal(ffl::IntrusivePtr<GarbageCol
 
 	auto itor = itemIndexes_.find(ptr->get());
 	if(itor != itemIndexes_.end()) {
-		graph_.addEdge(currentIndex_, itor->second, description == NULL ? std::string("(variant)") : std::string(description));
+		graph_.addEdge(currentIndex_, itor->second, description == nullptr ? std::string("(variant)") : std::string(description));
 	}
 }
 
@@ -803,4 +803,3 @@ void runGarbageCollectionDebug(const char* fname)
 
 	GarbageCollectorAnalyzer().run(fname);
 }
-

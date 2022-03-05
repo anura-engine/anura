@@ -1053,11 +1053,11 @@ public:
 		variant_type_ptr value_type = type->is_list_of();
 		if(value_type) {
 			bool result = variant_types_compatible(value_type_, value_type);
-			if(!result && why != NULL && type->is_specific_list()) {
+			if(!result && why != nullptr && type->is_specific_list()) {
 				variant_type_ptr mismatching_element;
 				for(variant_type_ptr eltype : *type->is_specific_list()) {
 					if(variant_types_compatible(value_type_, eltype) == false) {
-						if(mismatching_element.get() == NULL) {
+						if(mismatching_element.get() == nullptr) {
 							mismatching_element = eltype;
 						} else {
 							mismatching_element = variant_type_ptr();
@@ -1066,7 +1066,7 @@ public:
 					}
 				}
 
-				if(mismatching_element.get() != NULL) {
+				if(mismatching_element.get() != nullptr) {
 					*why << "Element of list does not match: " << mismatching_element->to_string() << "\nExpected " << value_type_->to_string() << "\n";
 					if(mismatching_element->get_expr() && mismatching_element->get_expr()->hasDebugInfo()) {
 						*why << mismatching_element->get_expr()->debugPinpointLocation() << "\n";

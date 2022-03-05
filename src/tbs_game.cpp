@@ -272,7 +272,7 @@ namespace tbs
 			b.add("player_info", player_info_var);
 			b.add("replay", replay);
 			b.add("timestamp", start_timestamp_);
-			b.add("end_timestamp", static_cast<int>(time(NULL)));
+			b.add("end_timestamp", static_cast<int>(time(nullptr)));
 			b.add("winner", winner_);
 			v.push_back(b.build());
 			if(v.size() > 10) {
@@ -589,7 +589,7 @@ namespace {
 		variant_builder result;
 		result.add("type", "error");
 		result.add("message", msg);
-		result.add("timestamp", static_cast<int>(time(NULL)));
+		result.add("timestamp", static_cast<int>(time(nullptr)));
 		queue_message(result.build(), nplayer);
 	}
 
@@ -598,7 +598,7 @@ namespace {
 		variant_builder result;
 		result.add("type", "message");
 		result.add("message", msg);
-		result.add("timestamp", static_cast<int>(time(NULL)));
+		result.add("timestamp", static_cast<int>(time(nullptr)));
 		queue_message(result.build(), nplayer);
 	}
 
@@ -797,7 +797,7 @@ namespace {
 
 #ifdef USE_DB_CLIENT
 		DEFINE_FIELD(db_client, "builtin db_client")
-			if(obj.db_client_.get() == NULL) {
+			if(obj.db_client_.get() == nullptr) {
 				obj.db_client_ = DbClient::create();
 			}
 
@@ -969,7 +969,7 @@ namespace {
 			return;
 		} else if(type == "chat_message") {
 			variant m = msg;
-			m.add_attr_mutation(variant("timestamp"), variant(static_cast<int>(time(NULL))));
+			m.add_attr_mutation(variant("timestamp"), variant(static_cast<int>(time(nullptr))));
 			if(nplayer >= 0) {
 				m.add_attr_mutation(variant("nick"), variant(players_[nplayer].name));
 			} else {

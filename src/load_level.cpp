@@ -171,7 +171,7 @@ public:
 	level_loader(const std::string& lvl) : lvl_(lvl)
 	{}
 	void operator()() {
-		level* lvl = NULL;
+		level* lvl = nullptr;
 		try {
 			lvl = new level(lvl_);
 		} catch(const graphics::texture::worker_thread_error&) {
@@ -234,7 +234,7 @@ ffl::IntrusivePtr<level> load_level(const std::string& lvl)
 	delete itor->second.first;
 	ffl::IntrusivePtr<level> res;
 	res.reset(itor->second.second);
-	if(res.get() == NULL) {
+	if(res.get() == nullptr) {
 		res.reset(new level(lvl));
 	}
 	res->finish_loading();

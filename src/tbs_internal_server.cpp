@@ -93,7 +93,7 @@ namespace tbs
 
 	void internal_server::process()
 	{
-		ASSERT_LOG(server_ptr != NULL, "Internal server pointer is NULL");
+		ASSERT_LOG(server_ptr != nullptr, "Internal server pointer is nullptr");
 		server_ptr->handle_process();
 	}
 
@@ -122,7 +122,7 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 #if defined(_MSC_VER)
 	char app_np[MAX_PATH];
 	// Grab the full path name
-	DWORD chararacters_copied = GetModuleFileNameA(NULL, app_np,  MAX_PATH);
+	DWORD chararacters_copied = GetModuleFileNameA(nullptr, app_np,  MAX_PATH);
 	ASSERT_LOG(chararacters_copied > 0, "Failed to get module name: " << GetLastError());
 	std::string app_name_and_path(app_np, chararacters_copied);
 
@@ -144,18 +144,18 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 	memset(&piProcessInfo, 0, sizeof(piProcessInfo));
 	siStartupInfo.cb = sizeof(siStartupInfo);
 	saFileSecurityAttributes.nLength = sizeof(saFileSecurityAttributes);
-	saFileSecurityAttributes.lpSecurityDescriptor = NULL;
+	saFileSecurityAttributes.lpSecurityDescriptor = nullptr;
 	saFileSecurityAttributes.bInheritHandle = true;
-	child_stderr = siStartupInfo.hStdError = CreateFileA("stderr_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	child_stderr = siStartupInfo.hStdError = CreateFileA("stderr_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	ASSERT_LOG(siStartupInfo.hStdError != INVALID_HANDLE_VALUE,
 		"Unable to open stderr_server.txt for child process.");
-	child_stdout = siStartupInfo.hStdOutput = CreateFileA("stdout_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	child_stdout = siStartupInfo.hStdOutput = CreateFileA("stdout_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	ASSERT_LOG(siStartupInfo.hStdOutput != INVALID_HANDLE_VALUE,
 		"Unable to open stdout_server.txt for child process.");
 	siStartupInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
 	siStartupInfo.dwFlags = STARTF_USESTDHANDLES;
 	std::cerr << "CREATE CHILD PROCESS: " << app_name_and_path << std::endl;
-	ASSERT_LOG(CreateProcessA(app_name_and_path.c_str(), &child_args[0], NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, 0, 0, &siStartupInfo, &piProcessInfo),
+	ASSERT_LOG(CreateProcessA(app_name_and_path.c_str(), &child_args[0], nullptr, nullptr, true, CREATE_DEFAULT_ERROR_MODE, 0, 0, &siStartupInfo, &piProcessInfo),
 		"Unable to create child process for utility: " << GetLastError());
 	child_process = piProcessInfo.hProcess;
 	child_thread = piProcessInfo.hThread;
@@ -173,11 +173,11 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 		for(const std::string& a : argv) {
 			args.push_back(const_cast<char*>(a.c_str()));
 		}
-		args.push_back(NULL);
+		args.push_back(nullptr);
 
 		execv(app.c_str(), &args[0]);
 
-		const char* error = NULL;
+		const char* error = nullptr;
 		switch(errno) {
 		case E2BIG: error = "E2BIG"; break;
 		case EACCES: error = "EACCES"; break;
@@ -320,9 +320,9 @@ void terminate_utility_process(bool* complete=nullptr)
 		terminate_utility_process(nullptr);
 
 		delete g_termination_semaphore;
-		g_termination_semaphore = NULL;
+		g_termination_semaphore = nullptr;
 
-		boost::interprocess::named_semaphore* startup_semaphore = NULL;
+		boost::interprocess::named_semaphore* startup_semaphore = nullptr;
 		std::string startup_semaphore_name;
 
 
@@ -336,7 +336,7 @@ void terminate_utility_process(bool* complete=nullptr)
 				startup_semaphore = new boost::interprocess::named_semaphore(boost::interprocess::create_only_t(), startup_semaphore_name.c_str(), 0);
 			} catch(boost::interprocess::interprocess_exception&) {
 				delete g_termination_semaphore;
-				g_termination_semaphore = NULL;
+				g_termination_semaphore = nullptr;
 				continue;
 			}
 
@@ -416,7 +416,7 @@ void terminate_utility_process(bool* complete=nullptr)
 		ASSERT_LOG(started_server, "Could not start server process. Server output: " << sys::read_file("stderr_server.txt") << " -- server log: " << sys::read_file("server-log.txt"));
 
 		delete startup_semaphore;
-		startup_semaphore = NULL;
+		startup_semaphore = nullptr;
 
 		boost::interprocess::named_semaphore::remove(startup_semaphore_name.c_str());
 

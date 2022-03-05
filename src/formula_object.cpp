@@ -1294,7 +1294,7 @@ void FormulaObject::applyDiff(variant delta)
 	variant v = json::parse(std::string(data.begin(), data.end()));
 	for(variant obj_node : v["objects"].as_list()) {
 		game_logic::WmlSerializableFormulaCallablePtr obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();
-		ASSERT_LOG(obj.get() != NULL, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
+		ASSERT_LOG(obj.get() != nullptr, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
 
 		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(obj->uuid(), obj);
 	}

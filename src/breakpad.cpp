@@ -78,9 +78,9 @@ namespace breakpad
 
 		// Possibly notify user about success/failure
 		if (r == google_breakpad::RESULT_SUCCEEDED) {
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Crash report", "Crash report was sent. Thank you!", NULL);
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Crash report", "Crash report was sent. Thank you!", nullptr);
 		} else {
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Crash report", "Could not send crash report. Thank you for trying, though!", NULL);
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Crash report", "Could not send crash report. Thank you for trying, though!", nullptr);
 		}
 
 		return false;
