@@ -129,13 +129,7 @@ namespace KRE
 			return icolor_;
 		}
 
-		const float* asFloatVector(ColorByteOrder order=ColorByteOrder::RGBA) const {
-			switch(order) {
-			case ColorByteOrder::BGRA: return glm::value_ptr(glm::vec4(color_[2], color_[1], color_[0], color_[3]));
-			case ColorByteOrder::ARGB: return glm::value_ptr(glm::vec4(color_[3], color_[0], color_[1], color_[2]));
-			case ColorByteOrder::ABGR: return glm::value_ptr(glm::vec4(color_[3], color_[2], color_[1], color_[0]));
-			default: break;
-			}
+		const float* asFloatVector() const {
 			return glm::value_ptr(color_);
 		}
 
