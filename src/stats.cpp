@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <vector>
 
-#include <boost/array.hpp>
+#include <array>
 #include <boost/asio.hpp>
 
 #include "checksum.hpp"

@@ -204,7 +204,7 @@ namespace http
 			recv_buf.reset(new receive_buf);
 		}
 
-		buffer_ptr buf(new boost::array<char, 64*1024>);
+		buffer_ptr buf(new std::array<char, 64*1024>);
 		socket->socket.async_read_some(boost::asio::buffer(*buf), std::bind(&web_server::handle_receive, this, socket, buf, std::placeholders::_1, std::placeholders::_2, recv_buf));
 	}
 

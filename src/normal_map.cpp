@@ -22,7 +22,7 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
-#include <boost/array.hpp>
+#include <array>
 #include <boost/shared_array.hpp>
 #include "intrusive_ptr.hpp"
 

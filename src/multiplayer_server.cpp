@@ -23,7 +23,7 @@
 
 #include <assert.h>
 
-#include <boost/array.hpp>
+#include <array>
 #include <boost/asio.hpp>
 #include <boost/regex.hpp>
 // boost::thread < 1.51 conflicts with C++11-capable compilers
@@ -47,7 +47,7 @@ using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
 
 typedef std::shared_ptr<tcp::socket> socket_ptr;
-typedef std::shared_ptr<boost::array<char, 1024> > buffer_ptr;
+typedef std::shared_ptr<std::array<char, 1024> > buffer_ptr;
 
 namespace multiplayer
 {
@@ -80,7 +80,7 @@ namespace multiplayer
 				SocketInfo info;
 				info.id = next_id_++;
 
-				boost::array<char, 4> buf;
+				std::array<char, 4> buf;
 				memcpy(&buf[0], &info.id, 4);
 
 				boost::asio::async_write(*socket, boost::asio::buffer(buf),
@@ -106,7 +106,7 @@ namespace multiplayer
 
 		void start_receive(socket_ptr socket)
 		{
-			buffer_ptr buf(new boost::array<char, 1024>);
+			buffer_ptr buf(new std::array<char, 1024>);
 			socket->async_read_some(boost::asio::buffer(*buf), std::bind(&server::handle_receive, this, socket, buf, std::placeholders::_1, std::placeholders::_2));
 		}
 
@@ -303,7 +303,7 @@ namespace multiplayer
 		}
 
 		udp::socket udp_socket_;
-		boost::array<char, 1024> udp_buf_;
+		std::array<char, 1024> udp_buf_;
 	};
 }
 

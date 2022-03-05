@@ -21,7 +21,7 @@ class tbs_relay_server : public http::web_server
 	};
 
 	typedef std::shared_ptr<OutgoingSocketInfo> OutgoingSocketPtr;
-	typedef boost::array<char, 4> OutgoingHeader;
+	typedef std::array<char, 4> OutgoingHeader;
 	typedef std::shared_ptr<OutgoingHeader> OutgoingHeaderPtr;
 
 	struct SessionRequestPair {
@@ -128,11 +128,11 @@ public:
 
 		handle_outgoing_connection(session_id, socket);
 
-		std::shared_ptr<boost::array<char, 65536> > buf(new boost::array<char, 65536>);
+		std::shared_ptr<std::array<char, 65536> > buf(new std::array<char, 65536>);
 		socket->socket.async_read_some(boost::asio::buffer(*buf), std::bind(&tbs_relay_server::handle_receive_outgoing_message, this, socket, buf, session_id, std::placeholders::_1, std::placeholders::_2));
 	}
 
-	void handle_receive_outgoing_message(OutgoingSocketPtr socket, std::shared_ptr<boost::array<char, 65536> > buf, uint32_t session_id, const boost::system::error_code& e, size_t nbytes)
+	void handle_receive_outgoing_message(OutgoingSocketPtr socket, std::shared_ptr<std::array<char, 65536> > buf, uint32_t session_id, const boost::system::error_code& e, size_t nbytes)
 	{
 		SessionRequestPair& session = sessions_[session_id].getRequestPair(socket);
 		if(e) {

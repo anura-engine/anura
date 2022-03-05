@@ -119,9 +119,9 @@ int get_named_zorder(const std::string& key, int default_value)
 namespace
 {
 	typedef std::map<const boost::regex*, bool> regex_match_map;
-	std::map<boost::array<char, 4>, regex_match_map> re_matches;
+	std::map<std::array<char, 4>, regex_match_map> re_matches;
 
-	bool match_regex(boost::array<char, 4> str, const boost::regex* re)
+	bool match_regex(std::array<char, 4> str, const boost::regex* re)
 	{
 		if(reinterpret_cast<intptr_t>(re)&1) {
 			//the low bit in the re pointer is set, meaning this is an inverted
@@ -655,7 +655,7 @@ variant TileMap::write() const
 	res.add("y_speed", y_speed_);
 	res.add("zorder", write_zorder(zorder_));
 
-	std::vector<boost::array<char, 4> > unique_tiles;
+	std::vector<std::array<char, 4> > unique_tiles;
 	std::ostringstream tiles;
 	bool first = true;
 	for(const std::vector<int>& row : map_) {
