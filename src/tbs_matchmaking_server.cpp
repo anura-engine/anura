@@ -29,7 +29,6 @@
 #include <functional>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/bind.hpp>
 #include <iostream>
 
 #include <sys/types.h>
@@ -276,10 +275,10 @@ public:
 		});
 
 		db_timer_.expires_from_now(boost::posix_time::milliseconds(10));
-		db_timer_.async_wait(boost::bind(&matchmaking_server::db_process, this, boost::asio::placeholders::error));
+		db_timer_.async_wait(std::bind(&matchmaking_server::db_process, this, std::placeholders::_1));
 
 		timer_.expires_from_now(boost::posix_time::milliseconds(1000));
-		timer_.async_wait(boost::bind(&matchmaking_server::heartbeat, this, boost::asio::placeholders::error));
+		timer_.async_wait(std::bind(&matchmaking_server::heartbeat, this, std::placeholders::_1));
 
 		for(int i = 0; i != 256; ++i) {
 			available_ports_.push_back(21156+i);
@@ -303,7 +302,7 @@ public:
 	void db_process(const boost::system::error_code& error)
 	{
 		db_timer_.expires_from_now(boost::posix_time::milliseconds(10));
-		db_timer_.async_wait(boost::bind(&matchmaking_server::db_process, this, boost::asio::placeholders::error));
+		db_timer_.async_wait(std::bind(&matchmaking_server::db_process, this, std::placeholders::_1));
 
 		db_client_->process(1000);
 		registration_db_client_->process(1000);
@@ -440,7 +439,7 @@ public:
 		}
 
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_matchmaking_heartbeat_ms));
-		timer_.async_wait(boost::bind(&matchmaking_server::heartbeat, this, boost::asio::placeholders::error));
+		timer_.async_wait(std::bind(&matchmaking_server::heartbeat, this, std::placeholders::_1));
 	}
 
 	std::string get_dbdate(time_t cur_time)
