@@ -69,6 +69,7 @@ modules/*
 !modules/lib_2d
 !modules/gui
 !modules/tbs
+.vscode/
 
 #Ignore this, don't know why it's being created for me.
 imgui.ini
