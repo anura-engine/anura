@@ -518,7 +518,7 @@ int main(int argcount, char* argvec[])
 	std::vector<std::string> benchmarks_list;
 	std::string utility_program;
 	std::vector<std::string> util_args;
-	boost::scoped_ptr<std::vector<std::string> > test_names;
+	std::unique_ptr<std::vector<std::string> > test_names;
 	std::string server = "wesnoth.org";
 	bool is_child_utility = false;
 
