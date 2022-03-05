@@ -361,12 +361,8 @@ PREF_BOOL(remember_me, true, "Remember me (my gamer account) when connecting to 
 
 // Seemingly, this is to select the "next common resolution down" for windowed mode.
 // Takes a window, two out params for the best common w/h which will fit in the screen at 2x (?), and "reduce" (?).
-void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce, bool isFullscreen)
+void auto_select_resolution(const KRE::WindowPtr& wm, int& width, int& height, bool reduce, bool isFullscreen)
 {
-
-	ASSERT_LOG(width != nullptr, "width is null.");
-	ASSERT_LOG(height != nullptr, "height is null.");
-
 	auto mode = wm->getDisplaySize();
 	auto best_mode = mode;
 	bool found = false;
@@ -374,8 +370,8 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, b
 	if(isFullscreen) {
 		LOG_INFO("RESOLUTION SET TO FULLSCREEN RESOLUTION " << mode.width << "x" << mode.height);
 
-		*width = mode.width;
-		*height = mode.height;
+		width = mode.width;
+		height = mode.height;
 
 		return;
 	}
@@ -437,8 +433,8 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, b
 
 	LOG_INFO("CHOSEN MODE IS " << best_mode.width << "x" << best_mode.height);
 
-	*width = best_mode.width;
-	*height = best_mode.height;
+	width = best_mode.width;
+	height = best_mode.height;
 }
 
 extern int g_tile_scale;
@@ -557,7 +553,8 @@ int main(int argcount, char* argvec[])
 		try {
 			cfg = json::parse_from_file("./master-config.cfg");
 		} catch(json::ParseError& error) {
-			ASSERT_LOG(false, "" << error.errorMessage());
+			LOG_ERROR(error.errorMessage());
+			return 1;
 		}
 
 		if(cfg.is_map()) {
@@ -635,7 +632,8 @@ int main(int argcount, char* argvec[])
 		difficulty::manager();
 	} catch (json::ParseError & e) {
 		if (!unit_tests_only) {
-			ASSERT_LOG(false, "JSON parse error: " << e.errorMessage());
+			LOG_ERROR("JSON parse error: " << e.errorMessage());
+			return 1;
 		}
 	}
 
@@ -748,8 +746,10 @@ int main(int argcount, char* argvec[])
 							}
 						}
 
-
-						ASSERT_LOG(match != "", "anura.exe does not match md5 in manifest and no alternative anura.exe found");
+						if(match == "") {
+							LOG_ERROR("anura.exe does not match md5 in manifest and no alternative anura.exe found");
+							return 1;
+						}
 
 						try {
 							sys::move_file(exe_name, "anura.exe.tmp");
@@ -970,7 +970,8 @@ int main(int argcount, char* argvec[])
 			}
 		}
 	} catch(json::ParseError& error) {
-		ASSERT_LOG(false, "Error parsing JSON when running starting validation: " << error.errorMessage());
+		LOG_ERROR("Error parsing JSON when running starting validation: " << error.errorMessage());
+		return 1;
 	}
 
 	if(unit_tests_only) {
@@ -1001,8 +1002,10 @@ int main(int argcount, char* argvec[])
 		//KRE::WindowMode mode = main_wnd->getDisplaySize();
 
 		SDL_DisplayMode dm;
-		int res = SDL_GetDesktopDisplayMode(0, &dm);
-		ASSERT_LOG(res == 0, "Could not get desktop display mode: " << SDL_GetError());
+		if(SDL_GetDesktopDisplayMode(0, &dm) != 0) {
+			LOG_ERROR("Could not get desktop display mode: " << SDL_GetError());
+			return 1;
+		}
 
 		preferences::adjust_virtual_width_to_match_physical(dm.w, dm.h);
 
@@ -1034,7 +1037,7 @@ int main(int argcount, char* argvec[])
 		int height = 0;
 
 		bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
-		auto_select_resolution(main_wnd, &width, &height, true, isFullscreen);
+		auto_select_resolution(main_wnd, width, height, true, isFullscreen);
 
 		preferences::adjust_virtual_width_to_match_physical(width, height);
 
@@ -1163,7 +1166,8 @@ int main(int argcount, char* argvec[])
 		try {
 			hex::load("data/");
 		} catch(KRE::ImageLoadError& ile) {
-			ASSERT_LOG(false, ile.what());
+			LOG_ERROR(ile.what());
+			return 1;
 		}
 
 		GraphicalFont::initForLocale(i18n::get_locale());
@@ -1278,7 +1282,8 @@ int main(int argcount, char* argvec[])
 	swap_variants_loading(loading);
 	if(loading.empty() == false) {
 		LOG_ERROR("Illegal object: " << write_uuid((*loading.begin())->as_callable_loading()));
-		ASSERT_LOG(false, "Unresolved unserialized objects: " << loading.size());
+		LOG_ERROR("Unresolved unserialized objects: " << loading.size());
+		return 1;
 	}
 
 	return 0;
