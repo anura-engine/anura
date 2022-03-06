@@ -147,7 +147,10 @@ public:
 	explicit variant(long unsigned int n) : type_(VARIANT_TYPE_INT), int_value_(n) { registerGlobalVariant(this); }
 	explicit variant(decimal d) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(d.value()) { registerGlobalVariant(this); }
 	explicit variant(double f) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(decimal(f).value()) { registerGlobalVariant(this); }
+#if defined(_MSC_VER)
+	//This is needed on Windows 64-bit due to some complications with long long not being as long as we expect.
 	explicit variant(uint64_t n) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(n) { registerGlobalVariant(this); }
+#endif
 	variant(int64_t n, DECIMAL_VARIANT_TYPE) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(n) { registerGlobalVariant(this); }
 	explicit variant(const game_logic::FormulaCallable* callable);
 	explicit variant(std::vector<variant>* array);
