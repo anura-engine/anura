@@ -479,7 +479,7 @@ struct tr : boost::equality_comparable<tree<T> >,
   //a tree is flat iff it consists of a root node with childless children
   bool flat() const {
     return !this->childless() && std::all_of(this->begin_sub_child(), this->end_sub_child(),
-      [](const T& c) { return c.childless(); });
+      [](const const_subtree<T>& c) { return c.childless(); });
   }
 
   //functionality that gets delegated to the subclass
