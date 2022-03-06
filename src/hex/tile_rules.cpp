@@ -183,23 +183,23 @@ namespace hex
 		  probability_(v["probability"].as_int32(100))
 	{
 		if(v.has_key("x")) {
-			absolute_position_ = std::unique_ptr<point>(new point(v["x"].as_int32()));
+			absolute_position_ = std::make_unique<point>(v["x"].as_int32());
 		}
 		if(v.has_key("y")) {
 			if(absolute_position_ != nullptr) {
 				absolute_position_->y = v["y"].as_int32();
 			} else {
-				absolute_position_ = std::unique_ptr<point>(new point(0, v["y"].as_int32()));
+				absolute_position_ = std::make_unique<point>(0, v["y"].as_int32());
 			}
 		}
 		if(v.has_key("mod_x")) {
-			mod_position_ = std::unique_ptr<point>(new point(v["mod_x"].as_int32()));
+			mod_position_ = std::make_unique<point>(v["mod_x"].as_int32());
 		}
 		if(v.has_key("mod_y")) {
 			if(mod_position_ != nullptr) {
 				mod_position_->y = v["mod_y"].as_int32();
 			} else {
-				mod_position_ = std::unique_ptr<point>(new point(0, v["mod_y"].as_int32()));
+				mod_position_ = std::make_unique<point>(0, v["mod_y"].as_int32());
 			}
 		}
 		if(v.has_key("rotations")) {
@@ -279,11 +279,11 @@ namespace hex
 		if(!tiles.is_null()) {
 			if(tiles.is_list()) {
 				for(const auto& tile : tiles.as_list()) {
-					auto td = std::unique_ptr<TileRule>(new TileRule(shared_from_this(), tile));
+					auto td = std::make_unique<TileRule>(shared_from_this(), tile);
 					tile_data_.emplace_back(std::move(td));
 				}
 			} else if(tiles.is_map()) {
-				tile_data_.emplace_back(std::unique_ptr<TileRule>(new TileRule(shared_from_this(), tiles)));
+				tile_data_.emplace_back(std::make_unique<TileRule>(shared_from_this(), tiles));
 			} else {
 				ASSERT_LOG(false, "Tile data was neither list or map.");
 			}
@@ -296,7 +296,7 @@ namespace hex
 		std::string first_line = boost::trim_copy(map_.front());
 		const bool odd_start = first_line.front() == ',';
 		int lineno = odd_start ? 0 : 1;
-		auto td = std::unique_ptr<TileRule>(new TileRule(shared_from_this()));
+		auto td = std::make_unique<TileRule>(shared_from_this());
 		std::vector<point> coord_list;
 		for(const auto& map_line : map_) {
 			std::vector<std::string> strs;

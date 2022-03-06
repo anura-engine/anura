@@ -371,7 +371,7 @@ namespace multiplayer
 
 			LOG_INFO("SLOT " << n << " = " << host << " " << port);
 
-			udp_endpoint_peers.push_back(std::shared_ptr<udp::endpoint>(new udp::endpoint));
+			udp_endpoint_peers.push_back(std::make_shared<udp::endpoint>());
 			udp::resolver::query peer_query(udp::v4(), host, port);
 
 			*udp_endpoint_peers.back() = *udp_resolver.resolve(peer_query);

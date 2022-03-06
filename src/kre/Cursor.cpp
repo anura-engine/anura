@@ -48,7 +48,7 @@ namespace KRE
 #define DEFINE_CURSOR(s)				\
 	do{									\
 		auto c = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_##s); \
-		res[#s] = std::unique_ptr<CursorImpl>(new CursorImpl(c)); \
+		res[#s] = std::make_unique<CursorImpl>(c); \
 	} while(0)
 				DEFINE_CURSOR(ARROW);
 				DEFINE_CURSOR(IBEAM);

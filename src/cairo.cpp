@@ -354,7 +354,7 @@ namespace {
 			std::string real_fname = module::map_file(fname);
 			ASSERT_LOG(sys::file_exists(real_fname), "Could not find svg file: " << fname);
 
-			handle = std::shared_ptr<KRE::SVG::parse>(new KRE::SVG::parse(real_fname));
+			handle = std::make_shared<KRE::SVG::parse>(real_fname);
 			cache[fname] = handle;
 		} else {
 			handle = itor->second;

@@ -1030,6 +1030,6 @@ namespace KRE
 	CursorPtr SurfaceSDL::createCursorFromSurface(int hot_x, int hot_y)
 	{
 		auto s = SDL_CreateColorCursor(get(), hot_x, hot_y);
-		return std::unique_ptr<CursorSDL>(new CursorSDL(s));
+		return std::make_unique<CursorSDL>(s);
 	}
 }
