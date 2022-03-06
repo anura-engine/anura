@@ -472,6 +472,6 @@ namespace KRE
 
 
 		FontDriverRegistrar freeytype_font_impl("freetype", [](const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture){
-			return std::make_unique<FreetypeImpl>(fnt_name, fnt_path, size, color, init_texture);
+			return std::unique_ptr<FreetypeImpl>(new FreetypeImpl(fnt_name, fnt_path, size, color, init_texture));
 		});
 }

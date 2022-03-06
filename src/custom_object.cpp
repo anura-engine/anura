@@ -1382,7 +1382,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	std::unique_ptr<KRE::ModelManager2D> model_scope;
 	if(use_absolute_screen_coordinates_) {
-		model_scope = std::make_unique<KRE::ModelManager2D>(xx + g_camera_extend_x + Level::current().absolute_object_adjust_x(), yy + g_camera_extend_y + Level::current().absolute_object_adjust_y());
+		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(xx + g_camera_extend_x + Level::current().absolute_object_adjust_x(), yy + g_camera_extend_y + Level::current().absolute_object_adjust_y()));
 	}
 
 	for(const EntityPtr& attached : attachedObjects()) {

@@ -3599,7 +3599,7 @@ void editor::zoomOut()
 void BuiltinEditor::draw_gui() const
 {
 	auto canvas = KRE::Canvas::getInstance();
-	auto mm = std::make_unique<KRE::ModelManager2D>(-xpos_, -ypos_, 0, 1.0f/zoom_);
+	auto mm = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(-xpos_, -ypos_, 0, 1.0f/zoom_));
 
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	int mousex, mousey;
