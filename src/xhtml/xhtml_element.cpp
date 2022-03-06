@@ -211,14 +211,14 @@ namespace xhtml
 					if(attr_w != nullptr) {
 						try {
 							r.set_w(boost::lexical_cast<int>(attr_w->getValue()));
-						} catch(boost::bad_lexical_cast&) {
+						} catch(const boost::bad_lexical_cast&) {
 							LOG_ERROR("Unable to convert 'img' tag 'width' attribute to number: " << attr_w->getValue());
 						}
 					}
 					if(attr_h != nullptr) {
 						try {
 							r.set_h(boost::lexical_cast<int>(attr_h->getValue()));
-						} catch(boost::bad_lexical_cast&) {
+						} catch(const boost::bad_lexical_cast&) {
 							LOG_ERROR("Unable to convert 'img' tag 'height' attribute to number: " << attr_h->getValue());
 						}
 					}
@@ -226,14 +226,14 @@ namespace xhtml
 					if(attr_x != nullptr) {
 						try {
 							src_x = boost::lexical_cast<int>(attr_x->getValue());
-						} catch(boost::bad_lexical_cast&) {
+						} catch(const boost::bad_lexical_cast&) {
 							LOG_ERROR("Unable to convert 'img' tag 'x' attribute to number: " << attr_x->getValue());
 						}
 					}
 					if(attr_y != nullptr) {
 						try {
 							src_y = boost::lexical_cast<int>(attr_y->getValue());
-						} catch(boost::bad_lexical_cast&) {
+						} catch(const boost::bad_lexical_cast&) {
 							LOG_ERROR("Unable to convert 'img' tag 'y' attribute to number: " << attr_y->getValue());
 						}
 					}
@@ -443,7 +443,7 @@ namespace xhtml
 					try {
 						T value = boost::lexical_cast<T>(attr->getValue());
 						return value;
-					} catch(boost::bad_lexical_cast&) {
+					} catch(const boost::bad_lexical_cast&) {
 						LOG_ERROR("Unable to convert '" << attr->getValue() << "' to a number for attribute: " << str);
 					}
 				}
@@ -464,7 +464,7 @@ namespace xhtml
 					try {
 						width_ = boost::lexical_cast<int>(attr_w->getValue());
 						width_set = true;
-					} catch(boost::bad_lexical_cast&) {
+					} catch(const boost::bad_lexical_cast&) {
 						LOG_ERROR("Unable to convert 'img' tag 'width' attribute to number: " << attr_w->getValue());
 					}
 				}
@@ -472,7 +472,7 @@ namespace xhtml
 					try {
 						height_ = boost::lexical_cast<int>(attr_h->getValue());
 						height_set = true;
-					} catch(boost::bad_lexical_cast&) {
+					} catch(const boost::bad_lexical_cast&) {
 						LOG_ERROR("Unable to convert 'img' tag 'height' attribute to number: " << attr_h->getValue());
 					}
 				}
@@ -1143,7 +1143,7 @@ namespace xhtml
 			try {
 				width_ = boost::lexical_cast<int>(ws);
 				dimensions_fixed_ = true;
-			} catch(boost::bad_lexical_cast&) {
+			} catch(const boost::bad_lexical_cast&) {
 				LOG_ERROR("Unable to convert object width value '" << ws << "' to integer.");
 			}
 		}
@@ -1153,7 +1153,7 @@ namespace xhtml
 			try {
 				height_ = boost::lexical_cast<int>(hs);
 				dimensions_fixed_ = true;
-			} catch(boost::bad_lexical_cast&) {
+			} catch(const boost::bad_lexical_cast&) {
 				LOG_ERROR("Unable to convert object width value '" << hs << "' to integer.");
 			}
 		}

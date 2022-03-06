@@ -1738,7 +1738,7 @@ bool LevelRunner::play_cycle()
 			try {
 				debug_console::process_graph();
 				lvl_->process();
-			} catch(InterruptGameException& e) {
+			} catch(const InterruptGameException& e) {
 				handle_pause_game_result(e.result);
 			}
 

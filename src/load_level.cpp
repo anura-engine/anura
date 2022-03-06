@@ -77,7 +77,7 @@ public:
 		try {
 			variant node(json::parse_from_file(filename));
 			wml_cache().put(lvl_, node);
-		} catch(json::parse_error& e) {
+		} catch(const json::parse_error& e) {
 			ASSERT_LOG(false, "ERROR PARSING LEVEL WML FOR '" << filename << "': " << e.error_message());
 		}catch(...) {
 			std::cerr << "FAILED TO LOAD " << filename << "\n";

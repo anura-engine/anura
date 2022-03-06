@@ -440,7 +440,7 @@ namespace json
 								if(v.get_debug_info()) {
 									str_debug_info = *v.get_debug_info();
 								}
-							} catch(preprocessor_error&) {
+							} catch(const preprocessor_error&) {
 								CHECK_PARSE(false, "Preprocessor error: " + s, t.begin - doc.c_str());
 							}
 
@@ -551,7 +551,7 @@ namespace json
 
 				CHECK_PARSE(stack.size() == 1 && stack.back().array.size() == 1, "Unexpected end of input", i1 - doc.c_str());
 				return stack.back().array.front();
-			} catch(TokenizerError& e) {
+			} catch(const TokenizerError& e) {
 				CHECK_PARSE(false, e.msg, e.loc - doc.c_str());
 			}
 		}
@@ -599,7 +599,7 @@ namespace json
 
 			try {
 				result = parse_internal(data, fname, options, nullptr, nullptr);
-			} catch(ParseError& e) {
+			} catch(const ParseError& e) {
 				if(!preferences::edit_and_continue()) {
 					throw e;
 				}
@@ -640,7 +640,7 @@ namespace json
 	{
 		try {
 			return parse_from_file(fname, options);
-		} catch(json::ParseError& e) {
+		} catch(const json::ParseError& e) {
 			ASSERT_LOG(false, e.errorMessage());
 		}
 	}
@@ -650,7 +650,7 @@ namespace json
 		try {
 			parse_from_file(fname, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			return true;
-		} catch(ParseError&) {
+		} catch(const ParseError&) {
 			return false;
 		}
 	}

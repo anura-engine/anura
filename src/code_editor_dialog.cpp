@@ -552,7 +552,7 @@ void CodeEditorDialog::process()
 			}
 
 			has_error_ = false;
-		} catch(validation_failure_exception& e) {
+		} catch(const validation_failure_exception& e) {
 			file_contents_set_ = false;
 			error_label_->setText("Error");
 			error_label_->setTooltip(e.msg);
@@ -560,7 +560,7 @@ void CodeEditorDialog::process()
 			if(optional_error_text_area_) {
 				optional_error_text_area_->setText(e.msg);
 			}
-		} catch(json::ParseError& e) {
+		} catch(const json::ParseError& e) {
 			file_contents_set_ = false;
 			error_label_->setText("Error");
 			error_label_->setTooltip(e.errorMessage());
@@ -704,7 +704,7 @@ void CodeEditorDialog::process()
 
 					suggestions_prefix_ = static_cast<int>(identifier.size());
 				}
-			} catch(formula_tokenizer::TokenError&) {
+			} catch(const formula_tokenizer::TokenError&) {
 			}
 		}
 
@@ -770,17 +770,17 @@ void CodeEditorDialog::process()
 		} else {
 			animation_preview_.reset();
 		}
-	} catch(type_error&) {
+	} catch(const type_error&) {
 		if(animation_preview_) {
 			animation_preview_.reset();
 		}
-	} catch(Frame::Error&) {
+	} catch(const Frame::Error&) {
 		// skip
-	} catch(validation_failure_exception&) {
+	} catch(const validation_failure_exception&) {
 		if(animation_preview_) {
 			animation_preview_.reset();
 		}
-	} catch(KRE::ImageLoadError&) {
+	} catch(const KRE::ImageLoadError&) {
 		if(animation_preview_) {
 			animation_preview_.reset();
 		}
@@ -981,7 +981,7 @@ void CodeEditorDialog::setAnimationRect(rect r)
 		editor_->modifyCurrentObject(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(Frame::Error&) {
+		} catch(const Frame::Error&) {
 		}
 	}
 }
@@ -1008,7 +1008,7 @@ void CodeEditorDialog::moveSolidRect(int dx, int dy)
 		editor_->modifyCurrentObject(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(Frame::Error&) {
+		} catch(const Frame::Error&) {
 		}
 	}
 }
@@ -1022,7 +1022,7 @@ void CodeEditorDialog::setIntegerAttr(const char* attr, int value)
 		editor_->modifyCurrentObject(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(Frame::Error&) {
+		} catch(const Frame::Error&) {
 		}
 	}
 }

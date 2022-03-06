@@ -552,7 +552,7 @@ int main(int argcount, char* argvec[])
 
 		try {
 			cfg = json::parse_from_file("./master-config.cfg");
-		} catch(json::ParseError& error) {
+		} catch(const json::ParseError& error) {
 			LOG_ERROR(error.errorMessage());
 			return 1;
 		}
@@ -630,7 +630,7 @@ int main(int argcount, char* argvec[])
 	// load difficulty settings after module, before rest of args.
 	try {
 		difficulty::manager();
-	} catch (json::ParseError & e) {
+	} catch (const json::ParseError & e) {
 		if (!unit_tests_only) {
 			LOG_ERROR("JSON parse error: " << e.errorMessage());
 			return 1;
@@ -969,7 +969,7 @@ int main(int argcount, char* argvec[])
 				}
 			}
 		}
-	} catch(json::ParseError& error) {
+	} catch(const json::ParseError& error) {
 		LOG_ERROR("Error parsing JSON when running starting validation: " << error.errorMessage());
 		return 1;
 	}
@@ -1165,7 +1165,7 @@ int main(int argcount, char* argvec[])
 
 		try {
 			hex::load("data/");
-		} catch(KRE::ImageLoadError& ile) {
+		} catch(const KRE::ImageLoadError& ile) {
 			LOG_ERROR(ile.what());
 			return 1;
 		}
@@ -1267,7 +1267,7 @@ int main(int argcount, char* argvec[])
 			quit = LevelRunner(lvl, level_cfg, orig_level_cfg).play_level();
 			level_cfg = orig_level_cfg;
 			lvl.reset();
-		} catch(multiplayer_exception&) {
+		} catch(const multiplayer_exception&) {
 		}
 	}
 	}

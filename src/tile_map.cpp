@@ -326,7 +326,7 @@ void TileMap::load(const std::string& fname, const std::string& tile_id)
 
 	try {
 		node = json::parse_from_file("data/tiles/" + fname);
-	} catch(json::ParseError& e) {
+	} catch(const json::ParseError& e) {
 		ASSERT_LOG(false, "Error parsing data/tiles/" << fname << ": " << e.errorMessage());
 	}
 

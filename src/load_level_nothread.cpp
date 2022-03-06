@@ -86,7 +86,7 @@ variant load_level_wml_nowait(const std::string& lvl)
 			return json::parse_from_file(preferences::save_file_path());
 		}
 		return json::parse_from_file(get_level_path(lvl));
-	} catch(json::ParseError& e) {
+	} catch(const json::ParseError& e) {
 		ASSERT_LOG(false, e.errorMessage());
 	}
 }

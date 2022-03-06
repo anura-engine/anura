@@ -334,7 +334,7 @@ void terminate_utility_process(bool* complete=nullptr)
 				startup_semaphore_name = get_semaphore_name("start", sem_id);
 				g_termination_semaphore = new boost::interprocess::named_semaphore(boost::interprocess::create_only_t(), g_termination_semaphore_name.c_str(), 0);
 				startup_semaphore = new boost::interprocess::named_semaphore(boost::interprocess::create_only_t(), startup_semaphore_name.c_str(), 0);
-			} catch(boost::interprocess::interprocess_exception&) {
+			} catch(const boost::interprocess::interprocess_exception&) {
 				delete g_termination_semaphore;
 				g_termination_semaphore = nullptr;
 				continue;
@@ -354,10 +354,10 @@ void terminate_utility_process(bool* complete=nullptr)
 					SharedMemoryPipeManager::createNamedPipe(pipe_name);
 					g_current_ipc_pipe.reset(new SharedMemoryPipe(pipe_name, true));
 					*ipc_pipe = g_current_ipc_pipe;
-				} catch(boost::exception& e) {
+				} catch(const boost::exception& e) {
 					error_msg = diagnostic_information(e);
 					error_msg = "boost exception: " + error_msg;
-				} catch(std::exception& e) {
+				} catch(const std::exception& e) {
 					ASSERT_LOG(false, "Error creating local server. Try restarting your computer to resolve this problem: " << e.what());
 				} catch(...) {
 					pipe_name = "";

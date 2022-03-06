@@ -1022,7 +1022,7 @@ std::map<std::string, std::string>& class_path_map()
 					assert_recover_scope recover_scope;
 					try {
 						result = build_class(type);
-					} catch(validation_failure_exception& e) {
+					} catch(const validation_failure_exception& e) {
 						edit_and_continue_class(type, e.msg);
 					}
 
@@ -2036,7 +2036,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 					variant node;
 					try {
 						node = json::parse_from_file(p.second);
-					} catch(json::ParseError& e) {
+					} catch(const json::ParseError& e) {
 						ASSERT_LOG(false, "Error parsing " << p.second << ": " << e.errorMessage());
 					}
 

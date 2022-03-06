@@ -957,7 +957,7 @@ CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
 			object_prototype_paths[id] = proto_paths;
 
 			return result;
-		} catch(validation_failure_exception& e) {
+		} catch(const validation_failure_exception& e) {
 			static bool in_edit_and_continue = false;
 			if(in_edit_and_continue || preferences::edit_and_continue() == false) {
 				throw e;
@@ -969,9 +969,9 @@ CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
 			return recreate(id, old_type);
 		}
 
-	} catch(json::ParseError& e) {
+	} catch(const json::ParseError& e) {
 		ASSERT_LOG(false, "Error parsing FML for custom object '" << id << "' in '" << path_itor->second << "': '" << e.errorMessage() << "'");
-	} catch(KRE::ImageLoadError& e) {
+	} catch(const KRE::ImageLoadError& e) {
 		ASSERT_LOG(false, "Error loading object '" << id << "': could not load needed image: " << e.what());
 	}
 	// We never get here, but this stops a compiler warning.
@@ -1524,7 +1524,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		ffl::IntrusivePtr<Frame> f;
 		try {
 			f.reset(new Frame(anim));
-		} catch(Frame::Error&) {
+		} catch(const Frame::Error&) {
 			ASSERT_LOG(false, "ERROR LOADING FRAME IN OBJECT '" << id_ << "'");
 		}
 

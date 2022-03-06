@@ -195,7 +195,7 @@ namespace css
 					}
 					try {
 						parseDeclaration(pp);
-					} catch (ParserError& e) {
+					} catch (const ParserError& e) {
 						LOG_ERROR("Dropping declaration: " << e.what());
 						while(!isToken(TokenId::SEMICOLON) && !isToken(TokenId::RBRACE) && !isToken(TokenId::EOF_TOKEN)) {
 							advance();
@@ -456,7 +456,7 @@ namespace css
 		for(auto& token : pasrseRuleList(0)) {
 			try {
 				parseRule(token);
-			} catch(ParserError& e) {
+			} catch(const ParserError& e) {
 				LOG_DEBUG("Dropping rule: " << e.what() << " " << (token != nullptr ? token->toString() : ""));
 			}
 		}

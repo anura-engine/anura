@@ -1656,7 +1656,7 @@ public:
 				}
 			}
 
-		} catch(validation_failure_exception& error) {
+		} catch(const validation_failure_exception& error) {
 			fprintf(stderr, "ERROR HANDLING POST: %s\n", error.msg.c_str());
 			disconnect(socket);
 		}

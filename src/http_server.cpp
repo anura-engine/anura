@@ -352,7 +352,7 @@ namespace http
 
 			try {
 				doc = parse_message(std::string(payload, payload + payload_len));
-			} catch(json::ParseError& e) {
+			} catch(const json::ParseError& e) {
 				LOG_ERROR("ERROR PARSING JSON: " << e.errorMessage());
 				sys::write_file("./error_payload2.txt", std::string(payload));
 			} catch(...) {

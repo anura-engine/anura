@@ -1567,7 +1567,7 @@ namespace css
 			advance();
 			try {
 				lst = parseListStyleTypeInt(ref);
-			} catch(ParserError&) {
+			} catch(const ParserError&) {
 				throw ParserError(formatter() << "Unrecognised identifier for '" << prefix << "' property: " << ref);
 			}
 		} else {
@@ -2063,7 +2063,7 @@ namespace css
 						try {
 							ListStyleType lst = parseListStyleTypeInt(params[1]->getStringValue());
 							ct.emplace_back(lst, params.front()->getStringValue());
-						} catch(ParserError& e) {
+						} catch(const ParserError& e) {
 							throw ParserError(formatter() << e.what() << " while parsing counter function in content property.");
 						}
 					}
@@ -2077,7 +2077,7 @@ namespace css
 						try {
 							ListStyleType lst = parseListStyleTypeInt(params[2]->getStringValue());
 							ct.emplace_back(lst, params[0]->getStringValue(), params[1]->getStringValue());
-						} catch(ParserError& e) {
+						} catch(const ParserError& e) {
 							throw ParserError(formatter() << e.what() << " while parsing counter function in content property.");
 						}
 					}
@@ -2258,7 +2258,7 @@ namespace css
 					try {
 						lst = parseListStyleTypeInt(ref);
 						set_lst = true;
-					} catch(ParserError&) {
+					} catch(const ParserError&) {
 						throw ParserError(formatter() << "Unrecognised identifier for '" << prefix << "' property: " << ref);
 					}
 				}
@@ -2365,7 +2365,7 @@ namespace css
 			skipWhitespace();
 			try {
 				color = parseColorInternal();
-			} catch(ParserError&) {
+			} catch(const ParserError&) {
 			}
 
 			skipWhitespace();

@@ -2285,7 +2285,7 @@ variant_type_ptr parse_variant_type(const variant& type)
 			if(tok.type != FFL_TOKEN_TYPE::WHITESPACE && tok.type != FFL_TOKEN_TYPE::COMMENT) {
 				tokens.push_back(tok);
 			}
-		} catch(TokenError& e) {
+		} catch(const TokenError& e) {
 			ASSERT_LOG(false, "ERROR PARSING TYPE: " << e.msg << " IN '" << s << "' AT " << type.debug_location());
 		}
 	}
@@ -2391,7 +2391,7 @@ variant_type_ptr parse_optional_function_type(const variant& type)
 			if(tok.type != FFL_TOKEN_TYPE::WHITESPACE && tok.type != FFL_TOKEN_TYPE::COMMENT) {
 				tokens.push_back(tok);
 			}
-		} catch(TokenError& e) {
+		} catch(const TokenError& e) {
 			ASSERT_LOG(false, "ERROR PARSING TYPE: " << e.msg << " IN '" << s << "' AT " << type.debug_location());
 		}
 	}
@@ -2428,7 +2428,7 @@ variant_type_ptr parse_optional_formula_type(const variant& type)
 			if(tok.type != FFL_TOKEN_TYPE::WHITESPACE && tok.type != FFL_TOKEN_TYPE::COMMENT) {
 				tokens.push_back(tok);
 			}
-		} catch(TokenError& e) {
+		} catch(const TokenError& e) {
 			ASSERT_LOG(false, "ERROR PARSING TYPE: " << e.msg << " IN '" << s << "' AT " << type.debug_location());
 		}
 	}

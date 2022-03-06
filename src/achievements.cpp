@@ -44,7 +44,7 @@ AchievementPtr Achievement::get(const std::string& id)
 		variant node;
 		try {
 			node = (json::parse_from_file("data/achievements.cfg"));
-		} catch(json::ParseError&) {
+		} catch(const json::ParseError&) {
 			cache[""]; //mark as loaded
 			return AchievementPtr();
 		}

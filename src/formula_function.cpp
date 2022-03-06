@@ -1261,8 +1261,8 @@ namespace game_logic
 				}
 
 				return f->execute(*callable);
-			} catch(type_error&) {
-			} catch(validation_failure_exception&) {
+			} catch(const type_error&) {
+			} catch(const validation_failure_exception&) {
 			}
 			LOG_ERROR("ERROR IN EVAL");
 			return variant();
@@ -1439,7 +1439,7 @@ namespace game_logic
 			const assert_recover_scope recovery_scope;
 			try {
 				return args()[0]->evaluate(variables);
-			} catch(validation_failure_exception& e) {
+			} catch(const validation_failure_exception& e) {
 				g_handle_errors_error_message = e.msg;
 				return args()[1]->evaluate(variables);
 			}
@@ -4980,7 +4980,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 								for(const auto& p : stats.as_map()) {
 									map_[p.first.as_string()] = NodeInfo(p.second);
 								}
-							} catch(json::ParseError&) {
+							} catch(const json::ParseError&) {
 							}
 						}
 
@@ -4989,7 +4989,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 								map_[p.first.as_string()].value = p.second;
 							}
 						}
-					} catch(json::ParseError& e) {
+					} catch(const json::ParseError& e) {
 						ASSERT_LOG(false, "Error parsing json for backed map in " << docname_ << ": " << e.errorMessage());
 					}
 				}
@@ -5286,7 +5286,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 					get_doc_cache(prefs_directory)[docname] = result;
 				}
 				return result;
-			} catch(json::ParseError& e) {
+			} catch(const json::ParseError& e) {
 				if(allow_failure) {
 					if(use_cache) {
 						get_doc_cache(prefs_directory)[docname] = variant();
@@ -5837,7 +5837,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		try {
 			assert_recover_scope scope;
 			return EVAL_ARG(0);
-		} catch (validation_failure_exception& e) {
+		} catch (const validation_failure_exception& e) {
 			bool success = false;
 			std::function<void()> fn(std::bind(run_expression_for_edit_and_continue, args()[0], &variables, &success));
 
@@ -6558,7 +6558,7 @@ FUNCTION_DEF(sprintf, 1, -1, "sprintf(string, ...): Format the string using stan
 
 		std::string res = formatter() << f;
 		return variant(res);
-	} catch(boost::exception& e) {
+	} catch(const boost::exception& e) {
 		ASSERT_LOG(false, "Error when formatting string: " << boost::diagnostic_information(e) << "\n" << debugPinpointLocation());
 	}
 FUNCTION_ARGS_DEF

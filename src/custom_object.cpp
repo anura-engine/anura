@@ -1593,7 +1593,7 @@ void CustomObject::draw(int xx, int yy) const
 				if(key_texture->width() > max_property_width) {
 					max_property_width = key_texture->width();
 				}
-			} catch(validation_failure_exception&) {
+			} catch(const validation_failure_exception&) {
 			}
 		}
 
@@ -1852,7 +1852,7 @@ void CustomObject::process(Level& lvl)
 				debug_console::ExecuteDebugConsoleScope debug_scope;
 				const assert_recover_scope scope;
 				executeCommand(cmd);
-			} catch(validation_failure_exception&) {
+			} catch(const validation_failure_exception&) {
 			}
 		} else {
 			executeCommand(cmd);
@@ -5484,13 +5484,13 @@ bool CustomObject::handleEvent(int event, const FormulaCallable* context)
 			ConstCustomObjectTypePtr base_type_back = base_type_;
 			assert_edit_and_continue_fn_scope scope([&](){ this->handleEventInternal(event, context, true); });
 			return handleEventInternal(event, context);
-		} catch(validation_failure_exception&) {
+		} catch(const validation_failure_exception&) {
 			return true;
 		}
 	} else {
 		try {
 			return handleEventInternal(event, context);
-		} catch(validation_failure_exception& e) {
+		} catch(const validation_failure_exception& e) {
 			if(Level::current().in_editor()) {
 				return true;
 			}
@@ -5580,7 +5580,7 @@ bool CustomObject::handleEventInternal(int event, const FormulaCallable* context
 		try {
 			formula_profiler::Instrument instrumentation("FFL", handler);
 			var = handler->execute(*this);
-		} catch(validation_failure_exception& e) {
+		} catch(const validation_failure_exception& e) {
 #ifndef DISABLE_FORMULA_PROFILER
 			event_call_stack.pop_back();
 #endif
@@ -5601,7 +5601,7 @@ bool CustomObject::handleEventInternal(int event, const FormulaCallable* context
 			} else {
 				delayed_commands_.emplace_back(var);
 			}
-		} catch(validation_failure_exception& e) {
+		} catch(const validation_failure_exception& e) {
 			current_error_msg = "Runtime error executing event commands: " + e.msg;
 			throw e;
 		}
@@ -5626,7 +5626,7 @@ void CustomObject::resolveDelayedEvents()
 		for(const variant& v : delayed_commands_) {
 			executeCommand(v);
 		}
-	} catch(validation_failure_exception&) {
+	} catch(const validation_failure_exception&) {
 	}
 
 	delayed_commands_.clear();

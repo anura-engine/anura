@@ -896,7 +896,7 @@ namespace preferences
 		if(node.is_null()) {
 			try {
 				node = json::parse_from_file(path + "preferences.cfg");
-			} catch(json::ParseError&) {
+			} catch(const json::ParseError&) {
 				return;
 			}
 		}

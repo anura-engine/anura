@@ -322,10 +322,10 @@ namespace gui
 
 		try {
 			setObject(v);
-		} catch(type_error&) {
-		} catch(Frame::Error&) {
-		} catch(validation_failure_exception&) {
-		} catch(KRE::ImageLoadError&) {
+		} catch(const type_error&) {
+		} catch(const Frame::Error&) {
+		} catch(const validation_failure_exception&) {
+		} catch(const KRE::ImageLoadError&) {
 		}
 	}
 
@@ -962,10 +962,10 @@ namespace gui
 		DEFINE_SET_FIELD
 			try {
 				obj.setObject(value);
-			} catch(type_error&) {
-			} catch(Frame::Error&) {
-			} catch(validation_failure_exception&) {
-			} catch(KRE::ImageLoadError&) {
+			} catch(const type_error&) {
+			} catch(const Frame::Error&) {
+			} catch(const validation_failure_exception&) {
+			} catch(const KRE::ImageLoadError&) {
 			}
 	END_DEFINE_CALLABLE(AnimationPreviewWidget)
 

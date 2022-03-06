@@ -360,11 +360,11 @@ COMMAND_LINE_UTILITY(tbs_server) {
 			for(const std::string& id : bot_id) {
 				bots.push_back(ffl::IntrusivePtr<tbs::bot>(new tbs::bot(io_service, "127.0.0.1", formatter() << port, json::parse_from_file("data/tbs_test/" + id + ".cfg"))));
 			}
-		} catch(validation_failure_exception& e) {
+		} catch(const validation_failure_exception& e) {
 			std::map<variant,variant> m;
 			m[variant("error")] = variant(e.msg);
 			tbs::web_server::set_debug_state(variant(&m));
-		} catch(json::ParseError& e) {
+		} catch(const json::ParseError& e) {
 			std::map<variant,variant> m;
 			m[variant("error")] = variant(e.message);
 			tbs::web_server::set_debug_state(variant(&m));
@@ -372,9 +372,9 @@ COMMAND_LINE_UTILITY(tbs_server) {
 
 		try {
 			io_service.run();
-		} catch(code_modified_exception&) {
+		} catch(const code_modified_exception&) {
 			s.clear_games();
-		} catch(tbs::exit_exception&) {
+		} catch(const tbs::exit_exception&) {
 			break;
 		}
 	}

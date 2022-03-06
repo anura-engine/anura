@@ -741,7 +741,7 @@ namespace KRE
 				return surf->convert(fmt, fn)->runGlobalAlphaFilter();
 			}
 			return surf->runGlobalAlphaFilter();
-		} catch(ImageLoadError& e) {
+		} catch(const ImageLoadError& e) {
 			throw ImageLoadError(formatter() << "Failed to load image file: '" << filename << "' : " << e.what());
 		}
 		return nullptr;

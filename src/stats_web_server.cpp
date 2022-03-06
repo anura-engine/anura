@@ -63,7 +63,7 @@ void web_server::handlePost(socket_ptr socket, variant doc, const http::environm
 		try {
 			send_msg(socket, "text/json", "{ \"status\": \"ok\" }", "");
 			sys::write_file("stats-definitions.json", get_tables_definition().write_json());
-		} catch(validation_failure_exception& e) {
+		} catch(const validation_failure_exception& e) {
 			std::map<variant,variant> msg;
 			msg[variant("status")] = variant("error");
 			msg[variant("message")] = variant(e.msg);

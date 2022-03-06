@@ -298,17 +298,17 @@ namespace gui
 					animation_preview_->setObject(current_);
 				}
 			}
-		} catch (type_error&) {
+		} catch (const type_error&) {
 			if(animation_preview_) {
 				animation_preview_.reset();
 			}
-		} catch(Frame::Error&) {
+		} catch(const Frame::Error&) {
 			// skip
-		} catch(validation_failure_exception&) {
+		} catch(const validation_failure_exception&) {
 			if(animation_preview_) {
 				animation_preview_.reset();
 			}
-		} catch(KRE::ImageLoadError&) {
+		} catch(const KRE::ImageLoadError&) {
 			if(animation_preview_) {
 				animation_preview_.reset();
 			}

@@ -115,7 +115,7 @@ void http_client::send_request(std::string method_path, std::string request, std
 					std::placeholders::_1,
 					std::placeholders::_2,
 					conn));
-		} catch(std::exception& e) {
+		} catch(const std::exception& e) {
 			LOG_ERROR("Error in http resolve: " << e.what() << "\n");
 		}
 	} else if(resolution_state_ == RESOLUTION_IN_PROGRESS) {
@@ -162,7 +162,7 @@ void http_client::async_connect(connection_ptr conn)
 			std::bind(&http_client::handle_connect, this,
 				std::placeholders::_1, conn, endpoint_iterator_));
 #endif
-	} catch(std::exception& e) {
+	} catch(const std::exception& e) {
 		LOG_ERROR("Error in async_connect: " << e.what() << "\n");
 	}
 }
@@ -251,7 +251,7 @@ void http_client::write_connection_data(connection_ptr conn)
 	try {
 		boost::asio::async_write(*conn->socket, boost::asio::buffer(*msg),
 		      std::bind(&http_client::handle_send, this, conn, std::placeholders::_1, std::placeholders::_2, msg));
-	} catch(std::exception& e) {
+	} catch(const std::exception& e) {
 		LOG_ERROR("Error: exception in async_write: " << e.what() << "\n");
 	}
 
@@ -288,7 +288,7 @@ void http_client::handle_send(connection_ptr conn, const boost::system::error_co
 	} else {
 		try {
 			conn->socket->async_read_some(boost::asio::buffer(conn->buf), std::bind(&http_client::handle_receive, this, conn, std::placeholders::_1, std::placeholders::_2));
-		} catch(std::exception& e) {
+		} catch(const std::exception& e) {
 			LOG_ERROR("Error: handle_send: " << e.what() << "\n");
 		}
 	}
@@ -440,7 +440,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 
 		try {
 			conn->socket->async_read_some(boost::asio::buffer(conn->buf), std::bind(&http_client::handle_receive, this, conn, std::placeholders::_1, std::placeholders::_2));
-		} catch(std::exception& e) {
+		} catch(const std::exception& e) {
 			LOG_ERROR("Error in async_read_from: " << e.what() << "\n");
 		}
 	}
@@ -491,7 +491,7 @@ void http_client::process()
 	try {
 		io_service_->poll();
 		io_service_->reset();
-	} catch(std::exception& e) {
+	} catch(const std::exception& e) {
 		LOG_ERROR("Error in http client: " << e.what() << "\n");
 	}
 }

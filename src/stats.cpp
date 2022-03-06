@@ -163,7 +163,7 @@ namespace stats
 						while(!done) {
 							client.process();
 						}
-					} catch(std::exception& e) {
+					} catch(const std::exception& e) {
 						LOG_ERROR("Error sending stats: " << e.what() << "\n");
 					}
 				}

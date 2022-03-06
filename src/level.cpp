@@ -363,7 +363,7 @@ Level::Level(const std::string& level_cfg, variant node)
 		try {
 			const assert_recover_scope safe_scope;
 			rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, true);
-		} catch(validation_failure_exception& /*e*/) {
+		} catch(const validation_failure_exception& /*e*/) {
 			LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 			rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, false);
 		}
@@ -717,7 +717,7 @@ void Level::setRenderToTexture(int width, int height)
 			const assert_recover_scope safe_scope;
 			rt_ = KRE::RenderTarget::create(width, height, 1, false, true);
 			rt_->setBlendState(false);
-		} catch(validation_failure_exception& /*e*/) {
+		} catch(const validation_failure_exception& /*e*/) {
 			LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 			rt_ = KRE::RenderTarget::create(width, height, 1, false, false);
 			rt_->setBlendState(false);
@@ -2422,7 +2422,7 @@ KRE::RenderTargetPtr& Level::applyShaderToFrameBufferTexture(graphics::AnuraShad
 			try {
 				const assert_recover_scope safe_scope;
 				backup_rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, true);
-			} catch(validation_failure_exception& /*e*/) {
+			} catch(const validation_failure_exception& /*e*/) {
 				LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 				backup_rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, false);
 			}
@@ -4505,7 +4505,7 @@ std::vector<EntityPtr> Level::predict_future(EntityPtr e, int ncycles)
 			process();
 			backup();
 			++nframes;
-		} catch(validation_failure_exception&) {
+		} catch(const validation_failure_exception&) {
 			LOG_INFO("ERROR WHILE PREDICTING FUTURE...");
 			break;
 		}

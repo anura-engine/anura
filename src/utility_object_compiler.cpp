@@ -934,7 +934,7 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 		variant node;
 		try {
 			node = json::parse(sys::read_file(cfg_fname));
-		} catch(json::ParseError& e) {
+		} catch(const json::ParseError& e) {
 			ASSERT_LOG(false, "Parse error parsing " << arg << " -> " << cfg_fname << ": " << e.errorMessage());
 		}
 

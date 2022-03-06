@@ -441,7 +441,7 @@ void process_stats(const variant& doc)
 			}
 		}
 	}
-	} catch(validation_failure_exception& e) {
+	} catch(const validation_failure_exception& e) {
 		message_type_index.erase(module_str);
 		LOG_ERROR("ERROR IN MODULE PROCESSING FOR " << module_str);
 		module_errors[module_str] = e.msg;

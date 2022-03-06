@@ -359,7 +359,7 @@ namespace
 			std::string new_contents = modify_variant_text(contents, original, v, 1, 1, "");
 			try {
 				json::parse(new_contents, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
-			} catch(json::ParseError& e) {
+			} catch(const json::ParseError& e) {
 				ASSERT_LOG(false, "ERROR: MODIFIED DOCUMENT " << fname << " COULD NOT BE PARSED. FILE NOT WRITTEN: " << e.errorMessage() << "\n" << new_contents);
 			}
 
@@ -379,12 +379,12 @@ namespace
 		for(const std::string& fname : files) {
 			try {
 				process_file(dir + "/" + fname, file_mappings);
-			} catch(json::ParseError&) {
+			} catch(const json::ParseError&) {
 				LOG_ERROR("FAILED TO PARSE " << fname);
-			} catch(type_error&) {
+			} catch(const type_error&) {
 				LOG_ERROR("TYPE ERROR PARSING " << fname);
 				error_files.push_back(fname);
-			} catch(validation_failure_exception& e) {
+			} catch(const validation_failure_exception& e) {
 				LOG_ERROR("PARSING " << fname << ": " << e.msg);
 				error_files.push_back(fname);
 			}

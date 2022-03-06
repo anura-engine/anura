@@ -83,10 +83,10 @@ namespace KRE
 		try {
 			fp = Font::findFontPath(fontn + ".ttf");
 
-		} catch(FontError&) {
+		} catch(const FontError&) {
 			try {
 				fp = Font::findFontPath(fontn + ".otf");
-			} catch(FontError&) {
+			} catch(const FontError&) {
 				fp = Font::findFontPath(fontn);
 			}
 		}

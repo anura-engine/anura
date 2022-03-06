@@ -271,10 +271,10 @@ namespace editor_dialogs
 
 			AnimationWidgetPtr preview(new AnimationWidget(128, 128, object_template_));
 			addWidget(preview, width() - border_offset - 128, border_offset + 200);
-		} catch(validation_failure_exception& e) {
+		} catch(const validation_failure_exception& e) {
 			error_text_ = e.msg;
 			LOG_ERROR("error parsing formula: " << e.msg);
-		} catch(type_error& e) {
+		} catch(const type_error& e) {
 			error_text_ = e.message;
 			LOG_ERROR("error executing formula: " << e.message);
 		}

@@ -142,7 +142,7 @@ namespace sys
 	{
 		try {
 			create_directory(path(dir));
-		} catch(filesystem_error&) {
+		} catch(const filesystem_error&) {
 			return "";
 		}
 		return dir;

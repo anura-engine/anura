@@ -517,7 +517,7 @@ namespace gui
 		}
 		try {
 			val = std::max(0, std::min(boost::lexical_cast<int>(t_[n]->text()), 255));
-		} catch(boost::bad_lexical_cast&) {
+		} catch(const boost::bad_lexical_cast&) {
 			// passing on it, keep default.
 		}
 		switch(n) {

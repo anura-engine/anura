@@ -447,22 +447,22 @@ namespace KRE
 		try {
 			static auto screen_dim = shader->getUniform("screen_dimensions");
 			shader->setUniformValue(screen_dim, glm::value_ptr(glm::vec2(getWindow()->width(), getWindow()->height())));
-		} catch(ShaderUniformError&) {
+		} catch(const ShaderUniformError&) {
 		}
 		try {
 			static auto radius_it = shader->getUniform("outer_radius");
 			shader->setUniformValue(radius_it, radius);
-		} catch(ShaderUniformError&) {
+		} catch(const ShaderUniformError&) {
 		}
 		try {
 			static auto inner_radius_it = shader->getUniform("inner_radius");
 			shader->setUniformValue(inner_radius_it, 0.0f);
-		} catch(ShaderUniformError&) {
+		} catch(const ShaderUniformError&) {
 		}
 		try {
 			static auto centre_it = shader->getUniform("centre");
 			shader->setUniformValue(centre_it, glm::value_ptr(glm::vec2(centre.x, centre.y)));
-		} catch(ShaderUniformError&) {
+		} catch(const ShaderUniformError&) {
 		}
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
 		glEnableVertexAttribArray(shader->getVertexAttribute());
@@ -521,22 +521,22 @@ namespace KRE
 		try {
 			static auto screen_dim = shader->getUniform("screen_dimensions");
 			shader->setUniformValue(screen_dim, glm::value_ptr(glm::vec2(width(), height())));
-		} catch(ShaderUniformError&) {
+		} const ShaderUniformError&) {
 		}
 		try {
 			static auto radius_it = shader->getUniform("outer_radius");
 			shader->setUniformValue(radius_it, outer_radius);
-		} catch(ShaderUniformError&) {
+		} catch(const ShaderUniformError&) {
 		}
 		try {
 			static auto inner_radius_it = shader->getUniform("inner_radius");
 			shader->setUniformValue(inner_radius_it, inner_radius);
-		} catch(ShaderUniformError&) {
+		} catch(const ShaderUniformError&) {
 		}
 		try {
 			static auto centre_it = shader->getUniform("centre");
 			shader->setUniformValue(centre_it, glm::value_ptr(glm::vec2(centre.x, centre.y)));
-		} catch(ShaderUniformError&) {
+		} catch(const ShaderUniformError&) {
 		}
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
 		glEnableVertexAttribArray(shader->getVertexAttribute());

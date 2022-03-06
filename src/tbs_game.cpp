@@ -464,7 +464,7 @@ namespace {
 				p.allow_deltas = false;
 			}
 			LOG_INFO("restored state");
-		} catch(json::ParseError&) {
+		} catch(const json::ParseError&) {
 			LOG_INFO("JSON ERROR RESTORING GAME STATE");
 		} catch(...) {
 			LOG_INFO("ERROR RESTORING GAME STATE");

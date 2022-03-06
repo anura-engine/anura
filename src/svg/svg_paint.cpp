@@ -119,7 +119,7 @@ namespace KRE
 					try {
 						double value = boost::lexical_cast<double>(*it);
 						icc_color_values_.emplace_back(value);
-					} catch(boost::bad_lexical_cast&) {
+					} catch(const boost::bad_lexical_cast&) {
 						ASSERT_LOG(false, "Unable to convert icc-color value from string to numeric: " << *it << " : " << s);
 					}
 				}

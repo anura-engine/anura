@@ -164,7 +164,7 @@ namespace pathfinding
 					}
 				}
 			}
-		} catch (PathfindingException<variant>& e) {
+		} catch (const PathfindingException<variant>& e) {
 			LOG_ERROR(e.msg << " " << e.src.to_debug_string() << ", " << e.dest.to_debug_string());
 		}
 		wg->resetGraph();
@@ -354,7 +354,7 @@ namespace pathfinding
 					}
 				}
 			}
-		} catch (PathfindingException<point>& e) {
+		} catch (const PathfindingException<point>& e) {
 			LOG_ERROR(e.msg << " (" << e.src.x << "," << e.src.y << ") : (" << e.dest.x << "," << e.dest.y << ")");
 		}
 		return variant(&path);
@@ -411,7 +411,7 @@ namespace pathfinding
 					}
 				}
 			}
-		} catch (PathfindingException<variant>& e) {
+		} catch (const PathfindingException<variant>& e) {
 			LOG_ERROR(e.msg << " " << e.src.to_debug_string() << ", " << e.dest.to_debug_string());
 		}
 		wg->resetGraph();

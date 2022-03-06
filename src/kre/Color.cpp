@@ -218,7 +218,7 @@ namespace KRE
 					}
 					return 1.0f;
 				}
-			} catch(boost::bad_lexical_cast&) {
+			} catch(const boost::bad_lexical_cast&) {
 				ASSERT_LOG(false, "unable to convert value to number: " << str);
 			}
 		}

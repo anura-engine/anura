@@ -1697,7 +1697,7 @@ namespace gui
 					ptr += advance;
 				}
 			}
-		} catch(boost::regex_error&) {
+		} catch(const boost::regex_error&) {
 		}
 	}
 

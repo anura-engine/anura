@@ -212,7 +212,7 @@ namespace gui
 								++begin;
 							}
 
-						} catch(formula_tokenizer::TokenError&) {
+						} catch(const formula_tokenizer::TokenError&) {
 							i = begin;
 							break;
 						}
@@ -440,7 +440,7 @@ namespace gui
 				tokens_.push_back(token);
 				token = json::get_token(begin, end);
 			}
-		} catch(json::TokenizerError& e) {
+		} catch(const json::TokenizerError& e) {
 			LOG_ERROR("Tokenizer error: " << e.msg);
 		}
 	}
@@ -526,7 +526,7 @@ namespace gui
 		result.tokens = std::vector<json::Token>(begin_token, end_token+1);
 		try {
 			result.obj = get_map_editing(row, col, current_obj_);
-		} catch(json::ParseError&) {
+		} catch(const json::ParseError&) {
 			LOG_ERROR("json parse error: " << std::string(begin_token->begin, end_token->end));
 			return result;
 		}

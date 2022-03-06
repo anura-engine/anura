@@ -3526,7 +3526,7 @@ UNIT_TEST(bad_variant_exponentiation_0) {
 		const assert_recover_scope unit_test_exception_expected;
 		try {
 			b = a ^ variant(32);
-		} catch (validation_failure_exception vfe) {
+		} catch (const validation_failure_exception vfe) {
 			excepted = true;
 		}
 	}
@@ -3576,7 +3576,7 @@ UNIT_TEST(bad_variant_exponentiation_1) {
 		const assert_recover_scope unit_test_exception_expected;
 		try {
 			b = a ^ variant(16);
-		} catch (validation_failure_exception vfe) {
+		} catch (const validation_failure_exception vfe) {
 			excepted = true;
 		}
 	}
@@ -4195,7 +4195,7 @@ UNIT_TEST(bad_variant_exponentiation_30) {
 		const assert_recover_scope unit_test_exception_expected;
 		try {
 			b = a ^ variant(2);
-		} catch (validation_failure_exception vfe) {
+		} catch (const validation_failure_exception vfe) {
 			excepted = true;
 		}
 	}

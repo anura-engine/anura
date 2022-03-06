@@ -609,7 +609,7 @@ namespace css
 		double num = 0;
 		try {
 			num = boost::lexical_cast<double>(res);
-		} catch (boost::bad_lexical_cast& e) {
+		} catch (const boost::bad_lexical_cast& e) {
 			LOG_ERROR("Parse error converting '" << res << "' to numeric value: " << e.what());
 		}
 		return num;

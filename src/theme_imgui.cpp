@@ -307,7 +307,7 @@ void load_imgui_theme()
 	try {
 		variant v = json::parse_from_file(fname);
 		load_theme_from_variant(v);
-	} catch(json::ParseError& e) {
+	} catch(const json::ParseError& e) {
 		LOG_INFO("Failed to read file: " << fname << " : " << e.errorMessage());
 	}
 }

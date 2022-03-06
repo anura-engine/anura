@@ -129,7 +129,7 @@ namespace tiled
 					parseMapElement(v.second);
 				}
 			}
-		} catch(xml_parser_error &e) {
+		} catch(const xml_parser_error &e) {
 			ASSERT_LOG(false, "Failed to read TMX file " << e.what());
 		} catch(...) {
 			ASSERT_LOG(false, "Failed to read TMX file with unknown error");
@@ -378,7 +378,7 @@ namespace tiled
 				try {
 					int value = boost::lexical_cast<int>(tile);
 					res.emplace_back(value);
-				} catch(boost::bad_lexical_cast& e) {
+				} catch(const boost::bad_lexical_cast& e) {
 					ASSERT_LOG(false, "Couldn't convert '" << tile << " to integer value: " << e.what());
 				}
 			}
@@ -440,7 +440,7 @@ namespace tiled
 						int value = boost::lexical_cast<int>(s);
 						ASSERT_LOG(n < 4, "parsing too many elements of terrain data" << str);
 						terrain_array[n] = value;
-					} catch(boost::bad_lexical_cast& e) {
+					} catch(const boost::bad_lexical_cast& e) {
 						ASSERT_LOG(false, "Unable to convert string to integer: " << s << ", " << e.what());
 					}
 				}

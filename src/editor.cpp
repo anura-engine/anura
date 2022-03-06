@@ -1622,7 +1622,7 @@ void BuiltinEditor::process()
 		try {
 			const assert_recover_scope safe_scope;
 			lvl->complete_rebuild_tiles_in_background();
-		} catch(validation_failure_exception& e) {
+		} catch(const validation_failure_exception& e) {
 			if(!drawing_rect_) {
 				undo_command();
 			}

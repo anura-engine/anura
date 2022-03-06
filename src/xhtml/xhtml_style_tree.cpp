@@ -451,7 +451,7 @@ namespace xhtml
 			if(!plist.empty()) {
 				sp = plist.begin()->second.style;
 			}
-		} catch(css::ParserError& e) {
+		} catch(const css::ParserError& e) {
 			LOG_ERROR("Unable to parse value '" << value << "' to set to property: " << get_property_name(p) << "; " << e.what());
 		}
 		if(sp == nullptr) {
