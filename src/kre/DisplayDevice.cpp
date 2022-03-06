@@ -191,7 +191,7 @@ namespace KRE
 		return DisplayDevice::getCurrent()->handleCreateRenderTarget(node);
 	}
 
-	bool DisplayDevice::checkForFeature(DisplayDeviceCapabilties cap)
+	bool DisplayDevice::checkForFeature(DisplayDeviceCapabilities cap)
 	{
 		return DisplayDevice::getCurrent()->doCheckForFeature(cap);
 	}

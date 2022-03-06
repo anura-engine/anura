@@ -353,7 +353,7 @@ namespace xhtml
 
 		for(auto shadow : shadows_) {
 			if(std::abs(shadow.blur) < FLT_EPSILON ||
-				!KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
+				!KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilities::RENDER_TO_TEXTURE)) {
 				// no blur
 				KRE::FontRenderablePtr shadow_font(new KRE::FontRenderable(*fontr));
 				shadow_font->setPosition(shadow.x_offset, shadow.y_offset);

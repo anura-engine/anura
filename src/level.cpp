@@ -356,7 +356,7 @@ Level::Level(const std::string& level_cfg, variant node)
 	rmanager_ = KRE::RenderManager::getInstance();
 	rmanager_->addQueue(0, "Level::opaques");
 
-	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
+	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilities::RENDER_TO_TEXTURE)) {
 		have_render_to_texture_ = true;
 		auto& gs = graphics::GameScreen::get();
 
@@ -2475,7 +2475,7 @@ void Level::shadersUpdated()
 
 void Level::calculateLighting(int x, int y, int w, int h) const
 {
-	bool fbo = KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE);
+	bool fbo = KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilities::RENDER_TO_TEXTURE);
 	if(!dark_ || editor_ || !fbo) {
 		return;
 	}

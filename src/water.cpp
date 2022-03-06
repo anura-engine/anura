@@ -80,7 +80,7 @@ void Water::init()
 	ab->addAttribute(AttributeBasePtr(waterline_));
 	ab->setDrawMode(DrawMode::TRIANGLES);
 	/// Set appropriate blend equation/functions on each of these attribute sets
-	if(DisplayDevice::checkForFeature(DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
+	if(DisplayDevice::checkForFeature(DisplayDeviceCapabilities::BLEND_EQUATION_SEPERATE)) {
 		//ab->setBlendEquation(BlendEquation(BlendEquationConstants::BE_REVERSE_SUBTRACT));
 	}
 	ab->setBlendMode(BlendModeConstants::BM_ONE, BlendModeConstants::BM_ONE);

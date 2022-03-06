@@ -322,7 +322,7 @@ namespace KRE
 		// XXX For reasons (i.e. some video cards are problematic either hardware/drivers)
 		// we are forced to use power-of-two textures anyway if we want mip-mapping and
 		// address modes other than CLAMP.
-		if(!DisplayDevice::checkForFeature(DisplayDeviceCapabilties::NPOT_TEXTURES)) {
+		if(!DisplayDevice::checkForFeature(DisplayDeviceCapabilities::NPOT_TEXTURES)) {
 			tp->width = next_power_of_two(tp->surface_width);
 			tp->height = next_power_of_two(tp->surface_height);
 			ASSERT_LOG(tp->type != TextureType::TEXTURE_3D && tp->type != TextureType::TEXTURE_CUBIC, "fixme texture type3d or cubic");

@@ -38,7 +38,7 @@
 
 namespace KRE
 {
-	enum class DisplayDeviceCapabilties {
+	enum class DisplayDeviceCapabilities {
 		NPOT_TEXTURES,
 		BLEND_EQUATION_SEPERATE,
 		RENDER_TO_TEXTURE,
@@ -191,7 +191,7 @@ namespace KRE
 
 		static DisplayDevicePtr getCurrent();
 
-		static bool checkForFeature(DisplayDeviceCapabilties cap);
+		static bool checkForFeature(DisplayDeviceCapabilities cap);
 
 		static void registerFactoryFunction(const std::string& type, std::function<DisplayDevicePtr(WindowPtr)>);
 	private:
@@ -222,7 +222,7 @@ namespace KRE
 		virtual TexturePtr handleCreateTextureArray(int count, int width, int height, PixelFormat::PF fmt, TextureType type) = 0;
 		virtual TexturePtr handleCreateTextureArray(const std::vector<SurfacePtr>& surfaces, const variant& node) = 0;
 
-		virtual bool doCheckForFeature(DisplayDeviceCapabilties cap) = 0;
+		virtual bool doCheckForFeature(DisplayDeviceCapabilities cap) = 0;
 
 		virtual void doBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch) = 0;
 	};
