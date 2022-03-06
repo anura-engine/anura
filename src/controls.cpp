@@ -339,7 +339,7 @@ namespace controls
 		for(int n = 0; n != nplayers; ++n) {
 			while(n != local_player && controls[n].size() < controls[local_player].size()) {
 				if(controls[n].empty()) {
-					controls[n].push_back(ControlFrame());
+					controls[n].emplace_back();
 				} else {
 					controls[n].push_back(controls[n].back());
 				}

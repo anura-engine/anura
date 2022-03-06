@@ -316,7 +316,7 @@ namespace KRE
 				} else {
 					ASSERT_LOG(false, "PSYSTEM2, time_colour nodes must have a 'color' or 'colour' attribute");
 				}
-				tc_data_.push_back(std::make_pair(t, result));
+				tc_data_.emplace_back(t, result);
 			} else if(tc_node.is_list()) {
 				for(int n = 0; n != tc_node.num_elements(); ++n) {
 					float t = tc_node[n]["time"].as_float();
@@ -336,7 +336,7 @@ namespace KRE
 					} else {
 						ASSERT_LOG(false, "PSYSTEM2, time_colour nodes must have a 'color' or 'colour' attribute");
 					}
-					tc_data_.push_back(std::make_pair(t, result));
+					tc_data_.emplace_back(t, result);
 				}
 			}
 			sort_tc_data();

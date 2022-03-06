@@ -570,7 +570,7 @@ namespace editor_dialogs
 		if(object_template_.has_key("prototype")) {
 			v = object_template_["prototype"].as_list();
 		}
-		v.push_back(variant(choices[index]));
+		v.emplace_back(choices[index]);
 		object_template_.add_attr(variant("prototype"), variant(&v));
 
 		init();
@@ -615,8 +615,8 @@ namespace editor_dialogs
 	{
 		auto wnd = KRE::WindowManager::getMainWindow();
 		gui::filter_list f;
-		f.push_back(gui::filter_pair("Image Files", ".*?\\.(png|jpg|gif|bmp|tif|tiff|tga|webp|xpm|xv|pcx)"));
-		f.push_back(gui::filter_pair("All Files", ".*"));
+		f.emplace_back("Image Files", ".*?\\.(png|jpg|gif|bmp|tif|tiff|tga|webp|xpm|xv|pcx)");
+		f.emplace_back("All Files", ".*");
 		gui::FileChooserDialog open_dlg(
 			static_cast<int>(wnd->width() * 0.1f),
 			static_cast<int>(wnd->height() * 0.1f),

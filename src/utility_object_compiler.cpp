@@ -434,7 +434,7 @@ UTILITY(compile_objects)
 
 		std::vector<variant> vs;
 		for(int n : v) {
-			vs.push_back(variant(n));
+			vs.emplace_back(n);
 		}
 
 		node.add_attr_mutation(variant("frame_info"), variant(&vs));
@@ -1137,7 +1137,7 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 			node[variant("image")] = baking_info["dest_image"];
 			node[variant("frames")] = variant(static_cast<int>(anim.frames.size()));
 			node[variant("pad")] = variant(3);
-			anim_nodes.push_back(variant(&node));
+			anim_nodes.emplace_back(&node);
 		}
 
 		node.add_attr(variant("animation"), variant(&anim_nodes));
@@ -1693,7 +1693,7 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 	variant_builder node;
 	node.add("id", obj_type + "_" + output);
 	std::vector<variant> proto;
-	proto.push_back(variant(prototype));
+	proto.emplace_back(prototype);
 	node.add("prototype", variant(&proto));
 
 	std::vector<variant> animation_nodes;
@@ -1723,10 +1723,10 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 		anim_node.add("image", obj_dir + "/" + img_prefix + output + ".png");
 		anim_node.add("frames", static_cast<int>(p.second.surfaces.size()));
 		std::vector<variant> sprite_rect;
-		sprite_rect.push_back(variant(xpos));
-		sprite_rect.push_back(variant(ypos));
-		sprite_rect.push_back(variant(xpos+p.second.width-1));
-		sprite_rect.push_back(variant(ypos+p.second.height-1));
+		sprite_rect.emplace_back(xpos);
+		sprite_rect.emplace_back(ypos);
+		sprite_rect.emplace_back(xpos+p.second.width-1);
+		sprite_rect.emplace_back(ypos+p.second.height-1);
 		anim_node.add("rect", variant(&sprite_rect));
 		anim_node.add("duration", 6);
 

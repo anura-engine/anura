@@ -82,7 +82,7 @@ namespace graphics
 				game_logic::Formula::failIfStaticContext();
 				std::vector<variant> v;
 				for(size_t n = 0; n < 16; n++) {
-					v.push_back(variant((glm::value_ptr(KRE::get_global_model_matrix()))[n]));
+					v.emplace_back((glm::value_ptr(KRE::get_global_model_matrix()))[n]);
 				}
 				return variant(&v);
 			}
@@ -647,7 +647,7 @@ namespace graphics
 		}
 
 		if(target == nullptr) {
-			uniform_commands_.push_back(DrawCommand());
+			uniform_commands_.emplace_back();
 			target = &uniform_commands_.back();
 			target->name = key;
 			target->target = program_->shader_->getUniform(key);
@@ -716,7 +716,7 @@ namespace graphics
 		}
 
 		if(target == nullptr) {
-			attribute_commands_.push_back(DrawCommand());
+			attribute_commands_.emplace_back();
 			target = &attribute_commands_.back();
 			target->name = key;
 			target->target = program_->shader_->getAttribute(key);
@@ -896,4 +896,3 @@ namespace graphics
 	}
 
 }
-

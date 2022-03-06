@@ -277,7 +277,7 @@ namespace tbs
 				m[variant("id")] = variant(cid);
 				m[variant("bot")] = variant::from_bool(g->game_state->players()[index].is_human == false);
 			}
-			clients.push_back(variant(&m));
+			clients.emplace_back(&m);
 			++index;
 		}
 

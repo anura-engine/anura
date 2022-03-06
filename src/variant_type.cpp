@@ -88,7 +88,7 @@ std::map<std::string, std::vector<variant> > load_named_variant_info()
 				key.erase(key.begin(), colon+1);
 
 				if(directive == "extends") {
-					extends.push_back(std::pair<std::string,variant>(key, p.second));
+					extends.emplace_back(key, p.second);
 				} else {
 					ASSERT_LOG(false, "Unknown type directive: " << directive << ":" << key);
 				}
@@ -117,7 +117,7 @@ std::map<std::string, std::vector<variant> > load_named_variant_info()
 				key.erase(key.begin(), colon+1);
 
 				if(directive == "extends") {
-					extends.push_back(std::pair<std::string,variant>(key, p.second));
+					extends.emplace_back(key, p.second);
 				} else {
 					ASSERT_LOG(false, "Unknown type directive: " << directive << ":" << key);
 				}

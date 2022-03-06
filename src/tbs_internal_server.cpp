@@ -460,7 +460,7 @@ void terminate_utility_process(bool* complete=nullptr)
 
 	server_base::socket_info& internal_server::create_socket_info(send_function send_fn)
 	{
-		connections_.push_back(std::pair<send_function, socket_info>(send_fn, socket_info()));
+		connections_.emplace_back(send_fn, socket_info());
 		return connections_.back().second;
 	}
 
@@ -490,16 +490,16 @@ void terminate_utility_process(bool* complete=nullptr)
 
 			client_info& cli_info = clients[info.session_id];
 			if(cli_info.msg_queue.empty() == false) {
-				messages.push_back(std::pair<send_function,variant>(send_fn, game_logic::deserialize_doc_with_objects(cli_info.msg_queue.front())));
+				messages.emplace_back(send_fn, game_logic::deserialize_doc_with_objects(cli_info.msg_queue.front()));
 				cli_info.msg_queue.pop_front();
 			} else if(send_heartbeat) {
 				if(!cli_info.game) {
 					variant_builder v;
 					v.add("type", variant("heartbeat"));
-					messages.push_back(std::pair<send_function,variant>(send_fn, v.build()));
+					messages.emplace_back(send_fn, v.build());
 				} else {
 					variant v = create_heartbeat_packet(cli_info);
-					messages.push_back(std::pair<send_function,variant>(send_fn, v));
+					messages.emplace_back(send_fn, v);
 				}
 			}
 		}
@@ -537,7 +537,7 @@ void terminate_utility_process(bool* complete=nullptr)
 
 	void internal_server::write_queue(send_function send_fn, const variant& v, int session_id)
 	{
-		msg_queue_.push_back(std::make_tuple(send_fn,v,session_id));
+		msg_queue_.emplace_back(send_fn,v,session_id);
 	}
 
 	bool internal_server::read_queue(send_function* send_fn, variant* v, int *session_id)

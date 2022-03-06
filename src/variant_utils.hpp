@@ -82,7 +82,7 @@ template<typename Seq>
 variant vector_to_variant(const Seq& seq) {
 	std::vector<variant> v;
 	for(const typename Seq::value_type& value : seq) {
-		v.push_back(variant(value));
+		v.emplace_back(value);
 	}
 
 	return variant(&v);

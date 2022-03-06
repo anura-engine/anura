@@ -98,7 +98,7 @@ void http_client::send_request(std::string method_path, std::string request, std
 	conn->progress_handler = progress_handler;
 
 	if(timeout_and_retry_) {
-		connections_monitor_timeout_.push_back(std::weak_ptr<Connection>(conn));
+		connections_monitor_timeout_.emplace_back(conn);
 		conn->timeout_period = 2000<<(attempt_num > 5 ? 5 : attempt_num);
 		conn->timeout_deadline = SDL_GetTicks() + conn->timeout_period;
 		conn->timeout_nbytes_needed = 1024*16;
@@ -236,7 +236,7 @@ void http_client::send_connection_request(connection_ptr conn)
 	conn->request = msg.str();
 
 	if(g_http_fake_lag > 0) {
-		connections_waiting_on_fake_lag_.push_back(std::pair<int,connection_ptr>(SDL_GetTicks()+g_http_fake_lag, conn));
+		connections_waiting_on_fake_lag_.emplace_back(SDL_GetTicks()+g_http_fake_lag, conn);
 	} else {
 		write_connection_data(conn);
 	}

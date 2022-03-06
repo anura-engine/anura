@@ -1726,8 +1726,8 @@ namespace sound
 
 	DEFINE_FIELD(pan, "[decimal,decimal]")
 		std::vector<variant> v;
-		v.push_back(variant(obj.leftPan()));
-		v.push_back(variant(obj.rightPan()));
+		v.emplace_back(obj.leftPan());
+		v.emplace_back(obj.rightPan());
 		return variant(&v);
 
 	DEFINE_SET_FIELD
@@ -1740,7 +1740,7 @@ namespace sound
 		auto v = obj.getFilters();
 		std::vector<variant> result;
 		for(auto p : v) {
-			result.push_back(variant(p.get()));
+			result.emplace_back(p.get());
 		}
 
 		return variant(&result);
@@ -2305,7 +2305,7 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 		threading::lock lck(g_playing_sounds_mutex);
 
 		for(auto p : g_playing_sounds) {
-			res.push_back(variant(p.get()));
+			res.emplace_back(p.get());
 		}
 
 		return variant(&res);

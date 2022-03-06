@@ -186,7 +186,7 @@ namespace preferences
 				if(key == "dir") {
 					std::vector<variant> result;
 					for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
-						result.push_back(variant(itor->first));
+						result.emplace_back(itor->first);
 					}
 
 					return variant(&result);

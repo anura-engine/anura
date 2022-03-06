@@ -169,7 +169,7 @@ namespace game_logic
 
 	std::vector<ConstExpressionPtr> FormulaExpression::queryChildrenRecursive() const {
 		std::vector<ConstExpressionPtr> result;
-		result.push_back(ConstExpressionPtr(this));
+		result.emplace_back(this);
 		for(ConstExpressionPtr child : queryChildren()) {
 			if(child.get() != this) {
 				std::vector<ConstExpressionPtr> items = child->queryChildrenRecursive();
@@ -377,7 +377,7 @@ namespace game_logic
 			std::vector<variant> res;
 			res.reserve(v.size());
 			for(const std::string& str : v) {
-				res.push_back(variant(str));
+				res.emplace_back(str);
 			}
 
 			return variant(&res);
@@ -535,7 +535,7 @@ namespace game_logic
 		DEFINE_FIELD(all, "[builtin ffl_cache]")
 			std::vector<variant> v;
 			for(auto item : get_all_ffl_caches()) {
-				v.push_back(variant(item));
+				v.emplace_back(item);
 			}
 
 			return variant(&v);
@@ -613,8 +613,8 @@ namespace game_logic
 			}
 
 			std::vector<variant> v;
-			v.push_back(variant(xi));
-			v.push_back(variant(yi));
+			v.emplace_back(xi);
+			v.emplace_back(yi);
 			return variant(&v);
 
 		END_DEFINE_FN
@@ -1329,7 +1329,7 @@ namespace game_logic
 
 					std::map<variant,variant> m_empty;
 					m[AttrStr] = variant(&m_empty);
-					res.push_back(variant(&m));
+					res.emplace_back(&m);
 				}
 
 				continue;
@@ -1355,7 +1355,7 @@ namespace game_logic
 			std::map<variant,variant> m_empty;
 			m[AttrStr] = variant(&m_empty);
 
-			res.push_back(variant(&m));
+			res.emplace_back(&m);
 
 			parse_xml_to_json_internal(itor->second, res);
 
@@ -1363,7 +1363,7 @@ namespace game_logic
 			m[DataStr] = variant(itor->first);
 
 			m[AttrStr] = variant(&m_empty);
-			res.push_back(variant(&m));
+			res.emplace_back(&m);
 		}
 	}
 
@@ -1762,9 +1762,9 @@ namespace game_logic
 			KRE::Color c(a[0].as_float(), a[1].as_float(), a[2].as_float());
 			auto vec = c.to_hsv_vec4();
 			std::vector<variant> res;
-			res.push_back(variant(vec[0]));
-			res.push_back(variant(vec[1]));
-			res.push_back(variant(vec[2]));
+			res.emplace_back(vec[0]);
+			res.emplace_back(vec[1]);
+			res.emplace_back(vec[2]);
 			return variant(&res);
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("[decimal,decimal,decimal]");
@@ -1775,9 +1775,9 @@ namespace game_logic
 			variant a = EVAL_ARG(0);
 			KRE::Color c = KRE::Color::from_hsv(a[0].as_float(), a[1].as_float(), a[2].as_float());
 			std::vector<variant> res;
-			res.push_back(variant(c.r()));
-			res.push_back(variant(c.g()));
-			res.push_back(variant(c.b()));
+			res.emplace_back(c.r());
+			res.emplace_back(c.g());
+			res.emplace_back(c.b());
 			return variant(&res);
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("[decimal,decimal,decimal]");
@@ -1790,7 +1790,7 @@ namespace game_logic
 				std::vector<variant> v;
 				const std::vector<FormulaInput> inputs = map.as_callable()->inputs();
 				for(const FormulaInput& in : inputs) {
-					v.push_back(variant(in.name));
+					v.emplace_back(in.name);
 				}
 
 				return variant(&v);
@@ -2054,8 +2054,8 @@ namespace game_logic
 
 			std::vector<variant> result;
 			result.reserve(2);
-			result.push_back(variant(decimal(u)));
-			result.push_back(variant(decimal(v)));
+			result.emplace_back(decimal(u));
+			result.emplace_back(decimal(v));
 
 			return variant(&result);
 		FUNCTION_ARGS_DEF
@@ -2454,7 +2454,7 @@ FUNCTION_DEF_IMPL
 
 			std::vector<variant> vl;
 			for(int n = 0; n < static_cast<int>(v.size()); ++n) {
-				vl.push_back(variant(&v[n]));
+				vl.emplace_back(&v[n]);
 			}
 			return variant(&vl);
 		FUNCTION_ARGS_DEF
@@ -2662,8 +2662,8 @@ FUNCTION_DEF_IMPL
 
  				variant cmp(EVAL_ARG(1));
 				std::vector<variant> fn_args;
-				fn_args.push_back(variant());
-				fn_args.push_back(variant());
+				fn_args.emplace_back();
+				fn_args.emplace_back();
 
 				for(auto edges = dg->getEdges()->begin();
 						edges != dg->getEdges()->end();
@@ -3877,7 +3877,7 @@ FUNCTION_DEF_IMPL
 		variant create_static_range_list() {
 			std::vector<variant> result;
 			for (int i = 0; i < StaticRangeListSize; ++i) {
-				result.push_back(variant(i));
+				result.emplace_back(i);
 			}
 
 			return variant(&result);
@@ -3919,7 +3919,7 @@ FUNCTION_DEF_IMPL
 				v.reserve(nelem/step);
 
 				for(int n = 0; n < nelem; n += step) {
-					v.push_back(variant(start+n));
+					v.emplace_back(start+n);
 				}
 			}
 
@@ -4004,7 +4004,7 @@ FUNCTION_DEF_IMPL
 			std::multimap<std::string, std::string> file_paths;
 			module::get_all_filenames_under_dir(EVAL_ARG(0).as_string(), &file_paths);
 			for(std::multimap<std::string, std::string>::const_iterator i = file_paths.begin(); i != file_paths.end(); ++i) {
-				v.push_back(variant(i->second));
+				v.emplace_back(i->second);
 			}
 			return variant(&v);
 		FUNCTION_ARGS_DEF
@@ -4024,7 +4024,7 @@ FUNCTION_DEF_IMPL
 			}
 			module::get_files_in_dir(dirname, &files);
 			for(std::vector<std::string>::const_iterator i = files.begin(); i != files.end(); ++i) {
-				v.push_back(variant(*i));
+				v.emplace_back(*i);
 			}
 			return variant(&v);
 		FUNCTION_ARGS_DEF
@@ -4294,7 +4294,7 @@ FUNCTION_DEF_IMPL
 			std::vector<variant> res;
 			for(size_t i=0; i<chopped.size(); ++i) {
 				const std::string& part = chopped[i];
-				res.push_back(variant(part));
+				res.emplace_back(part);
 			}
 
 			return variant(&res);
@@ -5976,7 +5976,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			}
 
 			seen_textures.push_back(t);
-			v.push_back(variant(new TextureObject(t->shared_from_this())));
+			v.emplace_back(new TextureObject(t->shared_from_this()));
 		}
 
 		return variant(&v);
@@ -6036,7 +6036,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		for(auto p : all_obj) {
 			FormulaCallable* obj = dynamic_cast<FormulaCallable*>(p);
 			if(obj) {
-				result.push_back(variant(obj));
+				result.emplace_back(obj);
 			}
 		}
 
@@ -6165,7 +6165,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		variant commands_fn = EVAL_ARG(1);
 
 		std::vector<variant> args;
-		args.push_back(variant(obj.get()));
+		args.emplace_back(obj.get());
 		variant commands = commands_fn(args);
 
 		obj->executeCommand(commands);
@@ -6257,7 +6257,7 @@ FUNCTION_DEF(rotate_rect, 4, 4, "rotate_rect(int|decimal center_x, int|decimal c
 		std::vector<variant> res;
 		res.reserve(8);
 		for(int n = 0; n != v.num_elements(); ++n) {
-			res.push_back(variant(r[n]));
+			res.emplace_back(r[n]);
 		}
 	} else {
 		short r[8];
@@ -6273,7 +6273,7 @@ FUNCTION_DEF(rotate_rect, 4, 4, "rotate_rect(int|decimal center_x, int|decimal c
 
 		res.reserve(8);
 		for(int n = 0; n != v.num_elements(); ++n) {
-			res.push_back(variant(r[n]));
+			res.emplace_back(r[n]);
 		}
 	}
 	return variant(&res);
@@ -6355,7 +6355,7 @@ FUNCTION_DEF(points_along_curve, 1, 2, "points_along_curve([[decimal,decimal]], 
         }
 
         float y = curve_unit_interval(p[1], p[3], m0*x_dist, m1*x_dist, t);
-        result.push_back(variant(y));
+        result.emplace_back(y);
     }
 
     return variant(&result);

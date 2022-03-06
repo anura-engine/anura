@@ -255,7 +255,7 @@ namespace editor_script
 				editor_.get_level().getAllTilesRect(x*TileSize, y*TileSize, x*TileSize, y*TileSize, m);
 				for(auto i : m) {
 					for(const std::string& s : i.second) {
-						result.push_back(variant(s));
+						result.emplace_back(s);
 					}
 				}
 
@@ -281,12 +281,12 @@ namespace editor_script
 						const rect& dim = editor_.get_level().boundaries();
 						for(int y = dim.y() - dim.y()%TileSize; y < dim.y2(); y += TileSize) {
 							for(int x = dim.x() - dim.x()%TileSize; x < dim.x2(); x += TileSize) {
-								result.push_back(variant(new TileCallable(editor_, x/TileSize, y/TileSize)));
+								result.emplace_back(new TileCallable(editor_, x/TileSize, y/TileSize));
 							}
 						}
 					} else {
 						for(const point& p : selection.tiles) {
-							result.push_back(variant(new TileCallable(editor_, p.x, p.y)));
+							result.emplace_back(new TileCallable(editor_, p.x, p.y));
 						}
 					}
 

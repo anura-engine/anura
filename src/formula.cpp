@@ -417,7 +417,7 @@ namespace game_logic
 				std::vector<std::string> more_function_names = symbols_->getFunctionNames();
 				function_names.insert(function_names.end(), more_function_names.begin(), more_function_names.end());
 				for(size_t i = 0; i < function_names.size(); i++) {
-					res.push_back(variant(function_names[i]));
+					res.emplace_back(function_names[i]);
 				}
 				return variant(&res);
 			}
@@ -3773,7 +3773,7 @@ namespace {
 				} else if(i1->type == FFL_TOKEN_TYPE::RPARENS || i1->type == FFL_TOKEN_TYPE::RSQUARE || i1->type == FFL_TOKEN_TYPE::RBRACKET) {
 					--parens;
 				} else if(i1->type == FFL_TOKEN_TYPE::COMMA && !parens) {
-					args.push_back(std::pair<const Token*, const Token*>(beg, i1));
+					args.emplace_back(beg, i1);
 					beg = i1+1;
 				}
 
@@ -3781,7 +3781,7 @@ namespace {
 			}
 
 			if(beg != i1) {
-				args.push_back(std::pair<const Token*, const Token*>(beg, i1));
+				args.emplace_back(beg, i1);
 			}
 
 			for(int n = 0; n != args.size(); ++n) {
@@ -5454,7 +5454,7 @@ UNIT_TEST(dot_precedence) {
 	for(int n = 0; n != 10; ++n) {
 		MapFormulaCallable* obj = new MapFormulaCallable;
 		obj->add("value", variant(n));
-		v.push_back(variant(obj));
+		v.emplace_back(obj);
 	}
 	callable2->add("item", variant(&v));
 	callable->add("obj", variant(callable2));
@@ -5588,7 +5588,7 @@ UNIT_TEST(formula_multifunction_types_compatible) {
 UNIT_TEST(formula_list_comprehension) {
 	std::vector<variant> result;
 	for(int n = 0; n != 4; ++n) {
-		result.push_back(variant(n));
+		result.emplace_back(n);
 	}
 
 	CHECK_EQ(Formula(variant("[x | x <- [0,1,2,3]]")).execute(), variant(&result));
@@ -5795,7 +5795,7 @@ BENCHMARK(formula_recurse_sort) {
 
 	std::vector<variant> input;
 	for(int n = 0; n != 100000; ++n) {
-		input.push_back(variant(n));
+		input.emplace_back(n);
 	}
 
 	std::vector<variant> expected_result = input;
@@ -5853,16 +5853,16 @@ COMMAND_LINE_UTILITY(test_multithread_variants) {
 	for(int n = 0; n != 20; ++n) {
 		std::vector<variant> mylist;
 		for(int m = 0; m != 2; ++m) {
-			mylist.push_back(variant(int(rand()%10)));
+			mylist.emplace_back(int(rand()%10));
 		}
 
-		lists.push_back(variant(&mylist));
+		lists.emplace_back(&mylist);
 	}
 
 	for(int n = 0; n != 10; ++n) {
 		std::map<variant,variant> mymap;
 		mymap[variant("a")] = variant(int(rand()%10));
-		lists.push_back(variant(&mymap));
+		lists.emplace_back(&mymap);
 	}
 
 	std::vector<std::thread> threads;

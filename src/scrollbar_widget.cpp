@@ -125,8 +125,8 @@ namespace gui
 		}
 
 		std::vector<variant> args;
-		args.push_back(variant(getEnvironment()));
-		args.push_back(variant(yscroll));
+		args.emplace_back(getEnvironment());
+		args.emplace_back(yscroll);
 
 		variant cmd = on_scroll_fn_(args);
 		getEnvironment()->executeCommand(cmd);

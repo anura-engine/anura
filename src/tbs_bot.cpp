@@ -171,7 +171,7 @@ private:
 			msg[variant("type")] = variant("quit");
 			quit_msg[variant("send")] = variant(&msg);
 
-			script_.push_back(variant(&quit_msg));
+			script_.emplace_back(&quit_msg);
 
 		} else if(msg.is_map() && msg["type"] == variant("bye")) {
 			has_quit_ = true;
@@ -206,7 +206,7 @@ private:
 				}
 				m[variant("value")] = expression_result;
 
-				validations.push_back(variant(&m));
+				validations.emplace_back(&m);
 			}
 		}
 

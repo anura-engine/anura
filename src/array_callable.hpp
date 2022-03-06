@@ -53,7 +53,7 @@ namespace game_logic
 			if(key == "floats" || key == "value") {
 				std::vector<variant> v;
 				for(int n = 0; n < static_cast<int>(f_.size()); ++n) {
-					v.push_back(variant(f_[n]));
+					v.emplace_back(f_[n]);
 				}
 				return variant(&v);
 			} else if(key == "size") {
@@ -89,7 +89,7 @@ namespace game_logic
 			if(key == "shorts" || key == "value") {
 				std::vector<variant> v;
 				for(int n = 0; n < static_cast<int>(s_.size()); ++n) {
-					v.push_back(variant(s_[n]));
+					v.emplace_back(s_[n]);
 				}
 				return variant(&v);
 			} else if(key == "size") {

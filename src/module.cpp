@@ -1267,7 +1267,7 @@ static const int ModuleProtocolVersion = 1;
 			sys::get_files_in_dir(preferences::dlc_path(), &files, &dirs);
 			std::vector<variant> result;
 			for(const std::string& m : dirs) {
-				result.push_back(variant(m));
+				result.emplace_back(m);
 			}
 
 			return variant(&result);

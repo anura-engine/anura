@@ -143,7 +143,7 @@ EditorEntityInfo::EditorEntityInfo(const variant& node)
 	help_(node["help"].as_string_default())
 {
 	for(auto& var_node : node["var"].as_list()) {
-		vars_.push_back(EditorVariableInfo(var_node));
+		vars_.emplace_back(var_node);
 	}
 
 	vars_and_properties_ = vars_;
@@ -201,4 +201,3 @@ void EditorEntityInfo::addProperty(const EditorVariableInfo& prop)
 }
 
 #endif // !NO_EDITOR
-

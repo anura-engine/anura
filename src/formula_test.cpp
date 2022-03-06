@@ -57,7 +57,7 @@ namespace
 				i_[2]->add("strength",variant(14));
 				std::vector<variant> members;
 				for(int n = 0; n != 3; ++n) {
-					members.push_back(variant(i_[n].get()));
+					members.emplace_back(i_[n].get());
 				}
 
 				return variant(&members);

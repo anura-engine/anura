@@ -344,31 +344,31 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 		int x, y;
 		Uint8 button_state = input::sdl_get_mouse_state(&x, &y);
 
-		info.push_back(variant(x));
-		info.push_back(variant(y));
+		info.emplace_back(x);
+		info.emplace_back(y);
 
 		if(button_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-			info.push_back(variant("left"));
+			info.emplace_back("left");
 		}
 
 		if(button_state & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
-			info.push_back(variant("right"));
+			info.emplace_back("right");
 		}
 
 		if(button_state & SDL_BUTTON(SDL_BUTTON_MIDDLE)) {
-			info.push_back(variant("middle"));
+			info.emplace_back("middle");
 		}
 
 		if(button_state & SDL_BUTTON(SDL_BUTTON_X1)) { //these aren't tested
-			info.push_back(variant("x1"));
+			info.emplace_back("x1");
 		}
 
 		if(button_state & SDL_BUTTON(SDL_BUTTON_X2)) {
-			info.push_back(variant("x2"));
+			info.emplace_back("x2");
 		}
 
 		std::vector<variant> result;
-		result.push_back(variant(&info));
+		result.emplace_back(&info);
 		return variant(&result);
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_TILT: {
@@ -398,7 +398,7 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
         for(int i = 0; i < 8; ++i){
             if((*locked_control_frame & (0x01 << i)) ){
 
-                result.push_back( variant(ctrl[i]) );
+                result.emplace_back(ctrl[i]);
             } else {
                 //this key isn't pressed
             }
@@ -527,13 +527,13 @@ variant PlayableCustomObject::getCtrlKeys() const
 			SDL_Keycode k = SDL_GetKeyFromScancode(SDL_Scancode(count));
 			if(k < 128 && util::c_isprint(k)) {
 				std::string str(1,k);
-				result.push_back(variant(str));
+				result.emplace_back(str);
 			} else {
 				const char* name = SDL_GetKeyName(k);
 				if(*name) {
-					result.push_back(variant(std::string(name)));
+					result.emplace_back(std::string(name));
 				} else {
-					result.push_back(variant(k));
+					result.emplace_back(k);
 				}
 			}
 		}

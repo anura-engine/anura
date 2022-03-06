@@ -152,7 +152,7 @@ namespace editor_dialogs
 				if(mod.included_modules_.empty() == false) {
 					std::vector<variant> v;
 					for(const std::string& s : mod.included_modules_) {
-						v.push_back(variant(s));
+						v.emplace_back(s);
 					}
 					m[variant("dependencies")] = variant(&v);
 				}

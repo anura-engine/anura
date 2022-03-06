@@ -406,7 +406,7 @@ namespace
 		variant properties = proto_properties + node_properties;
 		if(override_properties.empty() == false) {
 			std::vector<variant> overrides;
-			overrides.push_back(variant(&override_properties));
+			overrides.emplace_back(&override_properties);
 			properties = properties + variant(&overrides);
 		}
 
@@ -442,13 +442,13 @@ namespace
 
 			std::string parent = p.second;
 			const int parent_id = CustomObjectType::getObjectTypeIndex(parent);
-			ancestry_index().push_back(std::pair<int,int>(child_id, parent_id));
+			ancestry_index().emplace_back(child_id, parent_id);
 
 			auto itor = object_type_inheritance().find(parent);
 			while(itor != object_type_inheritance().end()) {
 				parent = itor->second;
 				const int parent_id = CustomObjectType::getObjectTypeIndex(parent);
-				ancestry_index().push_back(std::pair<int,int>(child_id, parent_id));
+				ancestry_index().emplace_back(child_id, parent_id);
 				itor = object_type_inheritance().find(parent);
 			}
 		}
@@ -730,7 +730,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 		std::vector<variant> protos;
 
 		while(prototype_derived_from != "") {
-			protos.push_back(variant(prototype_derived_from));
+			protos.emplace_back(prototype_derived_from);
 			auto it = object_type_inheritance().find(prototype_derived_from);
 			if(it == object_type_inheritance().end()) {
 				break;
@@ -740,7 +740,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 
 		std::vector<variant> args;
 		args.push_back(node);
-		args.push_back(variant(&protos));
+		args.emplace_back(&protos);
 
 		variant result = f(args);
 		ASSERT_LOG(result.is_null(), "Object validation failed for object " << id_ << ": " << result.as_string());
@@ -1096,7 +1096,7 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 			summary[variant("mod")] = variant(mod_time);
 			std::vector<variant> proto_paths_v;
 			for(const std::string& s : proto_paths) {
-				proto_paths_v.push_back(variant(s));
+				proto_paths_v.emplace_back(s);
 			}
 
 			summary[variant("prototype_paths")] = variant(&proto_paths_v);
@@ -1552,7 +1552,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	std::vector<variant> available_frames;
 	for(frame_map::const_iterator i = frames_.begin(); i != frames_.end(); ++i) {
-		available_frames.push_back(variant(i->first));
+		available_frames.emplace_back(i->first);
 	}
 
 	available_frames_ = variant(&available_frames);

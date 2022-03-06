@@ -410,11 +410,11 @@ Level::Level(const std::string& level_cfg, variant node)
 	}
 
 	for(variant v : node["sub_components"].as_list_optional()) {
-		sub_components_.push_back(SubComponent(v));
+		sub_components_.emplace_back(v);
 	}
 
 	for(variant v : node["sub_component_usages"].as_list_optional()) {
-		sub_component_usages_.push_back(SubComponentUsage(v));
+		sub_component_usages_.emplace_back(v);
 	}
 
 	if(preferences::load_compiled() && (level_cfg == "save.cfg" || level_cfg == "autosave.cfg")) {
@@ -1764,7 +1764,7 @@ variant Level::write() const
 		int id = 0;
 		while(p) {
 			if(p&1L) {
-				out.push_back(variant(graphics::get_palette_name(id)));
+				out.emplace_back(graphics::get_palette_name(id));
 			}
 
 			p >>= 1;
@@ -3337,10 +3337,10 @@ std::vector<point> Level::get_solid_contiguous_region(int xpos, int ypos) const
 
 		std::vector<tile_pos> new_positions;
 		for(const tile_pos& pos : positions) {
-			new_positions.push_back(std::make_pair(pos.first-1, pos.second));
-			new_positions.push_back(std::make_pair(pos.first+1, pos.second));
-			new_positions.push_back(std::make_pair(pos.first, pos.second-1));
-			new_positions.push_back(std::make_pair(pos.first, pos.second+1));
+			new_positions.emplace_back(pos.first-1, pos.second);
+			new_positions.emplace_back(pos.first+1, pos.second);
+			new_positions.emplace_back(pos.first, pos.second-1);
+			new_positions.emplace_back(pos.first, pos.second+1);
 		}
 
 		for(const tile_pos& pos : new_positions) {
@@ -3806,19 +3806,19 @@ DEFINE_FIELD(num_active, "int")
 DEFINE_FIELD(active_chars, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.active_chars_) {
-		v.push_back(variant(e.get()));
+		v.emplace_back(e.get());
 	}
 	return variant(&v);
 DEFINE_FIELD(chars, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.chars_) {
-		v.push_back(variant(e.get()));
+		v.emplace_back(e.get());
 	}
 	return variant(&v);
 DEFINE_FIELD(players, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.players()) {
-		v.push_back(variant(e.get()));
+		v.emplace_back(e.get());
 	}
 	return variant(&v);
 DEFINE_SET_FIELD
@@ -3853,7 +3853,7 @@ obj.instant_zoom_level_set_ = obj.cycle_;
 DEFINE_FIELD(focus, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.focus_override_) {
-		v.push_back(variant(e.get()));
+		v.emplace_back(e.get());
 	}
 	return variant(&v);
 DEFINE_SET_FIELD
@@ -3871,10 +3871,10 @@ DEFINE_FIELD(id, "string")
 
 DEFINE_FIELD(dimensions, "[int,int,int,int]")
 	std::vector<variant> v;
-	v.push_back(variant(obj.boundaries_.x()));
-	v.push_back(variant(obj.boundaries_.y()));
-	v.push_back(variant(obj.boundaries_.x2()));
-	v.push_back(variant(obj.boundaries_.y2()));
+	v.emplace_back(obj.boundaries_.x());
+	v.emplace_back(obj.boundaries_.y());
+	v.emplace_back(obj.boundaries_.x2());
+	v.emplace_back(obj.boundaries_.y2());
 	return variant(&v);
 DEFINE_SET_FIELD
 	ASSERT_EQ(value.num_elements(), 4);
@@ -3925,7 +3925,7 @@ DEFINE_SET_FIELD
 DEFINE_FIELD(chars_immune_from_time_freeze, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.chars_immune_from_time_freeze_) {
-		v.push_back(variant(e.get()));
+		v.emplace_back(e.get());
 	}
 	return variant(&v);
 DEFINE_SET_FIELD
@@ -3947,12 +3947,12 @@ DEFINE_FIELD(num_segments, "int")
 DEFINE_FIELD(camera_position, "[int, int, int, int]")
 	std::vector<variant> pos;
 	pos.reserve(4);
-	pos.push_back(variant(last_draw_position().x/100));
-	pos.push_back(variant(last_draw_position().y/100));
+	pos.emplace_back(last_draw_position().x/100);
+	pos.emplace_back(last_draw_position().y/100);
 
 	auto& gs = graphics::GameScreen::get();
-	pos.push_back(variant(gs.getVirtualWidth()));
-	pos.push_back(variant(gs.getVirtualHeight()));
+	pos.emplace_back(gs.getVirtualWidth());
+	pos.emplace_back(gs.getVirtualHeight());
 	return variant(&pos);
 DEFINE_SET_FIELD_TYPE("[decimal,decimal]")
 
@@ -3964,8 +3964,8 @@ DEFINE_FIELD(camera_target, "[int,int]")
 	std::vector<variant> pos;
 	pos.reserve(2);
 
-	pos.push_back(variant(last_draw_position().target_xpos));
-	pos.push_back(variant(last_draw_position().target_ypos));
+	pos.emplace_back(last_draw_position().target_xpos);
+	pos.emplace_back(last_draw_position().target_ypos);
 
 	return variant(&pos);
 
@@ -3995,7 +3995,7 @@ DEFINE_FIELD(is_paused, "bool")
 DEFINE_FIELD(editor_selection, "[custom_obj]")
 	std::vector<variant> result;
 	for(EntityPtr s : obj.editor_selection_) {
-		result.push_back(variant(s.get()));
+		result.emplace_back(s.get());
 	}
 
 	return variant(&result);
@@ -4010,7 +4010,7 @@ DEFINE_FIELD(frame_buffer_shaders, "[{begin_zorder: int, end_zorder: int, shader
 		m[variant("shader_info")] = e.shader_node;
 
 		m[variant("shader")] = variant(e.shader.get());
-		v.push_back(variant(&m));
+		v.emplace_back(&m);
 	}
 
 	obj.fb_shaders_variant_ = variant(&v);
@@ -4050,8 +4050,8 @@ DEFINE_FIELD(preferences, "object")
 DEFINE_FIELD(lock_screen, "null|[int]")
 	if(obj.lock_screen_.get()) {
 		std::vector<variant> v;
-		v.push_back(variant(obj.lock_screen_->x));
-		v.push_back(variant(obj.lock_screen_->y));
+		v.emplace_back(obj.lock_screen_->x);
+		v.emplace_back(obj.lock_screen_->y);
 		return variant(&v);
 	} else {
 		return variant();
@@ -4131,7 +4131,7 @@ DEFINE_SET_FIELD_TYPE("null|map")
 DEFINE_FIELD(hex_masks, "[builtin mask_node]")
 	std::vector<variant> result;
 	for(auto mask : obj.hex_masks_) {
-		result.emplace_back(variant(mask.get()));
+		result.emplace_back(mask.get());
 	}
 
 	return variant(&result);
@@ -4781,7 +4781,7 @@ bool Level::relocate_object(EntityPtr e, int new_x, int new_y)
 						if(p.size() == 2) {
 							p[0] = variant(p[0].as_int() + delta_x);
 							p[1] = variant(p[1].as_int() + delta_y);
-							new_value.push_back(variant(&p));
+							new_value.emplace_back(&p);
 						}
 					}
 					e->handleEvent("editor_changing_variable");

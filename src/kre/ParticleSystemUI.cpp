@@ -78,8 +78,8 @@ namespace KRE
 
 				if(t == ParameterType::CURVED_LINEAR || t == ParameterType::CURVED_SPLINE) {
 					geometry::control_point_vector v;
-					v.push_back(geometry::control_point(0.0f, 0.0f));
-					v.push_back(geometry::control_point(1.0f, 1.0f));
+					v.emplace_back(0.0f, 0.0f);
+					v.emplace_back(1.0f, 1.0f);
 					param->setControlPoints(t == ParameterType::CURVED_LINEAR ? InterpolationType::LINEAR : InterpolationType::SPLINE, v);
 				}
 

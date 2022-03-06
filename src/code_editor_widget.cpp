@@ -119,7 +119,7 @@ namespace gui
 				std::vector<std::vector<std::pair<int, int> > > opening_brackets;
 
 				if(!is_formula_) {
-					colors_.back().push_back(KRE::Color(196, 196, 196));
+					colors_.back().emplace_back(196, 196, 196);
 				}
 				++i;
 				std::string::const_iterator end = i;
@@ -143,7 +143,7 @@ namespace gui
 							case formula_tokenizer::FFL_TOKEN_TYPE::LSQUARE:
 							case formula_tokenizer::FFL_TOKEN_TYPE::LBRACKET:
 								opening_brackets.resize(opening_brackets.size()+1);
-								opening_brackets.back().push_back(std::pair<int,int>(static_cast<int>(colors_.size())-1, static_cast<int>(colors_.back().size())));
+								opening_brackets.back().emplace_back(static_cast<int>(colors_.size())-1, static_cast<int>(colors_.back().size()));
 								break;
 							case formula_tokenizer::FFL_TOKEN_TYPE::RPARENS:
 							case formula_tokenizer::FFL_TOKEN_TYPE::RSQUARE:
@@ -151,7 +151,7 @@ namespace gui
 								if(opening_brackets.empty()) {
 									error_color = true;
 								} else {
-									opening_brackets.back().push_back(std::pair<int,int>(static_cast<int>(colors_.size())-1, static_cast<int>(colors_.back().size())));
+									opening_brackets.back().emplace_back(static_cast<int>(colors_.size())-1, static_cast<int>(colors_.back().size()));
 									std::pair<int,int> key(static_cast<int>(colors_.size())-1, static_cast<int>(colors_.back().size()));
 									for(int n = 0; n != opening_brackets.back().size(); ++n) {
 										bracket_match_[opening_brackets.back()[n]] = opening_brackets.back();
@@ -161,7 +161,7 @@ namespace gui
 								break;
 							case formula_tokenizer::FFL_TOKEN_TYPE::COMMA:
 								if(opening_brackets.empty() == false) {
-									opening_brackets.back().push_back(std::pair<int,int>(static_cast<int>(colors_.size())-1, static_cast<int>(colors_.back().size())));
+									opening_brackets.back().emplace_back(static_cast<int>(colors_.size())-1, static_cast<int>(colors_.back().size()));
 								}
 								break;
 							default:
@@ -229,12 +229,12 @@ namespace gui
 						if(*i == '\n') {
 							colors_.resize(colors_.size()+1);
 						} else {
-							colors_.back().push_back(KRE::Color(196, 196, 196));
+							colors_.back().emplace_back(196, 196, 196);
 						}
 						++i;
 					}
 
-					colors_.back().push_back(KRE::Color(196, 196, 196));
+					colors_.back().emplace_back(196, 196, 196);
 					i = end + 1;
 				}
 
@@ -303,19 +303,19 @@ namespace gui
 				slider_range_.clear();
 				slider_labels_.clear();
 				if(current_value > 0) {
-					slider_range_.push_back(SliderRange(0.0f, 0.1f, -current_value*5, -current_value));
-					slider_range_.push_back(SliderRange(0.1f, 0.2f, -current_value, decimal(0)));
-					slider_range_.push_back(SliderRange(0.2f, 0.3f, decimal(0), current_value));
-					slider_range_.push_back(SliderRange(0.3f, 0.5f, decimal(0), current_value));
-					slider_range_.push_back(SliderRange(0.5f, 0.7f, current_value, 2*current_value));
-					slider_range_.push_back(SliderRange(0.7f, 0.9f, 2*current_value, 5*current_value));
-					slider_range_.push_back(SliderRange(0.9f, 1.0f, 5*current_value, 10*current_value));
-					slider_range_.push_back(SliderRange(1.0f, 2.0f, 10*current_value, 20*current_value));
+					slider_range_.emplace_back(0.0f, 0.1f, -current_value*5, -current_value);
+					slider_range_.emplace_back(0.1f, 0.2f, -current_value, decimal(0));
+					slider_range_.emplace_back(0.2f, 0.3f, decimal(0), current_value);
+					slider_range_.emplace_back(0.3f, 0.5f, decimal(0), current_value);
+					slider_range_.emplace_back(0.5f, 0.7f, current_value, 2*current_value);
+					slider_range_.emplace_back(0.7f, 0.9f, 2*current_value, 5*current_value);
+					slider_range_.emplace_back(0.9f, 1.0f, 5*current_value, 10*current_value);
+					slider_range_.emplace_back(1.0f, 2.0f, 10*current_value, 20*current_value);
 					slider_->setPosition(0.5f);
 				} else {
-					slider_range_.push_back(SliderRange(0.0f, 0.5f, current_value*2, decimal(0)));
-					slider_range_.push_back(SliderRange(0.5f, 1.0f, decimal(0), -current_value*2));
-					slider_range_.push_back(SliderRange(1.0f, 2.0f, -current_value*2, -current_value*4));
+					slider_range_.emplace_back(0.0f, 0.5f, current_value*2, decimal(0));
+					slider_range_.emplace_back(0.5f, 1.0f, decimal(0), -current_value*2);
+					slider_range_.emplace_back(1.0f, 2.0f, -current_value*2, -current_value*4);
 					slider_->setPosition(0.25f);
 				}
 
@@ -346,7 +346,7 @@ namespace gui
 				slider_->setLoc(x, y);
 
 				for(SliderRange& r : slider_range_) {
-					slider_labels_.push_back(WidgetPtr(new gui::Label(formatter() << r.target_begin, 10)));
+					slider_labels_.emplace_back(new gui::Label(formatter() << r.target_begin, 10));
 					slider_labels_.back()->setLoc(static_cast<int>(x + slider_->width()*r.begin) - slider_labels_.back()->width()/2, y);
 				}
 			}
@@ -597,4 +597,3 @@ namespace gui
 		preferences::save_preferences();
 	}
 }
-

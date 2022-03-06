@@ -376,7 +376,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 		case OP_PUSH_INT: {
 			++p;
-			stack.push_back(variant(static_cast<int>(*p)));
+			stack.emplace_back(static_cast<int>(*p));
 			break;
 		}
 
@@ -549,7 +549,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 				for(; i1 != i2; ++i1) {
 					std::string str(i1.get_char_as_string());
-					v.push_back(variant(str));
+					v.emplace_back(str);
 				}
 
 				stack.back() = variant(&v);
@@ -562,7 +562,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 				if(input.empty()) {
 					std::vector<variant> res;
-					stack.push_back(variant(&res));
+					stack.emplace_back(&res);
 					p += *(p+1);
 					break;
 				}
@@ -588,7 +588,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 				stack.resize(stack.size() - index);
 
-				stack.push_back(variant(&res));
+				stack.emplace_back(&res);
 
 				p += *(p+1);
 			} else if(stack.back().is_map()) {
@@ -598,7 +598,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 				if(input.empty()) {
 					std::vector<variant> res;
-					stack.push_back(variant(&res));
+					stack.emplace_back(&res);
 					p += *(p+1);
 					break;
 				}
@@ -624,7 +624,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 				stack.resize(stack.size() - index);
 
-				stack.push_back(variant(&res));
+				stack.emplace_back(&res);
 
 				p += *(p+1);
 			} else if(stack.back().is_callable()) {
@@ -665,7 +665,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 				if(input.empty()) {
 					std::vector<variant> res;
-					stack.push_back(variant(&res));
+					stack.emplace_back(&res);
 					p += *(p+1);
 					break;
 				}
@@ -698,7 +698,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 				variables_stack.pop_back();
 
-				stack.push_back(variant(&res));
+				stack.emplace_back(&res);
 
 				p += *(p+1);
 
@@ -709,7 +709,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 				if(input.empty()) {
 					std::map<variant,variant> res;
-					stack.push_back(variant(&res));
+					stack.emplace_back(&res);
 					p += *(p+1);
 					break;
 				}
@@ -740,7 +740,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 				variables_stack.pop_back();
 
-				stack.push_back(variant(&res));
+				stack.emplace_back(&res);
 
 				p += *(p+1);
 			} else {
@@ -789,12 +789,12 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 			if(index == items.size()) {
 				index = -1;
-				stack.push_back(variant());
+				stack.emplace_back();
 			} else {
 				stack.push_back(items[index]);
 			}
 
-			stack.push_back(variant(index));
+			stack.emplace_back(index);
 
 			p += *(p+1);
 
@@ -825,7 +825,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 			if(exit_loop) {
 				std::vector<variant> res;
-				stack.push_back(variant(&res));
+				stack.emplace_back(&res);
 				p += *(p+1);
 				break;
 			}
@@ -865,7 +865,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 			std::vector<variant> res(stack.begin() + start_stack, stack.end());
 			stack.resize(start_stack);
-			stack.push_back(variant(&res));
+			stack.emplace_back(&res);
 
 			p += *(p+1);
 
@@ -902,17 +902,17 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 		}
 
 		case OP_PUSH_NULL: {
-			stack.push_back(variant());
+			stack.emplace_back();
 			break;
 		}
 
 		case OP_PUSH_0: {
-			stack.push_back(variant(0));
+			stack.emplace_back(0);
 			break;
 		}
 
 		case OP_PUSH_1: {
-			stack.push_back(variant(1));
+			stack.emplace_back(1);
 			break;
 		}
 

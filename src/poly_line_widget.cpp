@@ -115,9 +115,9 @@ namespace gui
 			std::vector<variant> v;
 			for(auto& p : obj.points_) {
 				std::vector<variant> pp;
-				pp.emplace_back(variant(p.x));
-				pp.emplace_back(variant(p.y));
-				v.emplace_back(variant(&pp));
+				pp.emplace_back(p.x);
+				pp.emplace_back(p.y);
+				v.emplace_back(&pp);
 			}
 			return variant(&v);
 		DEFINE_SET_FIELD

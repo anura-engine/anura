@@ -289,8 +289,8 @@ namespace json
 			const char* i2 = i1 + doc.size();
 			try {
 				std::vector<JsonObject> stack;
-				stack.push_back(JsonObject(debug_info, use_preprocessor));
-				stack.push_back(JsonObject(debug_info, use_preprocessor));
+				stack.emplace_back(debug_info, use_preprocessor);
+				stack.emplace_back(debug_info, use_preprocessor);
 				stack[0].type = VAL_TYPE::ARRAY;
 
 				for(Token t = get_token(i1, i2); t.type != Token::TYPE::NUM_TYPES; t = get_token(i1, i2)) {
@@ -331,7 +331,7 @@ namespace json
 
 					case Token::TYPE::LCURLY: {
 						if(stack.back().type == VAL_TYPE::ARRAY) {
-							stack.push_back(JsonObject(debug_info, use_preprocessor));
+							stack.emplace_back(debug_info, use_preprocessor);
 							stack.back().setup_base(stack[stack.size()-2].base);
 						}
 
@@ -374,7 +374,7 @@ namespace json
 
 					case Token::TYPE::LSQUARE: {
 						if(stack.back().type == VAL_TYPE::ARRAY) {
-							stack.push_back(JsonObject(debug_info, use_preprocessor));
+							stack.emplace_back(debug_info, use_preprocessor);
 						}
 
 						CHECK_PARSE(stack.back().type == VAL_TYPE::NONE, "Unexpected [", t.begin - doc.c_str());
@@ -477,7 +477,7 @@ namespace json
 								CHECK_PARSE(false, "Repeated attribute: " + v.write_json(), t.begin - doc.c_str());
 							}
 
-							stack.push_back(JsonObject(str_debug_info, use_preprocessor));
+							stack.emplace_back(str_debug_info, use_preprocessor);
 							v.setDebugInfo(str_debug_info);
 							stack.back().name = v;
 							stack.back().require_colon = true;

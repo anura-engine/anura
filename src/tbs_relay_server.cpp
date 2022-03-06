@@ -47,7 +47,7 @@ class tbs_relay_server : public http::web_server
 				}
 			}
 
-			requests.push_back(SessionRequestPair());
+			requests.emplace_back();
 			LOG_INFO("Add new pair: " << requests.size());
 			requests.back().outgoing_socket = outgoing_socket;
 			return requests.back();
@@ -67,7 +67,7 @@ class tbs_relay_server : public http::web_server
 				}
 			}
 
-			requests.push_back(SessionRequestPair());
+			requests.emplace_back();
 			LOG_INFO("Add new pair: " << requests.size());
 			requests.back().incoming_socket = incoming_socket;
 			return requests.back();

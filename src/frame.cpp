@@ -131,10 +131,10 @@ void Frame::buildPatterns(variant obj_variant)
 		ffl::IntrusivePtr<TextureObject> tex_obj(new TextureObject(tex));
 
 		std::vector<variant> area;
-		area.emplace_back(variant(0));
-		area.emplace_back(variant(0));
-		area.emplace_back(variant(surfaces.front()->width()-1));
-		area.emplace_back(variant(surfaces.front()->height()-1));
+		area.emplace_back(0);
+		area.emplace_back(0);
+		area.emplace_back(surfaces.front()->width()-1);
+		area.emplace_back(surfaces.front()->height()-1);
 
 		item.add_attr_mutation(variant("fbo"), variant(tex_obj.get()));
 		item.add_attr_mutation(variant("image"), variant("fbo"));

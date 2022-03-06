@@ -84,7 +84,7 @@ namespace game_logic
 				return;
 			}
 
-			ptr_.push_back(FormulaCallableSuspendedPtr(new FormulaCallableSuspendedImpl<T>(ref)));
+			ptr_.emplace_back(new FormulaCallableSuspendedImpl<T>(ref));
 
 			visit(**ref);
 		}

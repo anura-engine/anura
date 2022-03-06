@@ -1003,7 +1003,7 @@ namespace
 			}
 
 			if(json::file_exists_and_is_valid(std::string(preferences::user_data_path()) + "/" + fname)) {
-				result.push_back(variant(slot));
+				result.emplace_back(slot);
 			}
 		}
 
@@ -1747,7 +1747,7 @@ namespace
 				variant value = properties[keys[n]];
 
 				if(std::binary_search(properties_with_setter.begin(), properties_with_setter.end(), slot - type_ptr->getSlotPropertiesBase())) {
-					deferred_properties.push_back(std::pair<int,variant>(slot, value));
+					deferred_properties.emplace_back(slot, value);
 					continue;
 				}
 
@@ -2005,7 +2005,7 @@ namespace
 				variant value = properties[keys[n]];
 
 				if(std::binary_search(properties_with_setter.begin(), properties_with_setter.end(), slot - type_ptr->getSlotPropertiesBase())) {
-					deferred_properties.push_back(std::pair<int,variant>(slot, value));
+					deferred_properties.emplace_back(slot, value);
 					continue;
 				}
 
@@ -2258,7 +2258,7 @@ namespace
 	FUNCTION_DEF(debug_all_custom_objects, 0, 0, "debug_all_custom_objects(): gets access to all custom objects in memory")
 		std::vector<variant> v;
 		for(CustomObject* obj : CustomObject::getAll()) {
-			v.push_back(variant(obj));
+			v.emplace_back(obj);
 		}
 
 		return variant(&v);
@@ -2447,8 +2447,8 @@ RETURN_TYPE("bool")
 
 			if(point_standable(*lvl, *obj, xpos, ypos, nullptr, SOLID_ONLY)) {
 				std::vector<variant> res;
-				res.push_back(variant(xpos));
-				res.push_back(variant(ypos));
+				res.emplace_back(xpos);
+				res.emplace_back(ypos);
 				return variant(&res);
 			}
 		}
@@ -2489,8 +2489,8 @@ RETURN_TYPE("bool")
 
 			if(!point_standable(*lvl, *obj, xpos, ypos, nullptr, SOLID_ONLY)) {
 				std::vector<variant> res;
-				res.push_back(variant(xpos));
-				res.push_back(variant(ypos));
+				res.emplace_back(xpos);
+				res.emplace_back(ypos);
 				return variant(&res);
 			}
 		}
@@ -2532,8 +2532,8 @@ RETURN_TYPE("bool")
 		}
 
 		std::vector<variant> res;
-		res.push_back(variant(x));
-		res.push_back(variant(y));
+		res.emplace_back(x);
+		res.emplace_back(y);
 		return variant(&res);
 
 	return variant(point_standable(*lvl, *obj, x, y, nullptr, SOLID_ONLY));
@@ -2598,8 +2598,8 @@ RETURN_TYPE("bool")
 			if(point_standable(*lvl, *obj, entities, x, y)) {
 				std::vector<variant> result;
 				result.reserve(2);
-				result.push_back(variant(x));
-				result.push_back(variant(y));
+				result.emplace_back(x);
+				result.emplace_back(y);
 				return variant(&result);
 			}
 
@@ -2741,7 +2741,7 @@ RETURN_TYPE("bool")
 
 		std::pair<Level::TileItor, Level::TileItor> range = Level::current().tiles_at_loc(EVAL_ARG(0).as_int(), EVAL_ARG(1).as_int());
 		while(range.first != range.second) {
-			v.push_back(variant(range.first->object));
+			v.emplace_back(range.first->object);
 			++range.first;
 		}
 
@@ -2797,7 +2797,7 @@ RETURN_TYPE("bool")
 			std::vector<variant> res;
 			res.reserve(v.size());
 			for(const EntityPtr& e : v){
-				res.push_back(variant(e.get()));
+				res.emplace_back(e.get());
 			}
 			//for(int n = 0; n != v.size(); ++n) {
 			//	res.push_back(variant(v[n].get()));
@@ -2923,7 +2923,7 @@ RETURN_TYPE("bool")
 				}
 				transient_speech_dialog_command* cmd = new transient_speech_dialog_command(speaker, str, duration);
 				cmd->setExpression(this);
-				result.push_back(variant(cmd));
+				result.emplace_back(cmd);
 			} else {
 				ASSERT_LOG(false, "UNRECOGNIZED ARGUMENT to transient_speech_dialog: " << v.to_debug_string());
 			}

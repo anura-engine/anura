@@ -787,11 +787,11 @@ void detect_user_collisions(Level& lvl)
 
 			for(int n = 0; n != ncollisions; ++n) {
 				{
-					collision_info[collision_key(a, collision_buf[n].first)].push_back(collision_key(b, collision_buf[n].second));
+					collision_info[collision_key(a, collision_buf[n].first)].emplace_back(b, collision_buf[n].second);
 				}
 
 				{
-					collision_info[collision_key(b, collision_buf[n].second)].push_back(collision_key(a, collision_buf[n].first));
+					collision_info[collision_key(b, collision_buf[n].second)].emplace_back(a, collision_buf[n].first);
 				}
 			}
 		}
@@ -804,7 +804,7 @@ void detect_user_collisions(Level& lvl)
 		int index = 0;
 		for(const collision_key& k : i->second) {
 			v.push_back(ffl::IntrusivePtr<UserCollisionCallable>(new UserCollisionCallable(i->first.first, k.first, *i->first.second, *k.second, index)));
-			all_callables.push_back(variant(v.back().get()));
+			all_callables.emplace_back(v.back().get());
 			++index;
 		}
 

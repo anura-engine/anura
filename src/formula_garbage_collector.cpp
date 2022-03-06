@@ -418,7 +418,7 @@ void GarbageCollectorImpl::debugOutputCollected()
 
 	std::vector<std::pair<int, std::string> > obj_counts_sorted;
 	for(auto p : obj_counts) {
-		obj_counts_sorted.push_back(std::pair<int, std::string>(p.second, p.first));
+		obj_counts_sorted.emplace_back(p.second, p.first);
 	}
 
 	int ncount = 0;
@@ -703,7 +703,7 @@ void GarbageCollectorAnalyzer::run(const char* fname)
 
 	std::vector<std::pair<int, std::string> > obj_counts_sorted;
 	for(auto p : obj_counts) {
-		obj_counts_sorted.push_back(std::pair<int, std::string>(p.second, p.first));
+		obj_counts_sorted.emplace_back(p.second, p.first);
 	}
 
 	std::sort(obj_counts_sorted.begin(), obj_counts_sorted.end());

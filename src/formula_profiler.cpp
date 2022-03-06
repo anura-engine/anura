@@ -228,7 +228,7 @@ public:
 
 		std::vector<std::pair<uint64_t, const char*> > ids;
 		for(auto p : id_to_time_) {
-			ids.push_back(std::pair<uint64_t,const char*>(p.second, p.first));
+			ids.emplace_back(p.second, p.first);
 		}
 
 		std::sort(ids.begin(), ids.end());
@@ -1350,7 +1350,7 @@ namespace formula_profiler
 
 			std::vector<std::pair<int, std::string> > sorted_samples, cum_sorted_samples;
 			for(std::map<std::string, int>::const_iterator i = samples_map.begin(); i != samples_map.end(); ++i) {
-				sorted_samples.push_back(std::pair<int, std::string>(i->second, i->first));
+				sorted_samples.emplace_back(i->second, i->first);
 			}
 
 			std::sort(sorted_samples.begin(), sorted_samples.end());
@@ -1392,11 +1392,11 @@ namespace formula_profiler
 			}
 
 			for(std::map<const game_logic::FormulaExpression*, int>::const_iterator i = expr_samples.begin(); i != expr_samples.end(); ++i) {
-				sorted_samples.push_back(std::pair<int, std::string>(i->second, formatter() << i->first->debugPinpointLocation() << " (called " << double(i->first->getNTimesCalled())/double(nframes_profiled) << " times per frame)"));
+				sorted_samples.emplace_back(i->second, formatter() << i->first->debugPinpointLocation() << " (called " << double(i->first->getNTimesCalled())/double(nframes_profiled) << " times per frame)");
 			}
 
 			for(std::map<const game_logic::FormulaExpression*, int>::const_iterator i = cum_expr_samples.begin(); i != cum_expr_samples.end(); ++i) {
-				cum_sorted_samples.push_back(std::pair<int, std::string>(i->second, formatter() << i->first->debugPinpointLocation() << " (called " << double(i->first->getNTimesCalled())/double(nframes_profiled) << " times per frame)"));
+				cum_sorted_samples.emplace_back(i->second, formatter() << i->first->debugPinpointLocation() << " (called " << double(i->first->getNTimesCalled())/double(nframes_profiled) << " times per frame)");
 			}
 
 			std::sort(sorted_samples.begin(), sorted_samples.end());
@@ -1520,7 +1520,7 @@ namespace formula_profiler
 		int count = 0;
 		for(int n = last_num_samples; n < num_samples; ++n) {
 			if(n+1 == num_samples || event_call_stack_samples[n].type != event_call_stack_samples[n+1].type) {
-				samples.push_back(std::pair<int, std::string>(count + 1, event_call_stack_samples[n].type->id()));
+				samples.emplace_back(count + 1, event_call_stack_samples[n].type->id());
 				count = 0;
 			} else {
 				++count;
@@ -1569,7 +1569,7 @@ namespace formula_profiler
 				m[variant("width")] = variant(s->width());
 				m[variant("height")] = variant(s->height());
 				m[variant("kb_usage")] = variant((s->width()*s->height()*4)/1024);
-				result.push_back(variant(&m));
+				result.emplace_back(&m);
 			}
 		}
 

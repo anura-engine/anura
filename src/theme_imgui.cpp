@@ -127,8 +127,8 @@ ImVec2 variant_to_vec2(const variant& v)
 variant vec2_to_variant(const ImVec2& v)
 {
 	std::vector<variant> res;
-	res.emplace_back(variant(v.x));
-	res.emplace_back(variant(v.y));
+	res.emplace_back(v.x);
+	res.emplace_back(v.y);
 	return variant(&res);
 }
 

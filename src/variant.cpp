@@ -4490,8 +4490,8 @@ UNIT_TEST(function_call_valid_passing_excess_arguments_is_invalid) {
 	check::type_is_function(execution_result);
 	const variant function = execution_result;
 	std::vector<variant> args;
-	args.push_back(variant(0));
-	args.push_back(variant("a"));
+	args.emplace_back(0);
+	args.emplace_back("a");
 	std::string message;
 	message.resize(128);
 	const bool call_valid = function.function_call_valid(args, & message, false);
@@ -4507,7 +4507,7 @@ UNIT_TEST(function_call_valid_passing_argument_of_unexpected_type_is_invalid) {
 	check::type_is_function(execution_result);
 	const variant function = execution_result;
 	std::vector<variant> args;
-	args.push_back(variant(decimal::from_string("0.32993")));
+	args.emplace_back(decimal::from_string("0.32993"));
 	std::string message;
 	message.resize(128);
 	const bool call_valid = function.function_call_valid(args, & message, false);
@@ -4523,9 +4523,9 @@ UNIT_TEST(function_call_passing_wrong_number_of_arguments_generates_error) {
 	check::type_is_function(execution_result);
 	const variant function = execution_result;
 	std::vector<variant> args;
-	args.push_back(variant(0));
-	args.push_back(variant(1));
-	args.push_back(variant(decimal::from_string("0.32993")));
+	args.emplace_back(0);
+	args.emplace_back(1);
+	args.emplace_back(decimal::from_string("0.32993"));
 	bool excepted = false;
 	{
 		const assert_recover_scope unit_test_exception_expected;
@@ -4617,7 +4617,7 @@ UNIT_TEST(empty_list_variant_as_list_ref_FAILS) {
 
 UNIT_TEST(list_variant_as_list_ref) {
 	std::vector<variant> variants_vector;
-	variants_vector.push_back(variant(32993));
+	variants_vector.emplace_back(32993);
 	const variant empty_list(& variants_vector);
 	check::type_is_list(empty_list);
 	const std::vector<variant> vector = empty_list.as_list_ref();
@@ -4711,8 +4711,8 @@ UNIT_TEST(string_variant_plus_int_variant) {
 
 UNIT_TEST(list_variant_plus_string_variant) {
 	std::vector<variant> variants_vector;
-	variants_vector.push_back(variant(1));
-	variants_vector.push_back(variant(2));
+	variants_vector.emplace_back(1);
+	variants_vector.emplace_back(2);
 	const variant list_variant(& variants_vector);
 	const std::string string = "null";
 	const variant string_variant(string);
@@ -5030,8 +5030,8 @@ UNIT_TEST(deserialize_string_variant_from_crashy_formula_in_string) {
 
 UNIT_TEST(list_variant_refcount_0) {
 	std::vector<variant> variants_vector;
-	variants_vector.push_back(variant("tdfgdsfgdfsdfgdsfgdsf33gg"));
-	variants_vector.push_back(variant(2534564567452436457586222.0));
+	variants_vector.emplace_back("tdfgdsfgdfsdfgdsfgdsf33gg");
+	variants_vector.emplace_back(2534564567452436457586222.0);
 	const variant list_variant(& variants_vector);
 	const uint_fast8_t refs_count = list_variant.refcount();
 	CHECK_EQ(1, refs_count);
@@ -5039,7 +5039,7 @@ UNIT_TEST(list_variant_refcount_0) {
 
 UNIT_TEST(list_variant_refcount_1) {
 	std::vector<variant> variants_vector;
-	variants_vector.push_back(variant("3454536-----'sdfasdfasdf3"));
+	variants_vector.emplace_back("3454536-----'sdfasdfasdf3");
 	const variant list_variant(& variants_vector);
 	const uint_fast8_t refs_count = list_variant.refcount();
 	CHECK_EQ(1, refs_count);

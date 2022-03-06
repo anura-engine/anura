@@ -316,7 +316,7 @@ namespace gui
 			Loc a(n, begin_col);
 			Loc b(n, end_col);
 
-			search_matches_.push_back(std::pair<Loc,Loc>(a, b));
+			search_matches_.emplace_back(a, b);
 		}
 	}
 
@@ -1198,7 +1198,7 @@ namespace gui
 		//text we got from ourselves, then filter it.
 		if(ffl_fn_filter_paste_.is_function() && txt != g_str_put_in_clipboard) {
 			std::vector<variant> arg;
-			arg.push_back(variant(txt));
+			arg.emplace_back(txt);
 			txt = ffl_fn_filter_paste_(arg).as_string();
 		}
 
@@ -1687,7 +1687,7 @@ namespace gui
 					const int base = static_cast<int>(ptr - text_[n].c_str());
 					const Loc begin(n, base + match.position());
 					const Loc end(n, base + match.position() + match.length());
-					search_matches_.push_back(std::pair<Loc,Loc>(begin,end));
+					search_matches_.emplace_back(begin,end);
 
 					const auto advance = match.position() + match.length();
 					if(advance == 0) {

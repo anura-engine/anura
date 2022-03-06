@@ -127,7 +127,7 @@ namespace
 			std::map<variant, variant> m;
 			m[variant("key")] = i->first;
 			m[variant("value")] = i->second;
-			v.push_back(variant(&m));
+			v.emplace_back(&m);
 		}
 
 		return variant(&v);
@@ -161,12 +161,12 @@ namespace
 				std::map<variant, variant> table_obj;
 				table_obj[variant("name")] = variant(j->first);
 				table_obj[variant("entries")] = output_table(j->second);
-				tables.push_back(variant(&table_obj));
+				tables.emplace_back(&table_obj);
 			}
 
 			obj[variant("tables")] = variant(&tables);
 
-			type_vec.push_back(variant(&obj));
+			type_vec.emplace_back(&obj);
 		}
 
 		return variant(&type_vec);
@@ -233,7 +233,7 @@ namespace
 		for(std::map<std::vector<std::string>, version_data>::const_iterator i = data_table.begin(); i != data_table.end(); ++i) {
 			std::vector<variant> k;
 			for(const std::string& s : i->first) {
-				k.push_back(variant(s));
+				k.emplace_back(s);
 			}
 			result[variant(&k)] = write_version_data(i->second);
 		}
@@ -272,7 +272,7 @@ void init_tables_for_module(const std::string& module, const variant& doc)
 		info.name = v["name"].as_string();
 		variant tables_v = v["tables"];
 		for(int m = 0; m != tables_v.num_elements(); ++m) {
-			info.tables.push_back(TableInfo(tables_v[m]));
+			info.tables.emplace_back(tables_v[m]);
 		}
 
 		if(v["record_all"].as_bool(false)) {

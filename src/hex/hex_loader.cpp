@@ -228,7 +228,7 @@ namespace hex
 	{
 		std::vector<variant> res;
 		for(const auto& tm : get_tile_map()) {
-			res.emplace_back(variant(tm.second.get()));
+			res.emplace_back(tm.second.get());
 		}
 		return res;
 	}

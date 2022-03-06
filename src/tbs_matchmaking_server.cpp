@@ -422,8 +422,8 @@ public:
 					session.send_process_counter = 0;
 
 					std::vector<variant> args;
-					args.push_back(variant(this));
-					args.push_back(variant(session.user_id));
+					args.emplace_back(this);
+					args.emplace_back(session.user_id);
 					args.push_back(account_itor->second.account_info["info"]);
 
 					variant cmd = process_account_fn_(args);
@@ -563,7 +563,7 @@ public:
 
 				if(handle_anon_request_fn_.is_function()) {
 					std::vector<variant> args;
-					args.push_back(variant(this));
+					args.emplace_back(this);
 					args.push_back(doc);
 					send_response(socket, handle_anon_request_fn_(args));
 				} else {
@@ -704,7 +704,7 @@ public:
 									accounts = email_info.as_list();
 								}
 
-								accounts.push_back(variant(user_full));
+								accounts.emplace_back(user_full);
 								registration_db_client_->put(email_key, variant(&accounts),
 							            [](){}, [](){});
 							});
@@ -1540,7 +1540,7 @@ public:
 					variant info = doc["info"];
 					if(info.is_map()) {
 						std::vector<variant> args;
-						args.push_back(variant(this));
+						args.emplace_back(this);
 						args.push_back(info);
 
 						variant cmd = handle_game_over_message_fn_(args);
@@ -1625,9 +1625,9 @@ public:
 					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown user\" }", "");
 				} else {
 					std::vector<variant> args;
-					args.push_back(variant(this));
+					args.emplace_back(this);
 					args.push_back(doc);
-					args.push_back(variant(itor->second.user_id));
+					args.emplace_back(itor->second.user_id);
 					args.push_back(account_itor->second.account_info["info"]);
 
 					static const variant TrxVar("trx");
@@ -1671,8 +1671,8 @@ public:
 		} else {
 
 			std::vector<variant> v;
-			v.push_back(variant(this));
-			v.push_back(variant(session.user_id));
+			v.emplace_back(this);
+			v.emplace_back(session.user_id);
 			v.push_back(account_itor->second.account_info["info"]);
 			v.push_back(doc);
 			variant cmd = user_account_fn_(v);
@@ -1694,8 +1694,8 @@ public:
 				account_info_[str_tolower(user)].account_info = user_info;
 
 				std::vector<variant> v;
-				v.push_back(variant(this));
-				v.push_back(variant(user));
+				v.emplace_back(this);
+				v.emplace_back(user);
 				v.push_back(user_info["info"]);
 				v.push_back(doc["msg"]);
 				variant cmd = admin_account_fn_(v);
@@ -1932,8 +1932,8 @@ public:
 			}
 
 			std::vector<variant> fn_args;
-			fn_args.push_back(variant(this));
-			fn_args.push_back(variant(&a));
+			fn_args.emplace_back(this);
+			fn_args.emplace_back(&a);
 			send_response(socket, handle_anon_request_fn_(fn_args));
 			return;
 		} else if(url == "/generate_beta_key") {
@@ -2027,7 +2027,7 @@ private:
 		}
 
 		std::vector<variant> args;
-		args.push_back(variant(&info));
+		args.emplace_back(&info);
 		variant result = matchmake_fn_(args);
 
 		if(result.is_list() == false) {
@@ -2099,7 +2099,7 @@ private:
 				if(recent_games.is_list()) {
 					recent_games_var = recent_games.as_list();
 				}
-				recent_games_var.push_back(variant(game_id));
+				recent_games_var.emplace_back(game_id);
 				account_user_info.add_attr_mutation(variant("recent_games"), variant(&recent_games_var));
 
 				db_client_->put("user:" + session_info.user_id, account_info_itor->second.account_info, [](){}, [](){});
@@ -2637,7 +2637,7 @@ private:
 		if(status_doc_delete_users_.empty() == false) {
 			std::vector<variant> v;
 			for(auto s : status_doc_delete_users_) {
-				v.push_back(variant(get_display_name(s)));
+				v.emplace_back(get_display_name(s));
 			}
 
 			delta.add("delete_users", variant(&v));
@@ -2661,7 +2661,7 @@ private:
 			std::vector<variant> v;
 			v.reserve(status_doc_delete_servers_.size());
 			for(auto value : status_doc_delete_servers_) {
-				v.push_back(variant(value));
+				v.emplace_back(value);
 			}
 
 			delta.add("delete_servers", variant(&v));
@@ -3002,7 +3002,7 @@ private:
 
 			if(channel.ops.is_null() || channel.ops.as_list().empty()) {
 				std::vector<variant> v;
-				v.push_back(variant(username));
+				v.emplace_back(username);
 				channel.ops = variant(&v);
 			}
 
@@ -3310,7 +3310,7 @@ COMMAND_LINE_UTILITY(db_script) {
 	arguments.pop_front();
 	std::vector<variant> arg;
 	for(auto s : arguments) {
-		arg.push_back(variant(s));
+		arg.emplace_back(s);
 	}
 
 	Formula f = Formula(variant(script));

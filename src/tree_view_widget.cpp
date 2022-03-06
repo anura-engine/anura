@@ -673,14 +673,14 @@ namespace gui
 				if(parent_container->is_map()) {
 					parent_container->add_attr(variant("a_new_integer"), variant(0));
 				} else {
-					new_list.push_back(variant(0));
+					new_list.emplace_back(0);
 					*parent_container = *parent_container + variant(&new_list);
 				}
 			} else if(choice_type == "Decimal") {
 				if(parent_container->is_map()) {
 					parent_container->add_attr(variant("a_new_decimal"), variant(0.0));
 				} else {
-					new_list.push_back(variant(0.0));
+					new_list.emplace_back(0.0);
 					*parent_container = *parent_container + variant(&new_list);
 				}
 			} else if(choice_type == "Boolean") {
@@ -694,13 +694,13 @@ namespace gui
 				if(parent_container->is_map()) {
 					parent_container->add_attr(variant("a_new_string"), variant(""));
 				} else {
-					new_list.push_back(variant("a string"));
+					new_list.emplace_back("a string");
 					*parent_container = *parent_container + variant(&new_list);
 				}
 			} else if(choice_type == "List") {
 				std::vector<variant> inner_list;
-				inner_list.push_back(variant("a string"));
-				new_list.push_back(variant(&inner_list));
+				inner_list.emplace_back("a string");
+				new_list.emplace_back(&inner_list);
 				if(parent_container->is_map()) {
 					parent_container->add_attr(variant("a_new_list"), variant(&new_list));
 				} else {
@@ -712,7 +712,7 @@ namespace gui
 				if(parent_container->is_map()) {
 					parent_container->add_attr(variant("a_new_map"), variant(&new_map));
 				} else {
-					new_list.push_back(variant(&new_map));
+					new_list.emplace_back(&new_map);
 					*parent_container = *parent_container + variant(&new_list);
 				}
 			}

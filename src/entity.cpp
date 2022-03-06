@@ -429,7 +429,7 @@ static const int EndAnimationScheduledCommand = -20000000;
 
 void Entity::addEndAnimCommand(variant cmd)
 {
-	scheduled_commands_.push_back(ScheduledCommand(EndAnimationScheduledCommand, cmd));
+	scheduled_commands_.emplace_back(EndAnimationScheduledCommand, cmd);
 }
 
 std::vector<variant> Entity::popEndAnimCommands()
@@ -449,7 +449,7 @@ std::vector<variant> Entity::popEndAnimCommands()
 
 void Entity::addScheduledCommand(int cycle, variant cmd)
 {
-	scheduled_commands_.push_back(ScheduledCommand(cycle, cmd));
+	scheduled_commands_.emplace_back(cycle, cmd);
 	if(debug_console::isExecutingDebugConsoleCommand()) {
 		scheduled_commands_.back().is_debug = true;
 	}

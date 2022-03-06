@@ -2282,9 +2282,9 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 			}
 
 			std::vector<variant> point;
-			point.push_back(variant(xpos));
-			point.push_back(variant(ypos));
-			new_value.push_back(variant(&point));
+			point.emplace_back(xpos);
+			point.emplace_back(ypos);
+			new_value.emplace_back(&point);
 
 			std::vector<std::function<void()> > redo, undo;
 			generate_mutate_commands(c, adding_points_, variant(&new_value), undo, redo);
@@ -2323,7 +2323,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 					if(i != v.end()) {
 						v.erase(i);
 					} else {
-						v.push_back(variant(segment));
+						v.emplace_back(segment);
 					}
 
 					lvl_->set_var(formatter() << "segments_after_" << selected_segment_, variant(&v));

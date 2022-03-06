@@ -335,7 +335,7 @@ void mapSDLEventScreenCoordinatesToVirtual(SDL_Event& event)
 
 void addProcessFunction(std::function<void()> fn, void* tag)
 {
-	process_functions.push_back(std::pair<std::function<void()>,void*>(fn, tag));
+	process_functions.emplace_back(fn, tag);
 }
 
 void removeProcessFunction(void* tag)
@@ -626,7 +626,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 						g_mouse_event_swallowed = false;
 					}
 				}
-				items.push_back(variant(e.get()));
+				items.emplace_back(e.get());
 			}
 			// Handling for "catch all" mouse events.
 			callable->add("handled", variant::from_bool(handled));

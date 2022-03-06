@@ -54,7 +54,7 @@ namespace pathfinding
 				for(const auto& e1 : edge.second) {
 					from_to.push_back(edge.first);
 					from_to.push_back(e1);
-					edges.push_back(variant(&from_to));
+					edges.emplace_back(&from_to);
 				}
 			}
 			return variant(&edges);
@@ -178,8 +178,8 @@ namespace pathfinding
 
 	variant point_as_variant_list(const point& pt) {
 		std::vector<variant> v;
-		v.push_back(variant(pt.x));
-		v.push_back(variant(pt.y));
+		v.emplace_back(pt.x);
+		v.emplace_back(pt.y);
 		return variant(&v);
 	}
 

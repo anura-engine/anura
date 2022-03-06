@@ -57,7 +57,7 @@ variant variant_callable::create_for_list(const variant& value) const
 		if(item.is_list()) {
 			v.push_back(create_for_list(item));
 		} else if(item.is_map()) {
-			v.push_back(variant(new variant_callable(item)));
+			v.emplace_back(new variant_callable(item));
 		} else {
 			v.push_back(item);
 		}
