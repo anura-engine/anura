@@ -143,39 +143,40 @@ namespace gui
 	std::vector<std::string> AnimationCreatorDialog::commonAnimationList()
 	{
 		// List of common animations.
-		std::vector<std::string> v;
-		v.push_back("stand");
-		v.push_back("normal");
-		v.push_back("hurt");
-		v.push_back("turn");
-		v.push_back("walk");
-		v.push_back("spring");
-		v.push_back("fly");
-		v.push_back("jump");
-		v.push_back("fall");
-		v.push_back("open");
-		v.push_back("ajar");
-		v.push_back("close");
-		v.push_back("land");
-		v.push_back("thrown");
-		v.push_back("lose_wings");
-		v.push_back("portrait");
-		v.push_back("swim");
-		v.push_back("attack");
-		v.push_back("cling");
-		v.push_back("fire");
-		v.push_back("jump_attack");
-		v.push_back("run");
-		v.push_back("crouch");
-		v.push_back("enter_crouch");
-		v.push_back("enter_lookup");
-		v.push_back("flash");
-		v.push_back("leave_crouch");
-		v.push_back("lookup");
-		v.push_back("pushed");
-		v.push_back("roll");
-		v.push_back("run_attack");
-		v.push_back("shoot");
+		static const std::vector<std::string> v {
+			"stand",
+			"normal",
+			"hurt",
+			"turn",
+			"walk",
+			"spring",
+			"fly",
+			"jump",
+			"fall",
+			"open",
+			"ajar",
+			"close",
+			"land",
+			"thrown",
+			"lose_wings",
+			"portrait",
+			"swim",
+			"attack",
+			"cling",
+			"fire",
+			"jump_attack",
+			"run",
+			"crouch",
+			"enter_crouch",
+			"enter_lookup",
+			"flash",
+			"leave_crouch",
+			"lookup",
+			"pushed",
+			"roll",
+			"run_attack",
+			"shoot",
+		};
 		return v;
 	}
 
