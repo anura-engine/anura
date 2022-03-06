@@ -405,6 +405,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_INCLUDE_IMGUI_USER_INL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\src\achievements.cpp" />
     <ClCompile Include="..\src\animation_creator.cpp" />
     <ClCompile Include="..\src\animation_preview_widget.cpp" />

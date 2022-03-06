@@ -376,6 +376,7 @@ void    ImGui_ImplSdlGL3_InvalidateDeviceObjects()
 
 bool ImGui_ImplSdlGL3_Init(SDL_Window* window)
 {
+	ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
     io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
@@ -417,7 +418,7 @@ bool ImGui_ImplSdlGL3_Init(SDL_Window* window)
 void ImGui_ImplSdlGL3_Shutdown()
 {
     ImGui_ImplSdlGL3_InvalidateDeviceObjects();
-    ImGui::Shutdown();
+	ImGui::DestroyContext();
 }
 
 void ImGui_ImplSdlGL3_NewFrame(SDL_Window* window)
