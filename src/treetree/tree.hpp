@@ -39,7 +39,7 @@
 
      This leads to an invariant that any node x in a non-empty tree is a
      sentinel iff x->next->prev != x. Accordingly, no memory overhead is
-     required to discriminate between sentinels and real nodes. 
+     required to discriminate between sentinels and real nodes.
 
      Because, excepting the "end" sentinel, internal node are in one-to-one
      correspondence with sentinel nodes, the "structural" memory overhead of a
@@ -97,7 +97,7 @@
 
      2) If two nodes, both being equal, or both being leaves, have unequal
         contents, the tree with the lesser contents is lesser.
-     
+
      3) If two internal nodes with equal contents are compared, having
         differing numbers of children, and all children (that are present) are
         equal, the tree with fewer children is lesser.
@@ -114,7 +114,6 @@
 #include <boost/next_prior.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/operators.hpp>
-#include <boost/bind.hpp>
 #include "iterator_shorthands.hpp"
 
 namespace TREE_TREE_NAMESPACE {
@@ -156,7 +155,7 @@ struct node_base {
 
   node_base* prev;
   node_base* next;
-  node_base* end; 
+  node_base* end;
 
   node_base* sentinel() {     //creates sentinel if childless
     if (node_base* n=end)
@@ -170,7 +169,7 @@ struct node_base {
     return end=new node_base(this);
   }
 
-  bool childless() const { 
+  bool childless() const {
     if (node_base* n=end)
       return n->prev==n;
     return true;
@@ -189,7 +188,7 @@ struct node_base {
     next->prev=this;
   }
 
-  void cut_out() const { 
+  void cut_out() const {
     left_cut(next);
     right_cut(prev);
   }
@@ -261,15 +260,15 @@ struct value_iter_base : public IterBase {
   typedef T    result_type;
   typedef TRef reference;
  protected:
-  reference dereference() const { 
-    return static_cast<NodePointer>(this->_node)->data; 
+  reference dereference() const {
+    return static_cast<NodePointer>(this->_node)->data;
   }
 };
 
 template<typename IterBase>
 struct pre_iter_base : public IterBase {
  protected:
-  void increment() { 
+  void increment() {
     if (this->_node->childless()) {
       this->_node=this->_node->next;
       ascend(this->_node);
@@ -286,9 +285,9 @@ struct pre_iter_base : public IterBase {
   }
 };
 template<typename IterBase>
-struct child_iter_base : public IterBase { 
+struct child_iter_base : public IterBase {
  protected:
-  void increment() { this->_node=this->_node->next; } 
+  void increment() { this->_node=this->_node->next; }
   void decrement() { this->_node=this->_node->prev; }
 };
 template<typename IterBase>
@@ -315,7 +314,7 @@ NodeBasePtr make_post(NodeBasePtr n) {
     n=n->end->end;
   return n;
 }
-  
+
 template<typename IterBase>
 struct iter : public IterBase,
               public boost::iterator_facade<iter<IterBase>,
@@ -367,7 +366,7 @@ struct tr : boost::equality_comparable<tree<T> >,
   typedef const_pre_iterator const_iterator;
 
   template<typename OtherTr>
-  bool operator==(const OtherTr& rhs) const { 
+  bool operator==(const OtherTr& rhs) const {
     return this->equal(rhs,std::equal_to<value_type>());
   }
   template<typename OtherTr,typename NodeEq>
@@ -384,7 +383,7 @@ struct tr : boost::equality_comparable<tree<T> >,
       if (i==this->end())
         return j==rhs.end();
       if (j==rhs.end())
-        return false;   
+        return false;
 
       if (i._node->next->dereferenceable()!=j._node->next->dereferenceable())
         return false;
@@ -392,7 +391,7 @@ struct tr : boost::equality_comparable<tree<T> >,
   }
 
   template<typename OtherTr>
-  bool operator<(const OtherTr& rhs) const { 
+  bool operator<(const OtherTr& rhs) const {
     return this->less(rhs,std::less<value_type>());
   }
 
@@ -435,7 +434,7 @@ struct tr : boost::equality_comparable<tree<T> >,
 
   const_pre_iterator begin() const { return this->root_node(); }
   const_pre_iterator end() const { return this->end_node(); }
-  const_child_iterator begin_child() const { 
+  const_child_iterator begin_child() const {
     if (const node_base* n=this->root_node()->end)
       return n->end;
     return NULL;
@@ -443,56 +442,56 @@ struct tr : boost::equality_comparable<tree<T> >,
   const_child_iterator end_child() const { return this->root_node()->end; }
   const_sub_pre_iterator begin_sub() const { return this->root_node(); }
   const_sub_pre_iterator end_sub() const { return this->end_node(); }
-  const_sub_child_iterator begin_sub_child() const { 
+  const_sub_child_iterator begin_sub_child() const {
     if (const node_base* n=this->root_node()->end)
       return n->end;
     return NULL;
   }
-  const_sub_child_iterator end_sub_child() const { 
-    return this->root_node()->end; 
+  const_sub_child_iterator end_sub_child() const {
+    return this->root_node()->end;
   }
-  const_post_iterator begin_post() const { 
-    return make_post(this->root_node()); 
+  const_post_iterator begin_post() const {
+    return make_post(this->root_node());
   }
   const_post_iterator end_post() const { return this->end_node(); }
-  const_sub_post_iterator begin_sub_post() const { 
-    return make_post(this->root_node()); 
+  const_sub_post_iterator begin_sub_post() const {
+    return make_post(this->root_node());
   }
   const_sub_post_iterator end_sub_post() const { return this->end_node(); }
 
   const value_type& root() const { return *this->begin(); }
-  const_subtree<T> root_sub() const { return *this->begin_sub(); } 
+  const_subtree<T> root_sub() const { return *this->begin_sub(); }
 
   const_subtree<T> operator[](size_type idx) const {
     return *boost::next(this->begin_sub_child(),idx);
   }
   const value_type& front() const { return *this->begin_child(); }
-  const value_type& back() const { 
+  const value_type& back() const {
     return static_cast<node<T>*>(this->root_node()->end->prev)->data;
   }
   const_subtree<T> front_sub() const { return *this->begin_sub_child(); }
-  const_subtree<T> back_sub() const { 
+  const_subtree<T> back_sub() const {
     return (const TREE_TREE_NAMESPACE::_tree_private::node_base*)
         this->root_node()->end->prev;
   }
 
   bool childless() const { return this->root_node()->childless(); }
   //a tree is flat iff it consists of a root node with childless children
-  bool flat() const { 
-    return (!this->childless() && 
+  bool flat() const {
+    return (!this->childless() &&
             std::find_if(this->begin_sub_child(),this->end_sub_child(),
-                         !boost::bind(&const_subtree<T>::childless,_1)
+                         !std::bind(&const_subtree<T>::childless, std::placeholders::_1)
                          )==this->end_sub_child());
   }
 
   //functionality that gets delegated to the subclass
   bool empty() const { return static_cast<const Tree*>(this)->empty(); }
  protected:
-  const node_base* root_node() const { 
-    return static_cast<const Tree*>(this)->root_node(); 
+  const node_base* root_node() const {
+    return static_cast<const Tree*>(this)->root_node();
   }
-  const node_base* end_node() const { 
-    return static_cast<const Tree*>(this)->end_node(); 
+  const node_base* end_node() const {
+    return static_cast<const Tree*>(this)->end_node();
   }
 };
 
@@ -519,8 +518,8 @@ struct mutable_tr : public tr<T,Tree> {
 
   //insertion may operate on any valid iterator i
   template<typename Iterator>
-  Iterator insert(Iterator i,const value_type& v) { 
-    return this->insert_n(i._node,v); 
+  Iterator insert(Iterator i,const value_type& v) {
+    return this->insert_n(i._node,v);
   }
   template<typename Iterator>
   Iterator insert(Iterator i,const_subtree<value_type> s) {
@@ -546,7 +545,7 @@ struct mutable_tr : public tr<T,Tree> {
   }
   template<typename InputIterator>
   void append(InputIterator f,InputIterator l) {
-    this->insert_n(this->root_node()->sentinel(),f,l);    
+    this->insert_n(this->root_node()->sentinel(),f,l);
   }
   void append(size_type n,const value_type& v) {
     this->insert_n(this->root_node()->sentinel(),repeat_it(v),repeat_it(v,n));
@@ -563,7 +562,7 @@ struct mutable_tr : public tr<T,Tree> {
   }
   template<typename InputIterator>
   void prepend(InputIterator f,InputIterator l) {
-    this->insert_n(this->root_node()->first_child(),f,l);    
+    this->insert_n(this->root_node()->first_child(),f,l);
   }
   void prepend(size_type n,const value_type& v) {
     this->insert_n(this->root_node()->first_child(),
@@ -597,7 +596,7 @@ struct mutable_tr : public tr<T,Tree> {
   template<typename Iterator>
   Iterator flatten(Iterator i) {
     node_base* n=i._node;
-    
+
     if (node_base* end=n->end) {
       if (end->prev!=end) {
         n->next->prev=end->prev;
@@ -607,7 +606,7 @@ struct mutable_tr : public tr<T,Tree> {
       }
 
       delete end;
-      n->end=NULL;      
+      n->end=NULL;
     }
 
     return i;
@@ -647,34 +646,34 @@ struct mutable_tr : public tr<T,Tree> {
   //unfortunately the compiler needs these to resolve overloads properly :p
   typename super::const_pre_iterator begin() const { return super::begin(); }
   typename super::const_pre_iterator end() const { return super::end(); }
-  typename super::const_child_iterator begin_child() const { 
+  typename super::const_child_iterator begin_child() const {
     return super::begin_child();
   }
-  typename super::const_child_iterator end_child() const { 
+  typename super::const_child_iterator end_child() const {
     return super::end_child();
   }
-  typename super::const_sub_pre_iterator begin_sub() const { 
+  typename super::const_sub_pre_iterator begin_sub() const {
     return super::begin_sub();
   }
-  typename super::const_sub_pre_iterator end_sub() const { 
+  typename super::const_sub_pre_iterator end_sub() const {
     return this->super::end_sub();
   }
-  typename super::const_sub_child_iterator begin_sub_child() const { 
+  typename super::const_sub_child_iterator begin_sub_child() const {
     return this->super::begin_sub_child();
   }
-  typename super::const_sub_child_iterator end_sub_child() const { 
+  typename super::const_sub_child_iterator end_sub_child() const {
     return this->super::end_sub_child();
   }
   const value_type& root() const { return super::root(); }
-  const_subtree<T> root_sub() const { return super::root_sub(); } 
-  
+  const_subtree<T> root_sub() const { return super::root_sub(); }
+
   pre_iterator begin() { return this->root_node(); }
   pre_iterator end() { return this->end_node(); }
   child_iterator begin_child() { return this->root_node()->first_child(); }
   child_iterator end_child() { return this->root_node()->sentinel(); }
   sub_pre_iterator begin_sub() { return this->root_node(); }
   sub_pre_iterator end_sub() { return this->end_node(); }
-  sub_child_iterator begin_sub_child() { 
+  sub_child_iterator begin_sub_child() {
     return this->root_node()->first_child();
   }
   sub_child_iterator end_sub_child() { return this->root_node()->sentinel(); }
@@ -684,16 +683,16 @@ struct mutable_tr : public tr<T,Tree> {
   sub_post_iterator end_sub_post() { return this->end_node(); }
 
   value_type& root() { return *this->begin(); }
-  subtree<T> root_sub() { return *this->begin_sub(); } 
+  subtree<T> root_sub() { return *this->begin_sub(); }
   subtree<T> operator[](size_type idx) {
     return *boost::next(this->begin_sub_child(),idx);
   }
   value_type& front() { return *this->begin_child(); }
-  value_type& back() { 
+  value_type& back() {
     return static_cast<node<T>*>(this->root_node()->end->prev)->data;
   }
   subtree<T> front_sub() { return *this->begin_sub_child(); }
-  subtree<T> back_sub() { 
+  subtree<T> back_sub() {
     return (TREE_TREE_NAMESPACE::_tree_private::node_base*)
         this->root_node()->end->prev;
   }
@@ -780,7 +779,7 @@ struct mutable_tr : public tr<T,Tree> {
     erase_n(i._node);
     return tmp;
   }
-  
+
   node_base* erase_descend(node_base* n) {
     while (n->end!=NULL && n->dereferenceable())
       n=n->end->end;
@@ -836,7 +835,7 @@ struct subtr : public NodePolicy {
   node_pointer _node;
 
   const node_base* root_node() const { return _node; }
-  const node_base* end_node() const { 
+  const node_base* end_node() const {
     const node_base* n=this->_node->next;
     ascend(n);
     return n;
@@ -854,7 +853,7 @@ template<typename T>
 struct const_subtree
     : public _tree_private::subtr<_tree_private::const_node_policy
                                  <T,const_subtree<T> > > {
-  
+
   typedef _tree_private::subtr<_tree_private::const_node_policy
                               <T,const_subtree<T> > > super;
 
@@ -868,7 +867,7 @@ struct const_subtree
   typedef pre_iterator iterator;
 
   template<typename OtherTr>
-  const_subtree(const OtherTr& other) : super(other.root_node()) { 
+  const_subtree(const OtherTr& other) : super(other.root_node()) {
     assert(!other.empty());
   }
   const_subtree(const _tree_private::node_base* n) : super(n) {}
@@ -878,17 +877,17 @@ struct const_subtree
     assert(!rhs.empty());
     this->_node=rhs.root_node();
   }
-  
+
  protected:
   template<typename,typename>
   friend struct _tree_private::sub_iter_base;
 };
 
 template<typename T>
-struct subtree : 
+struct subtree :
       public _tree_private::subtr<_tree_private::mutable_node_policy
                                   <T,subtree<T> > > {
-  
+
   typedef _tree_private::subtr<_tree_private::mutable_node_policy
                               <T,subtree<T> > > super;
 
@@ -908,7 +907,7 @@ struct subtree :
 
   subtree& operator=(subtree rhs) { return this->operator=<subtree>(rhs); }
 
-  subtree& operator=(const T& t) { 
+  subtree& operator=(const T& t) {
     this->prune();
     this->root()=t;
     return *this;
@@ -939,7 +938,7 @@ struct subtree :
   subtree(node_base* n) : super(n) {}
 
   node_base* root_node() { return this->_node; }
-  node_base* end_node() { 
+  node_base* end_node() {
     node_base* n=this->_node->next;
     ascend(n);
     return n;
@@ -953,9 +952,9 @@ struct tree : public _tree_private::mutable_tr<T,tree<T> > {
   typedef T value_type;
 
   tree() : _end() {}
-  explicit tree(const T& t) : 
-      _end(new _tree_private::node<T>(&_end,&_end,t)) { 
-    _end.prev=_end.next; 
+  explicit tree(const T& t) :
+      _end(new _tree_private::node<T>(&_end,&_end,t)) {
+    _end.prev=_end.next;
   }
   template<typename OtherTr>
   explicit tree(const OtherTr& other) : _end() { init(other); }
@@ -974,7 +973,7 @@ struct tree : public _tree_private::mutable_tr<T,tree<T> > {
   }
 
   void swap(subtree<T> rhs) { rhs.swap(*this); }
-  void swap(tree& rhs) { 
+  void swap(tree& rhs) {
     if (this->empty()) {
       if (!rhs.empty()) {
         rhs._end.next->next=rhs._end.next->prev=&this->_end;
@@ -995,11 +994,11 @@ struct tree : public _tree_private::mutable_tr<T,tree<T> > {
     }
   }
 
-  bool empty() const { return this->_end.next==&this->_end; } 
+  bool empty() const { return this->_end.next==&this->_end; }
 
-  void clear() { 
-    if (!this->empty()) 
-      this->erase(this->begin()); 
+  void clear() {
+    if (!this->empty())
+      this->erase(this->begin());
   }
 
  protected:
@@ -1031,9 +1030,9 @@ struct tree_placeholder : public tree<T> {
 
  protected:
   typedef const tree_placeholder& ctp;
-  tree_placeholder& x(ctp c) { 
+  tree_placeholder& x(ctp c) {
     this->prepend(const_subtree<T>(c));
-    return *this; 
+    return *this;
   }
  public:
   tree_placeholder& operator()(ctp c1) { return x(c1); }
@@ -1112,42 +1111,42 @@ struct sub_child_adapter {
   typedef typename Subtree::sub_child_iterator const_iterator;
   sub_child_adapter(Subtree t) : _t(t) {}
   iterator begin() const { return _t.begin_sub_child(); }
-  iterator end() const { return _t.end_sub_child(); } 
+  iterator end() const { return _t.end_sub_child(); }
  protected:
   mutable Subtree _t;
 };
 
 template<typename T>
-child_adapter<subtree<T> > children(subtree<T> t) { 
+child_adapter<subtree<T> > children(subtree<T> t) {
   return child_adapter<subtree<T> >(t);
 }
 template<typename T>
-sub_child_adapter<subtree<T> > sub_children(subtree<T> t) { 
+sub_child_adapter<subtree<T> > sub_children(subtree<T> t) {
   return sub_child_adapter<subtree<T> >(t);
 }
 template<typename T>
-child_adapter<subtree<T> > children(tree<T>& t) { 
+child_adapter<subtree<T> > children(tree<T>& t) {
   return child_adapter<subtree<T> >(t);
 }
 template<typename T>
-sub_child_adapter<subtree<T> > sub_children(tree<T>& t) { 
+sub_child_adapter<subtree<T> > sub_children(tree<T>& t) {
   return sub_child_adapter<subtree<T> >(t);
 }
 
 template<typename T>
-child_adapter<const_subtree<T> > children(const_subtree<T> t) { 
+child_adapter<const_subtree<T> > children(const_subtree<T> t) {
   return child_adapter<const_subtree<T> >(t);
 }
 template<typename T>
-sub_child_adapter<const_subtree<T> > sub_children(const_subtree<T> t) { 
+sub_child_adapter<const_subtree<T> > sub_children(const_subtree<T> t) {
   return sub_child_adapter<const_subtree<T> >(t);
 }
 template<typename T>
-child_adapter<const_subtree<T> > children(const tree<T>& t) { 
+child_adapter<const_subtree<T> > children(const tree<T>& t) {
   return child_adapter<const_subtree<T> >(t);
 }
 template<typename T>
-sub_child_adapter<subtree<T> > sub_children(const tree<T>& t) { 
+sub_child_adapter<subtree<T> > sub_children(const tree<T>& t) {
   return sub_child_adapter<const_subtree<T> >(t);
 }
 
@@ -1163,11 +1162,11 @@ struct sub_leaf_adapter {
   typedef iterator const_iterator;
 
   sub_leaf_adapter(Subtree t) : _t(t) {}
-  iterator begin() const { 
+  iterator begin() const {
     return filter_it(_t.begin_sub_post(),_t.end_sub_post(),
-                     &childless<Subtree>); 
+                     &childless<Subtree>);
   }
-  iterator end() const { 
+  iterator end() const {
     return filter_it(_t.end_sub_post(),_t.end_sub_post(),
                      &childless<Subtree>);
   }
@@ -1183,11 +1182,11 @@ struct leaf_adapter {
   typedef iterator const_iterator;
 
   leaf_adapter(Subtree t) : _t(t) {}
-  iterator begin() const { 
+  iterator begin() const {
     return transform_it(filter_it(_t.begin_sub_post(),_t.end_sub_post(),
-                                  &childless<Subtree>),&root<Subtree>); 
+                                  &childless<Subtree>),&root<Subtree>);
   }
-  iterator end() const { 
+  iterator end() const {
     return transform_it(filter_it(_t.end_sub_post(),_t.end_sub_post(),
                                   &childless<Subtree>),&root<Subtree>);
   }
@@ -1196,36 +1195,36 @@ struct leaf_adapter {
 };
 
 template<typename T>
-leaf_adapter<subtree<T> > leaves(subtree<T> t) { 
+leaf_adapter<subtree<T> > leaves(subtree<T> t) {
   return leaf_adapter<subtree<T> >(t);
 }
 template<typename T>
-sub_leaf_adapter<subtree<T> > sub_leaves(subtree<T> t) { 
+sub_leaf_adapter<subtree<T> > sub_leaves(subtree<T> t) {
   return sub_leaf_adapter<subtree<T> >(t);
 }
 template<typename T>
-leaf_adapter<subtree<T> > leaves(tree<T>& t) { 
+leaf_adapter<subtree<T> > leaves(tree<T>& t) {
   return leaf_adapter<subtree<T> >(t);
 }
 template<typename T>
-sub_leaf_adapter<subtree<T> > sub_leaves(tree<T>& t) { 
+sub_leaf_adapter<subtree<T> > sub_leaves(tree<T>& t) {
   return sub_leaf_adapter<subtree<T> >(t);
 }
 
 template<typename T>
-leaf_adapter<const_subtree<T> > leaves(const_subtree<T> t) { 
+leaf_adapter<const_subtree<T> > leaves(const_subtree<T> t) {
   return leaf_adapter<const_subtree<T> >(t);
 }
 template<typename T>
-sub_leaf_adapter<const_subtree<T> > sub_leaves(const_subtree<T> t) { 
+sub_leaf_adapter<const_subtree<T> > sub_leaves(const_subtree<T> t) {
   return sub_leaf_adapter<const_subtree<T> >(t);
 }
 template<typename T>
-leaf_adapter<const_subtree<T> > leaves(const tree<T>& t) { 
+leaf_adapter<const_subtree<T> > leaves(const tree<T>& t) {
   return leaf_adapter<const_subtree<T> >(t);
 }
 template<typename T>
-sub_leaf_adapter<subtree<T> > sub_leaves(const tree<T>& t) { 
+sub_leaf_adapter<subtree<T> > sub_leaves(const tree<T>& t) {
   return sub_leaf_adapter<const_subtree<T> >(t);
 }
 
