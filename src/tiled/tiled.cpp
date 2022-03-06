@@ -22,7 +22,11 @@
 */
 
 #include <SDL2/SDL.h>
+#ifdef __APPLE__
+#include <SDL_image.h>
+#else
 #include <SDL2/SDL_image.h>
+#endif
 
 #include "Shaders.hpp"
 #include "SceneGraph.hpp"
