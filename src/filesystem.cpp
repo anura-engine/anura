@@ -254,7 +254,7 @@ namespace sys
 			}
 			std::vector<std::string> cur_path;
 			std::string norm_path;
-			boost::split(cur_path, path, std::bind2nd(std::equal_to<char>(), '/'));
+			boost::split(cur_path, path, [](const char& c) { return c == '/'; });
 			for(const std::string& s : cur_path) {
 				if(s != ".") {
 					norm_path += s + "/";
