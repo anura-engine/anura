@@ -31,7 +31,7 @@
 #include <iostream>
 #include <vector>
 #include <limits.h>
-
+#include <random>
 
 #include "asserts.hpp"
 #include "formatter.hpp"
@@ -5801,7 +5801,7 @@ BENCHMARK(formula_recurse_sort) {
 	std::vector<variant> expected_result = input;
 	variant expected_result_v(&expected_result);
 
-	std::random_shuffle(input.begin(), input.end());
+	std::shuffle(input.begin(), input.end(), std::mt19937{});
 	static MapFormulaCallable* callable = new MapFormulaCallable;
 	callable->add("input", variant(&input));
 	BENCHMARK_LOOP {
