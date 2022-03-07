@@ -166,8 +166,8 @@ std::string get_call_stack()
 	std::string res;
 	std::vector<CallStackEntry> reversed_call_stack = g_variant_thread_info->call_stack;
 	std::reverse(reversed_call_stack.begin(), reversed_call_stack.end());
-	for(std::vector<CallStackEntry>::const_iterator i = reversed_call_stack.begin(); i != reversed_call_stack.end(); ++i) {
-		const game_logic::FormulaExpression* p = i->expression;
+	for(const CallStackEntry& i : reversed_call_stack) {
+		const game_logic::FormulaExpression* p = i.expression;
 		if(p && p->getParentFormula() != current_frame) {
 			current_frame = p->getParentFormula();
 			const variant::debug_info* info = current_frame.get_debug_info();
@@ -188,8 +188,8 @@ std::string get_typed_call_stack()
 	std::string res;
 	std::vector<CallStackEntry> reversed_call_stack = g_variant_thread_info->call_stack;
 	std::reverse(reversed_call_stack.begin(), reversed_call_stack.end());
-	for(std::vector<CallStackEntry>::const_iterator i = reversed_call_stack.begin(); i != reversed_call_stack.end(); ++i) {
-		const game_logic::FormulaExpression* p = i->expression;
+	for(const CallStackEntry& i : reversed_call_stack) {
+		const game_logic::FormulaExpression* p = i.expression;
 		if(p && p->getParentFormula() != current_frame) {
 			current_frame = p->getParentFormula();
 			const variant::debug_info* info = current_frame.get_debug_info();
@@ -2791,12 +2791,12 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 		sprintf(buf, "(%p)", fn_);
 		s << buf << "(";
 		bool first = true;
-		for(std::vector<std::string>::const_iterator i = fn_->type->arg_names.begin(); i != fn_->type->arg_names.end(); ++i) {
+		for(const std::string& i : fn_->type->arg_names) {
 			if (first)
 				first = false;
 			else
 				s << ", ";
-			s << *i;
+			s << i;
 		}
 		s << ")";
 
@@ -2811,12 +2811,12 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 		s << "<>";
 		s << buf << "(";
 		bool first = true;
-		for(std::vector<std::string>::const_iterator i = generic_fn_->type->arg_names.begin(); i != generic_fn_->type->arg_names.end(); ++i) {
+		for(const std::string& i : generic_fn_->type->arg_names) {
 			if (first)
 				first = false;
 			else
 				s << ", ";
-			s << *i;
+			s << i;
 		}
 		s << ")";
 		break;

@@ -448,8 +448,8 @@ namespace game_logic
 			variant staticEvaluate(const FormulaCallable& variables) const override {
 				std::vector<variant> res;
 				res.reserve(items_.size());
-				for(std::vector<ExpressionPtr>::const_iterator i = items_.begin(); i != items_.end(); ++i) {
-					res.push_back((*i)->evaluate(variables));
+				for(const ExpressionPtr& i : items_) {
+					res.push_back(i->evaluate(variables));
 				}
 
 				return variant(&res);

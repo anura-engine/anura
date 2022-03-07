@@ -129,9 +129,7 @@ bool point_standable(const Level& lvl, const Entity& e, const std::vector<Entity
 
 	const point pt(x, y);
 
-	for(std::vector<EntityPtr>::const_iterator i = chars.begin();
-	    i != chars.end(); ++i) {
-		const EntityPtr& obj = *i;
+	for(const EntityPtr& obj : chars) {
 		if(&e == obj.get()) {
 			continue;
 		}
@@ -193,11 +191,10 @@ bool entity_collides(Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionI
 		return true;
 	}
 
-	const std::vector<EntityPtr>& solid_chars = lvl.get_solid_chars();
-	for(std::vector<EntityPtr>::const_iterator obj = solid_chars.begin(); obj != solid_chars.end(); ++obj) {
-		if(obj->get() != &e && entity_collides_with_entity(e, **obj, info)) {
+	for(const EntityPtr& obj : lvl.get_solid_chars()) {
+		if(obj.get() != &e && entity_collides_with_entity(e, *obj, info)) {
 			if(info) {
-				info->collide_with = *obj;
+				info->collide_with = obj;
 			}
 			return true;
 		}
@@ -824,8 +821,7 @@ void detect_user_collisions(Level& lvl)
 		}
 	}
 
-	for(std::vector<EntityPtr>::const_iterator i = chars.begin(); i != chars.end(); ++i) {
-		const EntityPtr& a = *i;
+	for(const EntityPtr& a : chars) {
 		a->resolveDelayedEvents();
 	}
 }
@@ -836,14 +832,12 @@ bool is_flightpath_clear(const Level& lvl, const Entity& e, const rect& area)
 		return false;
 	}
 
-	const std::vector<EntityPtr>& v = lvl.get_solid_chars();
-	for(std::vector<EntityPtr>::const_iterator obj = v.begin();
-	    obj != v.end(); ++obj) {
-		if(obj->get() == &e) {
+	for(const EntityPtr& obj : lvl.get_solid_chars()) {
+		if(obj.get() == &e) {
 			continue;
 		}
 
-		if(rects_intersect(area, (*obj)->solidRect())) {
+		if(rects_intersect(area, obj->solidRect())) {
 			return false;
 		}
 	}

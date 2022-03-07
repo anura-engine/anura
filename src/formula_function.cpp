@@ -4023,8 +4023,8 @@ FUNCTION_DEF_IMPL
 				dirname += '/';
 			}
 			module::get_files_in_dir(dirname, &files);
-			for(std::vector<std::string>::const_iterator i = files.begin(); i != files.end(); ++i) {
-				v.emplace_back(*i);
+			for(const std::string& i : files) {
+				v.emplace_back(i);
 			}
 			return variant(&v);
 		FUNCTION_ARGS_DEF
