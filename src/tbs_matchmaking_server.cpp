@@ -2232,7 +2232,7 @@ private:
 
 		std::map<variant,variant> logged_in_user_set;
 		for(auto p : logged_in_user_set_) {
-			logged_in_user_set.insert(std::pair<variant,variant>(variant(p.first), variant(p.second)));
+			logged_in_user_set.emplace(variant(p.first), variant(p.second));
 		}
 
 		doc.add("logged_in_user_set", variant(&logged_in_user_set));

@@ -4793,9 +4793,9 @@ UNIT_TEST(dictionary_plus_dictionary_returns_dictionary) {
 	const variant value(decimal::from_string(pi_as_string));
 	const variant value_(variant::from_bool(true));
 	std::pair<std::map<variant, variant>::iterator, bool> ret;
-	ret = variants_map.insert(std::pair<variant, variant>(key, value));
+	ret = variants_map.emplace(key, value);
 	CHECK_EQ(true, ret.second);
-	ret = variants_map_.insert(std::pair<variant, variant>(key_, value_));
+	ret = variants_map_.emplace(key_, value_);
 	CHECK_EQ(true, ret.second);
 	const variant dictionary_variant(& variants_map);
 	const variant dictionary_variant_(& variants_map_);
@@ -4942,9 +4942,9 @@ UNIT_TEST(serialize_dictionary_variant_to_string) {
 	const variant value(decimal::from_string(pi_as_string));
 	const variant value_(variant::from_bool(true));
 	std::pair<std::map<variant, variant>::iterator, bool> ret;
-	ret = variants_map.insert(std::pair<variant, variant>(key, value));
+	ret = variants_map.emplace(key, value);
 	CHECK_EQ(true, ret.second);
-	ret = variants_map.insert(std::pair<variant, variant>(key_, value_));
+	ret = variants_map.emplace(key_, value_);
 	CHECK_EQ(true, ret.second);
 	const variant dictionary_variant(& variants_map);
 	std::string serialization = "";
@@ -5083,9 +5083,9 @@ UNIT_TEST(dictionary_variant_string_cast) {
 	const variant value(decimal::from_string(pi_as_string));
 	const variant value_(variant::from_bool(true));
 	std::pair<std::map<variant, variant>::iterator, bool> ret;
-	ret = variants_map.insert(std::pair<variant, variant>(key, value));
+	ret = variants_map.emplace(key, value);
 	CHECK_EQ(true, ret.second);
-	ret = variants_map.insert(std::pair<variant, variant>(key_, value_));
+	ret = variants_map.emplace(key_, value_);
 	CHECK_EQ(true, ret.second);
 	const variant variant_(& variants_map);
 	check::type_is_dictionary(variant_);

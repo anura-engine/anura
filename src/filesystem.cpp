@@ -133,7 +133,7 @@ namespace sys
 		}
 		for(recursive_directory_iterator it = recursive_directory_iterator(p); it != recursive_directory_iterator(); ++it) {
 			if(!is_directory(it->path())) {
-				file_map->insert(std::pair<std::string,std::string>(prefix + it->path().filename().generic_string(), it->path().generic_string()));
+				file_map->emplace(prefix + it->path().filename().generic_string(), it->path().generic_string());
 			}
 		}
 	}

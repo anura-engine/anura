@@ -1627,7 +1627,7 @@ namespace {
 									break;
 								}
 
-								lookups.insert(std::pair<int, VirtualMachine::Iterator>(itor.arg(), itor));
+								lookups.emplace(itor.arg(), itor);
 
 								ordered_lookups.emplace_back(itor);
 							}
@@ -2923,7 +2923,7 @@ namespace {
 									break;
 								}
 
-								lookups.insert(std::pair<int, VirtualMachine::Iterator>(itor.arg(), itor));
+								lookups.emplace(itor.arg(), itor);
 
 								ordered_lookups.emplace_back(itor);
 							}

@@ -441,7 +441,7 @@ namespace game_logic
 				lru_.front().obj = value;
 				lru_.front().key = key;
 
-				bool succeeded = cache_.insert(std::pair<variant,std::list<Entry>::iterator>(key, lru_.begin())).second;
+				bool succeeded = cache_.emplace(key, lru_.begin()).second;
 				ASSERT_LOG(succeeded, "Inserted into cache when there is already a valid entry: " << key.write_json());
 
 				if(cache_.size() > max_entries_) {

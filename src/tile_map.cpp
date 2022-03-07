@@ -1056,7 +1056,7 @@ const TilePattern* TileMap::getMatchingPattern(int x, int y, TilePatternCache& c
 	//matching the current tile.
 	TilePatternCacheMap::iterator itor = cache.cache.find(current_tile);
 	if(itor == cache.cache.end()) {
-		itor = cache.cache.insert(std::pair<const char*,std::vector<const TilePattern*> >(current_tile, std::vector<const TilePattern*>())).first;
+		itor = cache.cache.emplace(current_tile, std::vector<const TilePattern*>()).first;
 		for(const TilePattern* p : getPatterns()) {
 			if(!p->current_tile_pattern->empty() && !boost::regex_match(current_tile, current_tile + strlen(current_tile), *p->current_tile_pattern)) {
 				continue;

@@ -136,7 +136,7 @@ namespace
 	table read_table(const variant& v) {
 		table result;
 		for(int n = 0; n != v.num_elements(); ++n) {
-			result.insert(std::pair<variant, variant>(v[n]["key"], v[n]["value"]));
+			result.emplace(v[n]["key"], v[n]["value"]);
 		}
 
 		return result;
