@@ -30,7 +30,6 @@
 #include "asserts.hpp"
 #include "formula_callable_definition_fwd.hpp"
 #include "formula_callable_utils.hpp"
-#include "nocopy.hpp"
 #include "reference_counted_object.hpp"
 #include "variant_type.hpp"
 
