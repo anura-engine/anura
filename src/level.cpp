@@ -1622,7 +1622,7 @@ variant Level::write() const
 				continue;
 			}
 
-			opaque.insert(std::pair<int,int>(t.x,t.y));
+			opaque.emplace(t.x,t.y);
 		}
 
 		LOG_INFO("BUILDING RECTS...");
@@ -2041,7 +2041,7 @@ void Level::prepare_tiles_for_drawing()
 		}
 
 		if(t.object->isOpaque()) {
-			opaque.insert(std::pair<int,int>(t.x, t.y));
+			opaque.emplace(t.x, t.y);
 		}
 	}
 
@@ -2861,7 +2861,7 @@ bool Level::isSolid(const LevelSolidMap& map, const Entity& e, const std::vector
 	const Frame& current_frame = e.getCurrentFrame();
 
 	for(std::vector<point>::const_iterator p = points.begin(); p != points.end(); ++p) {
-		int x, y;
+		int x = 0, y = 0;
 		if(prev_x != std::numeric_limits<int>::min()) {
 			const int diff_x = (p->x - (p-1)->x) * (e.isFacingRight() ? 1 : -1);
 			const int diff_y = p->y - (p-1)->y;

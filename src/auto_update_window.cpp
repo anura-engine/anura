@@ -915,7 +915,7 @@ COMMAND_LINE_UTILITY(window_test)
 
 	int prev = 0;
 	for(int i = 0; i != 100000; ++i) {
-		glClearColor(i%2 ? 0.05 : 0.0, 0.0, 0.0, 1.0);
+		glClearColor(i % 2 ? 0.05f : 0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		SDL_GL_SwapWindow(win);
 		if(i%100 == 0) {

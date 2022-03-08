@@ -38,8 +38,8 @@ namespace threading
 {
 	manager::~manager()
 	{
-		for(std::vector<SDL_Thread*>::iterator i = detached_threads.begin(); i != detached_threads.end(); ++i) {
-			SDL_WaitThread(*i,nullptr);
+		for(SDL_Thread* const i : detached_threads) {
+			SDL_WaitThread(i, nullptr);
 		}
 	}
 
