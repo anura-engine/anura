@@ -174,8 +174,8 @@ ifeq ($(USE_IMGUI),yes)
   BASE_CXXFLAGS += -DUSE_IMGUI
   INC += -Iimgui
   CPPFLAGS += -DIMGUI_INCLUDE_IMGUI_USER_INL
-  SRC += imgui/imgui.cpp imgui/imgui_draw.cpp
-  OBJ += imgui/imgui.o imgui/imgui_draw.o
+  SRC += imgui/imgui.cpp imgui/imgui_draw.cpp imgui/imgui_widgets.cpp
+  OBJ += imgui/imgui.o   imgui/imgui_draw.o   imgui/imgui_widgets.o
   SRC_DIR += ./imgui
 endif
 
