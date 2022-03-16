@@ -4824,7 +4824,12 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			collides_with_level_ = starting_value;
 
 			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE), false);
-			handleEvent(OBJECT_EVENT_CHANGE_SOLID_DIMENSIONS_FAIL);
+
+            game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
+            callable->add("collide_with", variant());
+            game_logic::FormulaCallablePtr callable_ptr(callable);
+
+            handleEvent(OBJECT_EVENT_CHANGE_SOLID_DIMENSIONS_FAIL, callable);
 		}
 
 		break;
