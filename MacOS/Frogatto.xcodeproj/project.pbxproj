@@ -476,6 +476,7 @@
 		C0D6EB7116DB25D700B5ABCA /* bar_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6F16DB25D700B5ABCA /* bar_widget.cpp */; };
 		C0D78B5F171F215D00980007 /* libpng15.15.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D78B5E171F215D00980007 /* libpng15.15.dylib */; };
 		C0D78B60171F239D00980007 /* libpng15.15.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0D78B5E171F215D00980007 /* libpng15.15.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C0D8696027FAC5C000BAF62F /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D8695F27FAC5C000BAF62F /* imgui_widgets.cpp */; };
 		C0DDFDC6163F7FF800F727DD /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0406533163F790000F84F94 /* sys.cpp */; };
 		C0EF2A5E16229160004CD227 /* libGLEW.1.9.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */; };
 		C0EF2A5F1622918D004CD227 /* libGLEW.1.9.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -1413,6 +1414,7 @@
 		C0D6EB6F16DB25D700B5ABCA /* bar_widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bar_widget.cpp; sourceTree = "<group>"; };
 		C0D6EB7016DB25D700B5ABCA /* bar_widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = bar_widget.hpp; sourceTree = "<group>"; };
 		C0D78B5E171F215D00980007 /* libpng15.15.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libpng15.15.dylib; sourceTree = "<group>"; };
+		C0D8695F27FAC5C000BAF62F /* imgui_widgets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_widgets.cpp; path = ../imgui/imgui_widgets.cpp; sourceTree = "<group>"; };
 		C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libGLEW.1.9.0.dylib; sourceTree = "<group>"; };
 		C0F5E468169AAC97005ADCF5 /* language_dialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = language_dialog.cpp; sourceTree = "<group>"; };
 		C0F5E469169AAC97005ADCF5 /* language_dialog.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = language_dialog.hpp; sourceTree = "<group>"; };
@@ -2052,6 +2054,7 @@
 				C02D939C1E4FDB2300CB0A6A /* theme_imgui.hpp */,
 				C02D938A1E4C3CEF00CB0A6A /* imgui_draw.cpp */,
 				C02D938B1E4C3CEF00CB0A6A /* imgui.cpp */,
+				C0D8695F27FAC5C000BAF62F /* imgui_widgets.cpp */,
 				C02D938C1E4C3CEF00CB0A6A /* imgui.h */,
 				C02D93961E4C54A100CB0A6A /* imgui_user.inl */,
 				C02D93951E4C53E000CB0A6A /* spline.h */,
@@ -2662,6 +2665,7 @@
 				6357A74C1B3F13B400793D60 /* FontFreetype.cpp in Sources */,
 				638CC72A1AF6057700C7A106 /* ldo.cpp in Sources */,
 				C010C74C160AFD4D006E7D90 /* button.cpp in Sources */,
+				C0D8696027FAC5C000BAF62F /* imgui_widgets.cpp in Sources */,
 				C010C74D160AFD4D006E7D90 /* character_editor_dialog.cpp in Sources */,
 				C010C74E160AFD4D006E7D90 /* checkbox.cpp in Sources */,
 				6357A72E1B3F116900793D60 /* css_selector.cpp in Sources */,
