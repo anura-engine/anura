@@ -47,7 +47,7 @@ namespace KRE
 		  enabled_(true),
 		  ignore_global_model_(false),
 		  derived_position_(0.0f),
-		  derived_rotation_(),
+		  derived_rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		  derived_scale_(1.0f)
 	{
 	}
