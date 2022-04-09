@@ -3567,23 +3567,23 @@ RETURN_TYPE("bool")
 		}
 	};
 
-	FUNCTION_DEF(suspend_level, 1, 1, "suspend_Level(string dest_Level)")
+	FUNCTION_DEF(suspend_level, 1, 1, "suspend_level(string dest_level)")
 		std::string dst = EVAL_ARG(0).as_string();
 
 		return variant(new FnCommandCallable("suspend_level", [=]() {
-			ffl::IntrusivePtr<Level> old_Level(&Level::current());
+			ffl::IntrusivePtr<Level> old_level(&Level::current());
 			std::string dst_str = dst;
 
 			const controls::control_backup_scope ctrl_backup_scope(controls::CLEAR_LOCKS);
 
 			ffl::IntrusivePtr<Level> pause_level(load_level(dst));
-			pause_level->set_suspended_level(old_Level);
+			pause_level->set_suspended_level(old_level);
 
 			std::string return_id = Level::current().id();
 			LevelRunner runner(pause_level, dst_str, return_id);
 			const bool result = runner.play_level();
 
-			old_Level->setAsCurrentLevel();
+			old_level->setAsCurrentLevel();
 
 			if(result) {
 				LevelRunner::getCurrent()->force_return(true);
@@ -3602,18 +3602,18 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(resume_level)
 
-	FUNCTION_DEF(teleport, 1, 5, "teleport(string dest_Level, (optional)string dest_label, (optional)string transition, (optional)playable): teleports the player to a new Level. The Level is given by dest_Level, with null() for the current Level. If dest_label is given then the player will be teleported to the object in the destination Level with that label. If transition is given, it names a type of transition (such as 'flip' or 'fade') which indicates the kind of visual effect to use for the transition. If a playable is specified it is placed in the Level instead of the current one.  If no_move_to_standing is set to true, rather than auto-positioning the player on the ground under/above the target, the player will appear at precisely the position of the destination object - e.g. this is useful if they need to fall out of a pipe or hole coming out of the ceiling.")
+	FUNCTION_DEF(teleport, 1, 5, "teleport(string dest_level, (optional)string dest_label, (optional)string transition, (optional)playable): teleports the player to a new Level. The Level is given by dest_level, with null() for the current Level. If dest_label is given then the player will be teleported to the object in the destination Level with that label. If transition is given, it names a type of transition (such as 'flip' or 'fade') which indicates the kind of visual effect to use for the transition. If a playable is specified it is placed in the Level instead of the current one.  If no_move_to_standing is set to true, rather than auto-positioning the player on the ground under/above the target, the player will appear at precisely the position of the destination object - e.g. this is useful if they need to fall out of a pipe or hole coming out of the ceiling.")
 		std::string label, transition;
 		EntityPtr new_playable;
 		bool no_move_to_standing = false;
-		std::string dst_Level_str;
+		std::string dst_level_str;
 		variant play;
 
 		LevelPtr level_obj;
 
 		if(!(NUM_ARGS == 1 && EVAL_ARG(0).is_map())) {
-			variant dst_Level = EVAL_ARG(0);
-			dst_Level_str = dst_Level.is_null() ? "" : dst_Level.as_string();
+			variant dst_level = EVAL_ARG(0);
+			dst_level_str = dst_level.is_null() ? "" : dst_level.as_string();
 			if(NUM_ARGS > 1) {
 				label = EVAL_ARG(1).as_string();
 				if(NUM_ARGS > 2) {
@@ -3632,7 +3632,7 @@ RETURN_TYPE("bool")
 				level_obj = argMap["level_obj"].convert_to<Level>();
 			}
 
-			dst_Level_str = argMap["level"].as_string_default("");
+			dst_level_str = argMap["level"].as_string_default("");
 			label = argMap["label"].as_string_default("");
 			if(argMap.has_key("player")) {
 				play = argMap["player"];
@@ -3649,7 +3649,7 @@ RETURN_TYPE("bool")
 			}
 		}
 
-		teleport_command* cmd = new teleport_command(dst_Level_str, label, transition, new_playable, no_move_to_standing, level_obj);
+		teleport_command* cmd = new teleport_command(dst_level_str, label, transition, new_playable, no_move_to_standing, level_obj);
 		cmd->setExpression(this);
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
@@ -3970,14 +3970,14 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("bool")
 	END_FUNCTION_DEF(collides)
 
-	FUNCTION_DEF(collides_with_Level, 1, 1, "collides_with_Level(object) -> boolean: returns true iff the given object collides with the Level.")
+	FUNCTION_DEF(collides_with_level, 1, 1, "collides_with_level(object) -> boolean: returns true iff the given object collides with the Level.")
 		return variant::from_bool(non_solid_entity_collides_with_level(
 				   Level::current(),
 				   *EVAL_ARG(0).convert_to<Entity>()));
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("object")
 	RETURN_TYPE("bool")
-	END_FUNCTION_DEF(collides_with_Level)
+	END_FUNCTION_DEF(collides_with_level)
 
 	FUNCTION_DEF(blur_object, 2, 2, "blur_object(properties, params)")
 		Formula::failIfStaticContext();
@@ -4212,11 +4212,11 @@ RETURN_TYPE("bool")
 		return parse_variant_type(variant("builtin widget"));
 	END_FUNCTION_DEF(widget)
 
-	class add_Level_module_command : public EntityCommandCallable {
+	class add_level_module_command : public EntityCommandCallable {
 		std::string lvl_;
 		int x_, y_;
 	public:
-		add_Level_module_command(const std::string& lvl, int x, int y)
+		add_level_module_command(const std::string& lvl, int x, int y)
 		  : lvl_(lvl), x_(x), y_(y)
 		{}
 
@@ -4225,8 +4225,8 @@ RETURN_TYPE("bool")
 		}
 	};
 
-	FUNCTION_DEF(add_Level_module, 3, 3, "add_Level_module(string lvl, int xoffset, int yoffset): adds the Level module with the given Level id at the given offset")
-		add_Level_module_command* cmd = (new add_Level_module_command(EVAL_ARG(0).string_cast(), EVAL_ARG(1).as_int(), EVAL_ARG(2).as_int()));
+	FUNCTION_DEF(add_level_module, 3, 3, "add_level_module(string lvl, int xoffset, int yoffset): adds the Level module with the given Level id at the given offset")
+		add_level_module_command* cmd = (new add_level_module_command(EVAL_ARG(0).string_cast(), EVAL_ARG(1).as_int(), EVAL_ARG(2).as_int()));
 		cmd->setExpression(this);
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
@@ -4234,12 +4234,12 @@ RETURN_TYPE("bool")
 		ARG_TYPE("int")
 		ARG_TYPE("int")
 	RETURN_TYPE("commands")
-	END_FUNCTION_DEF(add_Level_module)
+	END_FUNCTION_DEF(add_level_module)
 
-	class remove_Level_module_command : public EntityCommandCallable {
+	class remove_level_module_command : public EntityCommandCallable {
 		std::string lvl_;
 	public:
-		explicit remove_Level_module_command(const std::string& lvl) : lvl_(lvl)
+		explicit remove_level_module_command(const std::string& lvl) : lvl_(lvl)
 		{}
 
 		virtual void execute(Level& lvl, Entity& ob) const override {
@@ -4247,20 +4247,20 @@ RETURN_TYPE("bool")
 		}
 	};
 
-	FUNCTION_DEF(remove_Level_module, 1, 1, "remove_Level_module(string lvl): removes the given Level module")
-		remove_Level_module_command* cmd = (new remove_Level_module_command(EVAL_ARG(0).string_cast()));
+	FUNCTION_DEF(remove_level_module, 1, 1, "remove_level_module(string lvl): removes the given Level module")
+		remove_level_module_command* cmd = (new remove_level_module_command(EVAL_ARG(0).string_cast()));
 		cmd->setExpression(this);
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("string")
 	RETURN_TYPE("commands")
-	END_FUNCTION_DEF(remove_Level_module)
+	END_FUNCTION_DEF(remove_level_module)
 
-	class shift_Level_position_command : public EntityCommandCallable {
+	class shift_level_position_command : public EntityCommandCallable {
 		int xoffset_, yoffset_;
 	public:
 
-		shift_Level_position_command(int xoffset, int yoffset)
+		shift_level_position_command(int xoffset, int yoffset)
 		  : xoffset_(xoffset), yoffset_(yoffset) {}
 
 		virtual void execute(Level& lvl, Entity& ob) const override {
@@ -4269,7 +4269,7 @@ RETURN_TYPE("bool")
 	};
 
 	FUNCTION_DEF(cosmic_shift, 2, 2, "cosmic_shift(int xoffset, int yoffet): adjust position of all objects and tiles in the Level by the given offset")
-		shift_Level_position_command* cmd = (new shift_Level_position_command(EVAL_ARG(0).as_int(), EVAL_ARG(1).as_int()));
+		shift_level_position_command* cmd = (new shift_level_position_command(EVAL_ARG(0).as_int(), EVAL_ARG(1).as_int()));
 		cmd->setExpression(this);
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
@@ -4475,7 +4475,7 @@ RETURN_TYPE("bool")
 			obj_->setLevel(lvl);
 			obj_->setSpawnedBy(ob.label());
 
-			if(!place_Entity_in_Level_with_large_displacement(lvl, *obj_)) {
+			if(!place_Entity_in_level_with_large_displacement(lvl, *obj_)) {
 				return;
 			}
 
