@@ -665,6 +665,8 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 	for(auto p : proto_definitions) {
 		object_type_definitions()[p.first] = p.second;
 	}
+	
+	const bool objectHasAlreadyBeenAdded = !!object_type_definitions()[id_];
 
 	object_type_definitions()[id_] = callable_definition_;
 
@@ -725,25 +727,35 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 
 	callable_definition_->finalizeProperties();
 	callable_definition_->setStrict(is_strict_);
+	
+	if (!objectHasAlreadyBeenAdded) {
+		//[DDR 2022-04-13] Bad Hack: The above "if" is to work around an error
+		//where protos doesn't get fully populated for objects already added
+		//(it only sees the last prototype in the chain), which only triggers
+		//when you try to depend on the Frogatto module as a dependancy for
+		//your own module.
+		
+		for(auto f : g_object_validation_functions) {
+			std::vector<variant> protos;
 
-	for(auto f : g_object_validation_functions) {
-		std::vector<variant> protos;
-
-		while(prototype_derived_from != "") {
-			protos.emplace_back(prototype_derived_from);
-			auto it = object_type_inheritance().find(prototype_derived_from);
-			if(it == object_type_inheritance().end()) {
-				break;
+			while(prototype_derived_from != "") {
+				LOG_INFO("Added " << prototype_derived_from << " to protos for " << id_ << ".");
+				protos.emplace_back(prototype_derived_from);
+				auto it = object_type_inheritance().find(prototype_derived_from);
+				if(it == object_type_inheritance().end()) {
+					break;
+				}
+				prototype_derived_from = it->second;
 			}
-			prototype_derived_from = it->second;
+			LOG_INFO("Done.\n");
+
+			std::vector<variant> args;
+			args.push_back(node);
+			args.emplace_back(&protos);
+
+			variant result = f(args);
+			ASSERT_LOG(result.is_null(), "Object validation failed for object " << id_ << ": " << result.as_string());
 		}
-
-		std::vector<variant> args;
-		args.push_back(node);
-		args.emplace_back(&protos);
-
-		variant result = f(args);
-		ASSERT_LOG(result.is_null(), "Object validation failed for object " << id_ << ": " << result.as_string());
 	}
 }
 
