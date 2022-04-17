@@ -2523,6 +2523,7 @@ void Level::calculateLighting(int x, int y, int w, int h) const
 	wnd->render(rt.get());
 }
 
+//Show the white debug overlay for level solidity.
 void Level::draw_debug_solid(int x, int y, int w, int h) const
 {
 	if(preferences::show_debug_hitboxes() == false) {
@@ -2544,21 +2545,38 @@ void Level::draw_debug_solid(int x, int y, int w, int h) const
 			const int ypixel = (tile_y + ypos)*TileSize;
 
 			RectRenderable rr;
-			if(info->all_solid) {
-				rr.update(rect(xpixel, ypixel, TileSize, TileSize),
+			if(info->all_solid) { //Tile is all solid, draw a rect.
+				rr.update(xpixel, ypixel, TileSize, TileSize,
+					//I don't know why alpha isn't working here, I think ->render(&rr) isn't reading it correctly?
 					info->info.damage ? KRE::Color(255, 0, 0, 196) : KRE::Color(255, 255, 255, 196));
-			} else {
+			} else { //Tile is diagonal; probe solidity to draw a triangle.
 				std::vector<glm::u16vec2> v;
 
 				for(int suby = 0; suby != TileSize; ++suby) {
 					for(int subx = 0; subx != TileSize; ++subx) {
+						//The following if statement correctly loads a rectangle of
+						//coordinates into v. However, rr.update doesn't work. (I think.)
+						
+						//if(info->bitmap.test(suby*TileSize + subx)) {
+						//	v.emplace_back(xpixel + subx + 1, ypixel + suby + 1);
+						//}
+						
+						//Because rr.update doesn't work, I've added this much less efficient
+						//code which just draws the rectangle once for each pixel. >_<
 						if(info->bitmap.test(suby*TileSize + subx)) {
-							v.emplace_back(xpixel + subx + 1, ypixel + suby + 1);
+							rr.update(xpixel + subx, ypixel + suby, 1, 1,
+								info->info.damage ? KRE::Color(255, 0, 0, 196) : KRE::Color(255, 255, 255, 196));
+							KRE::WindowManager::getMainWindow()->render(&rr);
 						}
 					}
 				}
+				continue; //We just drew the thing, just continue to the next tile.
 
 				if(!v.empty()) {
+					//This is the call which does not work, which I do not know why.
+					//It basically... just doesn't update the rect?? At least not
+					//correctly. And the data structures underneath are not really
+					//human-readable in GDB, just a bunch of single-letter glm structs.
 					rr.update(&v, info->info.damage ? KRE::Color(255, 0, 0, 196) : KRE::Color(255, 255, 255, 196));
 				}
 
