@@ -901,7 +901,7 @@ editor::editor(const char* level_cfg)
     selected_entity_startx_(0),
 	selected_entity_starty_(0),
     filename_(level_cfg),
-	tool_(TOOL_ADD_RECT),
+	tool_(TOOL_SELECT_RECT),
     done_(false),
 	face_right_(true),
 	upside_down_(false),
