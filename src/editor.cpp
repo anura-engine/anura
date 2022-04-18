@@ -593,7 +593,7 @@ namespace
 	const EditorVariableInfo* g_variable_editing = nullptr;
 	int g_variable_editing_index = -1;
 	variant g_variable_editing_original_value;
-	const EditorVariableInfo* variable_info_selected(ConstEntityPtr e, int xpos, int ypos, int zoom, int* index_selected=nullptr)
+	const EditorVariableInfo* variable_info_selected(ConstEntityPtr e, int xpos, int ypos, float zoom, int* index_selected=nullptr)
 	{
 		if(index_selected) {
 			*index_selected = -1;
@@ -719,13 +719,13 @@ namespace
 	}
 
 
-	rect findSubComponentArea(const Level::SubComponent& sub, int xpos, int ypos, int zoom)
+	rect findSubComponentArea(const Level::SubComponent& sub, int xpos, int ypos, float zoom)
 	{
 		return rect((sub.source_area.x() + (sub.source_area.w()+TileSize*4)*sub.num_variations + 20 - xpos)/zoom, (sub.source_area.y() + 20 - ypos)/zoom, 16, 16);
 	}
 
 	//find if an edge of a rectangle is selected
-	bool rect_left_edge_selected(const rect& r, int x, int y, int zoom)
+	bool rect_left_edge_selected(const rect& r, int x, int y, float zoom)
 	{
 		return y >= r.y() - RectEdgeSelectThreshold*zoom &&
 			   y <= r.y2() + RectEdgeSelectThreshold*zoom &&
@@ -733,7 +733,7 @@ namespace
 			   x <= r.x() + RectEdgeSelectThreshold*zoom;
 	}
 
-	bool rect_right_edge_selected(const rect& r, int x, int y, int zoom)
+	bool rect_right_edge_selected(const rect& r, int x, int y, float zoom)
 	{
 		return y >= r.y() - RectEdgeSelectThreshold*zoom &&
 			   y <= r.y2() + RectEdgeSelectThreshold*zoom &&
@@ -741,7 +741,7 @@ namespace
 			   x <= r.x2() + RectEdgeSelectThreshold*zoom;
 	}
 
-	bool rect_top_edge_selected(const rect& r, int x, int y, int zoom)
+	bool rect_top_edge_selected(const rect& r, int x, int y, float zoom)
 	{
 		return x >= r.x() - RectEdgeSelectThreshold*zoom &&
 			   x <= r.x2() + RectEdgeSelectThreshold*zoom &&
@@ -749,7 +749,7 @@ namespace
 			   y <= r.y() + RectEdgeSelectThreshold*zoom;
 	}
 
-	bool rect_bottom_edge_selected(const rect& r, int x, int y, int zoom)
+	bool rect_bottom_edge_selected(const rect& r, int x, int y, float zoom)
 	{
 		return x >= r.x() - RectEdgeSelectThreshold*zoom &&
 			   x <= r.x2() + RectEdgeSelectThreshold*zoom &&
@@ -757,7 +757,7 @@ namespace
 			   y <= r.y2() + RectEdgeSelectThreshold*zoom;
 	}
 
-	bool rect_any_edge_selected(const rect& r, int x, int y, int zoom)
+	bool rect_any_edge_selected(const rect& r, int x, int y, float zoom)
 	{
 		return rect_left_edge_selected(r, x, y, zoom) ||
 		       rect_right_edge_selected(r, x, y, zoom) ||
@@ -765,7 +765,7 @@ namespace
 		       rect_bottom_edge_selected(r, x, y, zoom);
 	}
 
-	bool is_rect_selected(const rect& r, int x, int y, int zoom)
+	bool is_rect_selected(const rect& r, int x, int y, float zoom)
 	{
 		return x >= r.x() &&
 			   x <= r.x2() &&
@@ -893,7 +893,7 @@ int editor::codebar_height()
 }
 
 editor::editor(const char* level_cfg)
-  : zoom_(1),
+  : zoom_(0.5),
     xpos_(0),
 	ypos_(0),
 	anchorx_(0),
@@ -3584,15 +3584,21 @@ void editor::save_level()
 
 void editor::zoomIn()
 {
-	if(zoom_ > 1) {
-		zoom_ /= 2;
+	if(zoom_ > 0.25) {
+		zoom_ /= 2.0;
+	}
+	if(zoom_ >= 1.0) {
+		zoom_ = round(zoom_);
 	}
 }
 
 void editor::zoomOut()
 {
 	if(zoom_ < 8) {
-		zoom_ *= 2;
+		zoom_ *= 2.0;
+	}
+	if(zoom_ >= 1.0) {
+		zoom_ = round(zoom_);
 	}
 }
 
