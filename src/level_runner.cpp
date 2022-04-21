@@ -410,7 +410,11 @@ void LevelRunner::video_resize_event(const SDL_Event &event)
 	game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 	callable->add("width", variant(KRE::WindowManager::getMainWindow()->width()));
 	callable->add("height", variant(KRE::WindowManager::getMainWindow()->height()));
-	lvl_->player()->getEntity().handleEvent(WindowResizeEventID, callable.get());
+    
+    std::vector<EntityPtr> chars = lvl_->get_chars();
+    for(EntityPtr e : chars) {
+        e->handleEvent(WindowResizeEventID, callable.get());
+    }
 }
 
 void LevelRunner::on_player_set(EntityPtr e)
@@ -900,10 +904,12 @@ bool LevelRunner::play_level()
 		}
 	}
 
-	for(EntityPtr e : lvl_->get_chars()) {
-		e->handleEvent(OBJECT_EVENT_BEING_REMOVED);
-	}
-
+    
+    std::vector<EntityPtr> chars = lvl_->get_chars();
+    for(EntityPtr e : chars) {
+        e->handleEvent(OBJECT_EVENT_BEING_REMOVED);
+    }
+    
 	return quit_;
 }
 
