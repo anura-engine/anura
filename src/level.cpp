@@ -3944,6 +3944,21 @@ DEFINE_FIELD(segment_height, "int")
 DEFINE_FIELD(num_segments, "int")
 	return variant(unsigned(obj.sub_levels_.size()));
 
+DEFINE_FIELD(screen_bounds, "[int, int]")
+	auto& gs = graphics::GameScreen::get();
+	std::vector<variant> pos;
+	pos.reserve(2);
+	pos.emplace_back(gs.getVirtualWidth());
+	pos.emplace_back(gs.getVirtualHeight());
+	return variant(&pos);
+// This does not work, or, well, it doesn't do anything useful at least. It would ideally change the window size.
+//DEFINE_SET_FIELD_TYPE("[decimal, decimal]")
+//	ASSERT_EQ(value.num_elements(), 2);
+//	graphics::GameScreen::get().setVirtualDimensions(
+//		value[0].as_int(), 
+//		value[1].as_int()
+//	);
+
 DEFINE_FIELD(camera_position, "[int, int, int, int]")
 	std::vector<variant> pos;
 	pos.reserve(4);
@@ -3951,11 +3966,10 @@ DEFINE_FIELD(camera_position, "[int, int, int, int]")
 	pos.push_back(variant(last_draw_position().y/100));
 
 	auto& gs = graphics::GameScreen::get();
-	pos.push_back(variant(gs.getVirtualWidth()));
-	pos.push_back(variant(gs.getVirtualHeight()));
+	pos.emplace_back(int(round(gs.getVirtualWidth()  / last_draw_position().zoom)));
+	pos.emplace_back(int(round(gs.getVirtualHeight() / last_draw_position().zoom)));
 	return variant(&pos);
 DEFINE_SET_FIELD_TYPE("[decimal,decimal]")
-
 	ASSERT_EQ(value.num_elements(), 2);
 	last_draw_position().x_pos = last_draw_position().x = (value[0].as_decimal()*100).as_int();
 	last_draw_position().y_pos = last_draw_position().y = (value[1].as_decimal()*100).as_int();
