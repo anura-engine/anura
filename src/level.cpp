@@ -3862,7 +3862,7 @@ DEFINE_FIELD(zoom, "decimal")
 	return variant(obj.zoom_level_);
 DEFINE_SET_FIELD
 	obj.zoom_level_ = value.as_float();
-DEFINE_FIELD(instant_zoom, "decimal")
+DEFINE_FIELD(zoom_instant, "decimal")
 return variant(obj.zoom_level_);
 DEFINE_SET_FIELD
 obj.zoom_level_ = value.as_float();
@@ -3962,7 +3962,7 @@ DEFINE_FIELD(segment_height, "int")
 DEFINE_FIELD(num_segments, "int")
 	return variant(unsigned(obj.sub_levels_.size()));
 
-DEFINE_FIELD(screen_bounds, "[int, int]")
+DEFINE_FIELD(window_size, "[int, int]")
 	auto& gs = graphics::GameScreen::get();
 	std::vector<variant> pos;
 	pos.reserve(2);
