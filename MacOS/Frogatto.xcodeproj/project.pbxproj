@@ -408,8 +408,6 @@
 		C07A47A619443FCE00F1190E /* libpixman-1.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47A019443FC000F1190E /* libpixman-1.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C07A47A8194440A400F1190E /* libcairo.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A47A7194440A400F1190E /* libcairo.2.dylib */; };
 		C07A47A9194440B500F1190E /* libcairo.2.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47A7194440A400F1190E /* libcairo.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		C07A47AB1944487300F1190E /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A47AA1944487300F1190E /* libfreetype.6.dylib */; };
-		C07A47AC1944487C00F1190E /* libfreetype.6.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47AA1944487300F1190E /* libfreetype.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C07A47D119444C2000F1190E /* svg_attribs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47B419444C2000F1190E /* svg_attribs.cpp */; };
 		C07A47D219444C2000F1190E /* svg_container.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47B619444C2000F1190E /* svg_container.cpp */; };
 		C07A47D319444C2000F1190E /* svg_element.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47B819444C2000F1190E /* svg_element.cpp */; };
@@ -468,6 +466,8 @@
 		C0AECE0418E5411C00CD3161 /* tbs_matchmaking_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AECE0318E5411C00CD3161 /* tbs_matchmaking_server.cpp */; };
 		C0AECE0718E541A200CD3161 /* db_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AECE0518E541A200CD3161 /* db_client.cpp */; };
 		C0AECE0A18E541BD00CD3161 /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AECE0818E541BD00CD3161 /* uuid.cpp */; };
+		C0B3E825282637950034EA7F /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0B3E8232826313F0034EA7F /* libfreetype.6.dylib */; };
+		C0B3E826282637A40034EA7F /* libfreetype.6.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0B3E8232826313F0034EA7F /* libfreetype.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C0B87BD4166725A700D66B15 /* formula_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B87BD21667256F00D66B15 /* formula_object.cpp */; };
 		C0CB6CFA1933E62C004A6450 /* cairo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0CB6CF91933E62C004A6450 /* cairo.cpp */; };
 		C0D6EB6C16DB25C000B5ABCA /* tbs_internal_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */; };
@@ -501,8 +501,8 @@
 				C0442A7B1AC7A2A400A17F91 /* libboost_iostreams.dylib in CopyFiles */,
 				C0442A7F1AC7A9CB00A17F91 /* libboost_regex.dylib in CopyFiles */,
 				C02C5D081CA23AE4006D53E3 /* libboost_locale.dylib in CopyFiles */,
+				C0B3E826282637A40034EA7F /* libfreetype.6.dylib in CopyFiles */,
 				C07A47E21944699300F1190E /* libintl.8.dylib in CopyFiles */,
-				C07A47AC1944487C00F1190E /* libfreetype.6.dylib in CopyFiles */,
 				C07A47A9194440B500F1190E /* libcairo.2.dylib in CopyFiles */,
 				C07A47A419443FC900F1190E /* libfontconfig.1.dylib in CopyFiles */,
 				C07A47A519443FCB00F1190E /* libglib-2.0.0.dylib in CopyFiles */,
@@ -1306,7 +1306,6 @@
 		C07A479F19443FC000F1190E /* libglib-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libglib-2.0.0.dylib"; sourceTree = "<group>"; };
 		C07A47A019443FC000F1190E /* libpixman-1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libpixman-1.0.dylib"; sourceTree = "<group>"; };
 		C07A47A7194440A400F1190E /* libcairo.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libcairo.2.dylib; sourceTree = "<group>"; };
-		C07A47AA1944487300F1190E /* libfreetype.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libfreetype.6.dylib; sourceTree = "<group>"; };
 		C07A47B419444C2000F1190E /* svg_attribs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_attribs.cpp; path = svg/svg_attribs.cpp; sourceTree = "<group>"; };
 		C07A47B519444C2000F1190E /* svg_attribs.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_attribs.hpp; path = svg/svg_attribs.hpp; sourceTree = "<group>"; };
 		C07A47B619444C2000F1190E /* svg_container.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_container.cpp; path = svg/svg_container.cpp; sourceTree = "<group>"; };
@@ -1399,6 +1398,7 @@
 		C0AECE0818E541BD00CD3161 /* uuid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uuid.cpp; sourceTree = "<group>"; };
 		C0AECE0918E541BD00CD3161 /* uuid.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = uuid.hpp; sourceTree = "<group>"; };
 		C0B397F71636666C00D010E0 /* Frogatto.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Frogatto.entitlements; sourceTree = "<group>"; };
+		C0B3E8232826313F0034EA7F /* libfreetype.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libfreetype.6.dylib; sourceTree = "<group>"; };
 		C0B87BB9166603C300D66B15 /* icon.iconset */ = {isa = PBXFileReference; lastKnownFileType = folder.iconset; path = icon.iconset; sourceTree = "<group>"; };
 		C0B87BD21667256F00D66B15 /* formula_object.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = formula_object.cpp; sourceTree = "<group>"; };
 		C0B87BD31667256F00D66B15 /* formula_object.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = formula_object.hpp; sourceTree = "<group>"; };
@@ -1438,11 +1438,11 @@
 				C07A47A119443FC000F1190E /* libfontconfig.1.dylib in Frameworks */,
 				631A8A0C1AC69A5D00AA55C8 /* libboost_filesystem.dylib in Frameworks */,
 				C07A47A319443FC000F1190E /* libpixman-1.0.dylib in Frameworks */,
+				C0B3E825282637950034EA7F /* libfreetype.6.dylib in Frameworks */,
 				631A8A0A1AC69A0800AA55C8 /* libboost_regex.dylib in Frameworks */,
 				C08B95BD1D87E21E002CCB98 /* libvorbis.0.dylib in Frameworks */,
 				C07A47A219443FC000F1190E /* libglib-2.0.0.dylib in Frameworks */,
 				C0EF2A5E16229160004CD227 /* libGLEW.1.9.0.dylib in Frameworks */,
-				C07A47AB1944487300F1190E /* libfreetype.6.dylib in Frameworks */,
 				63E092031C6A9714006170A8 /* libvpx.a in Frameworks */,
 				C0D78B5F171F215D00980007 /* libpng15.15.dylib in Frameworks */,
 				C07A47E01944696C00F1190E /* libintl.8.dylib in Frameworks */,
@@ -2523,7 +2523,7 @@
 		C07A47E11944697300F1190E /* SVG Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				C07A47AA1944487300F1190E /* libfreetype.6.dylib */,
+				C0B3E8232826313F0034EA7F /* libfreetype.6.dylib */,
 				C07A47A7194440A400F1190E /* libcairo.2.dylib */,
 				C07A479E19443FC000F1190E /* libfontconfig.1.dylib */,
 				C07A479F19443FC000F1190E /* libglib-2.0.0.dylib */,
