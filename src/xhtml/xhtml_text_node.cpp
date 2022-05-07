@@ -32,12 +32,6 @@
 
 #include "WindowManager.hpp"
 
-#ifndef _MSC_VER
-#pragma comment(lib, "icudt.lib")
-#pragma comment(lib, "icuin.lib")
-#pragma comment(lib, "icuuc.lib")
-#endif
-
 namespace xhtml
 {
 	namespace

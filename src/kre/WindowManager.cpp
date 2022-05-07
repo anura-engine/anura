@@ -21,12 +21,6 @@
 	   distribution.
 */
 
-#ifndef _MSC_VER
-#pragma comment(lib, "SDL2")
-#pragma comment(lib, "SDL2main")
-#pragma comment(lib, "SDL2_image")
-#endif
-
 #include <cctype>
 #include <sstream>
 

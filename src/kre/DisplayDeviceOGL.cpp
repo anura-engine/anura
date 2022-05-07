@@ -21,12 +21,6 @@
 	   distribution.
 */
 
-#ifndef _MSC_VER
-#pragma comment(lib, "opengl32")
-#pragma comment(lib, "glu32")
-#pragma comment(lib, "glew32")
-#endif
-
 #include <numeric>
 
 #include <GL/glew.h>
