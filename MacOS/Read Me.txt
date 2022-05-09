@@ -1,6 +1,0 @@
-This is our primary setup for building on macs, which at the time of this writing is regularly maintained by one of our developers, and should build.  Ideally, this should be as simple as opening the project file, and clicking build.  All dependencies and prebuilt libs are inside this folder, or are a symlink to a reliable OS-level folder.  Be aware the gl.h symlink may break - if it does, create a new one pointing to apple's opengl framework.
-
-
-Well-maintained general instructions for building on OS X are here:
-https://github.com/frogatto/frogatto/wiki/Compiling-Frogatto-on-Mac-OS-X
-
