@@ -28,11 +28,7 @@
 #include <cmath>
 #include <vector>
 
-#ifdef __APPLE__
-#include <SDL_mixer.h>
-#else
 #include <SDL2/SDL_mixer.h>
-#endif
 #include <SDL2/SDL_loadso.h>
 
 #include <vorbis/vorbisfile.h>
