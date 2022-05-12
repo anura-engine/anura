@@ -93,3 +93,7 @@ windows/build/
 windows/*-Release/
 windows/*-Debug/
 *resouces.aps
+
+#Don't commit master-config.cfg by default.
+#It should be copied or symlinked from a module.
+master-config.cfg

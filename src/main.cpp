@@ -110,7 +110,7 @@
 #include "b2d_ffl.hpp"
 #endif
 
-#define DEFAULT_MODULE	"frogatto"
+#define DEFAULT_MODULE "frogatto4"
 
 variant g_auto_update_info;
 
