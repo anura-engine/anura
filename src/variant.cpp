@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include <cctype>
 #include <cmath>
 #include <set>
 #include <stdlib.h>
@@ -2911,7 +2912,10 @@ void variant::write_json(std::ostream& s, unsigned int flags) const
 			}
 
 			if(i->first.is_string()) {
-				s << '"' << i->first.string_cast() << "\":";
+				std::string str = i->first.string_cast();
+				boost::replace_all(str, "\"", "\\\"");
+				boost::replace_all(str, "\\", "\\\\");
+				s << '"' << str << "\":";
 			} else {
 				std::string str = i->first.write_json(true, flags);
 
@@ -3060,7 +3064,10 @@ void variant::write_json_pretty(std::ostream& s, std::string indent, unsigned in
 
 			s << "\n" << indent;
 			if(i->first.is_string()) {
-				s << '"' << i->first.string_cast() << "\": ";
+				std::string str = i->first.string_cast();
+				boost::replace_all(str, "\"", "\\\"");
+				boost::replace_all(str, "\\", "\\\\");
+				s << '"' << str << "\": ";
 			}
 			else {
 				std::string str = i->first.write_json(true, flags);
@@ -3070,6 +3077,7 @@ void variant::write_json_pretty(std::ostream& s, std::string indent, unsigned in
 				}
 				else {
 					boost::replace_all(str, "\"", "\\\"");
+					boost::replace_all(str, "\\", "\\\\");
 					s << "\"@eval " << str << "\": ";
 				}
 			}
@@ -5097,4 +5105,27 @@ UNIT_TEST(dictionary_variant_string_cast) {
 			"TT: 3.141592,32993: true" != dictionary_variant_string_cast) {
 		CHECK_EQ(false, true);
 	}
+}
+
+// Ensure {"\": "\"} serializes correctly.
+// https://github.com/frogatto/frogatto/issues/573
+UNIT_TEST(serialize_map_backslash_values) {
+	//Construct {"\": "\"} map.
+	std::map<variant, variant> backslash_std_map { 
+		std::pair<variant, variant>{ "\\", "\\" }
+	};
+	variant backslash_variant_map(& backslash_std_map);
+	
+	//Render the map 
+	std::stringstream ss1;
+	std::stringstream ss2;
+	backslash_variant_map.write_json(ss1, 0);
+	backslash_variant_map.write_json_pretty(ss2, "\t", 0);
+	std::string s1 = ss1.str();
+	std::string s2 = ss2.str();
+	//Can remove whitespace without affecting validity of the resulting JSON; and we don't want to catch formatting differences - especially with write_json_pretty()!
+	s1.erase(std::remove_if(s1.begin(), s1.end(), isspace), s1.end());
+	s2.erase(std::remove_if(s2.begin(), s2.end(), isspace), s2.end());
+	CHECK_EQ("{\"\\\\\":\"\\\\\"}", s1);
+	CHECK_EQ("{\"\\\\\":\"\\\\\"}", s2);
 }
