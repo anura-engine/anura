@@ -39,6 +39,10 @@ Assuming that you cloned `vcpkg` into a folder adjacent to the one you cloned an
 $ ../vcpkg/vcpkg install
 ```
 
+(If you're on an older version of Mac OS, as I am, `curl` may fail to install certain packages due to the expiration of LetsEncrypt's root certificate, which you can [read about a solution for, here](https://apple.stackexchange.com/questions/428448/app-curl-still-getting-certificate-expired-error-due-to-expired-lets-encrypt) — I opted to install the new `.pem` file.)
+
+
+
 This will build all packages listed in `vcpkg.json`. They will be found inside `./vcpkg_installed`.
 
 ## 5) Build
