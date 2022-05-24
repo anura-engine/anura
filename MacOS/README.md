@@ -16,7 +16,7 @@ The easiest way to install these, at the time of this writing, is to use [homebr
 
 ## 1) Install `vcpkg`
 
-- Clone the [vcpkg repo](https://github.com/microsoft/vcpkg) somewhere outside the anura folder. This can honestly go anywhere; you'll execute it by running a shell script from inside of it, via a relative path, and then setting the current working directory to the root `anura` folder.
+Clone the [vcpkg repo](https://github.com/microsoft/vcpkg) somewhere outside the anura folder. This can honestly go anywhere; you'll execute it by running a shell script from inside of it, via a relative path, and then setting the current working directory to the root `anura` folder.
 
 
 ## 2) Install several dependencies the `vcpkg` script needs, via `homebrew`
@@ -24,12 +24,12 @@ The easiest way to install these, at the time of this writing, is to use [homebr
 We need a few packages which can be installed as follows:
 
 ```sh
-$ brew install pkg-config libtool automake autoconf-archive
+$ brew install python pkg-config libtool automake autoconf-archive
 ```
 
 ## 3) Prepare `vcpkg`
 
-- Inside the vcpkg folder, run `./bootstrap-vcpkg.sh`.
+Inside the vcpkg folder, run `./bootstrap-vcpkg.sh`.
 
 ## 4) Run `vcpkg` and install dependencies
 
@@ -39,9 +39,7 @@ Assuming that you cloned `vcpkg` into a folder adjacent to the one you cloned an
 $ ../vcpkg/vcpkg install
 ```
 
-(If you're on an older version of Mac OS, as I am, `curl` may fail to install certain packages due to the expiration of LetsEncrypt's root certificate, which you can [read about a solution for, here](https://apple.stackexchange.com/questions/428448/app-curl-still-getting-certificate-expired-error-due-to-expired-lets-encrypt) — I opted to install the new `.pem` file.)
-
-
+> (If you're on an older version of Mac OS, as I am, `curl` may fail to install certain packages due to the expiration of LetsEncrypt's root certificate, which you can [read about a solution for, here](https://apple.stackexchange.com/questions/428448/app-curl-still-getting-certificate-expired-error-due-to-expired-lets-encrypt) — I opted to install the new `.pem` file.)
 
 This will build all packages listed in `vcpkg.json`. They will be found inside `./vcpkg_installed`.
 
