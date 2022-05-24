@@ -29,7 +29,7 @@ $ brew install pkg-config libtool automake autoconf-archive
 
 ## 3) Prepare `vcpkg`
 
-- Inside the vcpkg folder, run `bootstrap-vcpkg.sh`.
+- Inside the vcpkg folder, run `./bootstrap-vcpkg.sh`.
 
 ## 4) Run `vcpkg` and install dependencies
 
