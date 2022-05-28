@@ -2182,6 +2182,22 @@ namespace
 
 	END_FUNCTION_DEF(object_playable)
 
+
+	FUNCTION_DEF(is_object, 1, 1, "is_object(obj_type): Returns true if passing the string to object(obj_type, ...) would work, false if a fatal assert would be thrown.")
+		try {
+			CustomObjectType::getDefinition(EVAL_ARG(0).as_string());
+			return variant::from_bool(true);
+		} catch(const fatal_assert_failure_exception& e) {
+			return variant::from_bool(false);
+		} catch(const validation_failure_exception& e) {
+			return variant::from_bool(false);
+		}
+	FUNCTION_ARGS_DEF
+        ARG_TYPE("string")
+	RETURN_TYPE("bool")
+	END_FUNCTION_DEF(is_object)
+
+
     FUNCTION_DEF(get_object_type_animation, 2, 2, "get_object_type_animation(obj_type, animation_name): returns the animation object for the given object type")
         std::string objTypeName = EVAL_ARG(0).as_string();
         std::string anim_name = EVAL_ARG(1).as_string();
