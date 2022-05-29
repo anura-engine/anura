@@ -25,11 +25,7 @@
 #	define _USE_MATH_DEFINES	1
 #endif
 
-#ifdef __APPLE__
-#include <SDL_image.h>
-#else
 #include <SDL2/SDL_image.h>
-#endif
 #include <SDL2/SDL_pixels.h>
 
 #include "asserts.hpp"
