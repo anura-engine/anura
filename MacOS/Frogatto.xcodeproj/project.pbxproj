@@ -433,7 +433,6 @@
 		C02751C117FD4A0600173646 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C010C596160AFB8F006E7D90 /* InfoPlist.strings */; };
 		C02751C217FD4A0C00173646 /* icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = C00E2A9C1687D11000DEB111 /* icon.icns */; };
 		C02751C317FD4A1400173646 /* SDLMain.nib in Resources */ = {isa = PBXBuildFile; fileRef = C010C59F160AFB8F006E7D90 /* SDLMain.nib */; };
-		C02751C417FD4A1A00173646 /* master-config.cfg in Resources */ = {isa = PBXBuildFile; fileRef = C0917B12175480F7004307B0 /* master-config.cfg */; };
 		C02ACCAC16FD5F05006274BC /* variant_type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02ACCAA16FD5F05006274BC /* variant_type.cpp */; };
 		C02C5D051CA127E6006D53E3 /* SceneTree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02C5D031CA127E6006D53E3 /* SceneTree.cpp */; };
 		C02C5D0B1CA252E2006D53E3 /* url_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02C5D091CA252E2006D53E3 /* url_handler.cpp */; };
@@ -2710,7 +2709,6 @@
 			files = (
 				C02D93971E4C54A100CB0A6A /* imgui_user.inl in Resources */,
 				638CC7431AF6057700C7A106 /* SConscript in Resources */,
-				C02751C417FD4A1A00173646 /* master-config.cfg in Resources */,
 				638CC7201AF6057700C7A106 /* FILEFORMAT in Resources */,
 				C02751C317FD4A1400173646 /* SDLMain.nib in Resources */,
 				C02751C217FD4A0C00173646 /* icon.icns in Resources */,
