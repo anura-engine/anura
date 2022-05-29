@@ -2184,14 +2184,7 @@ namespace
 
 
 	FUNCTION_DEF(is_object, 1, 1, "is_object(obj_type): Returns true if passing the string to object(obj_type, ...) would work, false if a fatal assert would be thrown.")
-		try {
-			CustomObjectType::getDefinition(EVAL_ARG(0).as_string());
-			return variant::from_bool(true);
-		} catch(const fatal_assert_failure_exception& e) {
-			return variant::from_bool(false);
-		} catch(const validation_failure_exception& e) {
-			return variant::from_bool(false);
-		}
+		return variant::from_bool(CustomObjectType::hasDefinition(EVAL_ARG(0).as_string()));
 	FUNCTION_ARGS_DEF
         ARG_TYPE("string")
 	RETURN_TYPE("bool")

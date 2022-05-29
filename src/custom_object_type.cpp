@@ -825,6 +825,63 @@ FormulaCallableDefinitionPtr CustomObjectType::getDefinition(const std::string& 
 	}
 }
 
+bool CustomObjectType::hasDefinition(const std::string& id)
+{
+	std::map<std::string, FormulaCallableDefinitionPtr>::const_iterator itor = object_type_definitions().find(id);
+	if(itor != object_type_definitions().end()) {
+		return true;
+	} else {
+		if(object_file_paths().empty()) {
+			load_file_paths();
+		}
+
+		auto proto_path = module::find(prototype_file_paths(), id + ".cfg");
+		if(proto_path != prototype_file_paths().end()) {
+			if(getObjectPath(id) == nullptr) { return false; }
+			variant node = mergePrototype(json::parse_from_file(proto_path->second));
+			CustomObjectCallablePtr callableDefinition(new CustomObjectCallable);
+			callableDefinition->setTypeName("obj " + id);
+			int slot = -1;
+			init_object_definition(node, node["id"].as_string(), callableDefinition, slot, (!g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode)) || g_force_strict_mode);
+			std::map<std::string, FormulaCallableDefinitionPtr>::const_iterator itor = object_type_definitions().find(id);
+			ASSERT_LOG(itor != object_type_definitions().end(), "Could not load object prototype definition " << id);
+			return true;
+		}
+
+		std::string::const_iterator dot_itor = std::find(id.begin(), id.end(), '.');
+		std::string obj_id(id.begin(), dot_itor);
+
+		const std::string* path = getObjectPath(obj_id + ".cfg");
+		if(path == nullptr) { return false; }
+
+		std::map<std::string, variant> nodes;
+
+		variant node = mergePrototype(json::parse_from_file(*path));
+		nodes[obj_id] = node;
+		if(node["object_type"].is_list() || node["object_type"].is_map()) {
+			for(variant sub_node : node["object_type"].as_list()) {
+				const std::string sub_id = obj_id + "." + sub_node["id"].as_string();
+				ASSERT_LOG(nodes.count(sub_id) == 0, "Duplicate object: " << sub_id);
+				nodes[sub_id] = mergePrototype(sub_node);
+			}
+		}
+
+		for(auto p : nodes) {
+			if(object_type_definitions().count(p.first)) {
+				continue;
+			}
+
+			CustomObjectCallablePtr callableDefinition(new CustomObjectCallable);
+			callableDefinition->setTypeName("obj " + p.first);
+			int slot = -1;
+			init_object_definition(p.second, p.first, callableDefinition, slot, (!g_suppress_strict_mode && p.second["is_strict"].as_bool(custom_object_strict_mode)) || g_force_strict_mode);
+		}
+
+		itor = object_type_definitions().find(id);
+		return itor != object_type_definitions().end();
+	}
+}
+
 void CustomObjectType::ReloadFilePaths()
 {
 	invalidateAllObjects();
