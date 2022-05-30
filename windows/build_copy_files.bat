@@ -20,10 +20,6 @@ if ERRORLEVEL 1 goto return_error
 xcopy /y/s/d "%base_dir%music" "%build_dir%\music\"
 if ERRORLEVEL 1 goto return_error
 
-:: Copy Frogatto's master-config.cfg up to the build dir, so the game starts the right module with the right configuration.
-xcopy /y  /d "%base_dir%master-config.cfg" "%build_dir%\"
-if ERRORLEVEL 1 goto return_error
-
 :: Copy two missing .dlls FrostC reported on his machine. I think we should distribute the proper redistributiable.exe for these?
 xcopy /y      "C:\Windows\System32\MSVCP140.dll" "%build_dir%\"
 if ERRORLEVEL 1 goto return_error
