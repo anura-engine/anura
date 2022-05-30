@@ -55,7 +55,7 @@
 #include <vector>
 
 #include <jni.h>
-#include "SDL.h"
+#include <SDL2/SDL.h>
 #include <android/asset_manager_jni.h>
 #include <android/log.h>
 #include "SDL_rwops.h"
@@ -135,7 +135,7 @@ void get_files_in_dir(const std::string& sdirectory,
 		while(dir_list[dir_list.length()-1] == '\n') {
 			dir_list = dir_list.substr(0,dir_list.length()-1);
 		}
-		boost::split(*dirs, dir_list, std::bind2nd(std::equal_to<char>(), '\n'));
+		boost::split(*dirs, dir_list, [](const char& c) { return c == '\n'; });
 		//LOG("get_files_in_dir() : after split");
 	}
 
@@ -426,4 +426,3 @@ void notify_on_file_modification(const std::string& path, std::function<void()> 
 }
 
 #endif // ANDROID
-

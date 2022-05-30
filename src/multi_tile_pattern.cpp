@@ -158,7 +158,7 @@ MultiTilePattern::MultiTilePattern(variant node, const std::string& tile_id)
 			}
 		}
 
-		alternatives_.push_back(std::shared_ptr<MultiTilePattern>(new MultiTilePattern(alternative_node, default_tile_id_)));
+		alternatives_.push_back(std::make_shared<MultiTilePattern>(alternative_node, default_tile_id_));
 	}
 
 	std::vector<raw_cell> cells;

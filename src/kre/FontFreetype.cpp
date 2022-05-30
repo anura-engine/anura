@@ -21,12 +21,6 @@
 	   distribution.
 */
 
-#if defined(_DEBUG)
-#pragma comment(lib, "freetype2412_D")
-#else
-#pragma comment(lib, "freetype2412")
-#endif
-
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_STROKER_H

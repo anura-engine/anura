@@ -38,7 +38,7 @@ bool match_regex(const std::string& str, const boost::regex& pattern, T1* out1)
 	std::string s1(match[1].first, match[1].second);
 	try {
 		*out1 = boost::lexical_cast<T1>(s1);
-	} catch(boost::bad_lexical_cast&) {
+	} catch(const boost::bad_lexical_cast&) {
 		return false;
 	}
 
@@ -57,14 +57,14 @@ bool match_regex(const std::string& str, const boost::regex& pattern, T1* out1, 
 	std::string s1(match[1].first, match[1].second);
 	try {
 		*out1 = boost::lexical_cast<T1>(s1);
-	} catch(boost::bad_lexical_cast&) {
+	} catch(const boost::bad_lexical_cast&) {
 		return false;
 	}
 
 	std::string s2(match[2].first, match[2].second);
 	try {
 		*out2 = boost::lexical_cast<T2>(s2);
-	} catch(boost::bad_lexical_cast&) {
+	} catch(const boost::bad_lexical_cast&) {
 		return false;
 	}
 
@@ -83,21 +83,21 @@ bool match_regex(const std::string& str, const boost::regex& pattern, T1* out1, 
 	std::string s1(match[1].first, match[1].second);
 	try {
 		*out1 = boost::lexical_cast<T1>(s1);
-	} catch(boost::bad_lexical_cast&) {
+	} catch(const boost::bad_lexical_cast&) {
 		return false;
 	}
 
 	std::string s2(match[2].first, match[2].second);
 	try {
 		*out2 = boost::lexical_cast<T2>(s2);
-	} catch(boost::bad_lexical_cast&) {
+	} catch(const boost::bad_lexical_cast&) {
 		return false;
 	}
 
 	std::string s3(match[3].first, match[3].second);
 	try {
 		*out3 = boost::lexical_cast<T1>(s3);
-	} catch(boost::bad_lexical_cast&) {
+	} catch(const boost::bad_lexical_cast&) {
 		return false;
 	}
 

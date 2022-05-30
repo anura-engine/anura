@@ -269,7 +269,7 @@ namespace gui
 		w->setLoc(x,y);
 		widgets_.insert(w);
 		if(w->tabStop() >= 0) {
-			tab_widgets_.insert(TabSortedWidgetList::value_type(w->tabStop(), w));
+			tab_widgets_.emplace(w->tabStop(), w);
 		}
 		switch(dir) {
 		case MOVE_DIRECTION::DOWN:
@@ -344,7 +344,7 @@ namespace gui
 			tab_widgets_.erase(tw_it);
 		}
 		if(w_new->tabStop() >= 0) {
-			tab_widgets_.insert(TabSortedWidgetList::value_type(w_new->tabStop(), w_new));
+			tab_widgets_.emplace(w_new->tabStop(), w_new);
 		}
 
 		w_new->setLoc(x,y);

@@ -218,7 +218,7 @@ namespace KRE
 					}
 					return 1.0f;
 				}
-			} catch(boost::bad_lexical_cast&) {
+			} catch(const boost::bad_lexical_cast&) {
 				ASSERT_LOG(false, "unable to convert value to number: " << str);
 			}
 		}
@@ -657,10 +657,10 @@ namespace KRE
 		// a variant, then output in same format.
 		std::vector<variant> v;
 		v.reserve(4);
-		v.push_back(variant(r()));
-		v.push_back(variant(g()));
-		v.push_back(variant(b()));
-		v.push_back(variant(a()));
+		v.emplace_back(r());
+		v.emplace_back(g());
+		v.emplace_back(b());
+		v.emplace_back(a());
 		return variant(&v);
 	}
 

@@ -22,7 +22,6 @@
 */
 
 #include <boost/locale.hpp>
-#include <boost/thread.hpp>
 
 #include "asserts.hpp"
 #include "profile_timer.hpp"
@@ -32,10 +31,6 @@
 #include "unit_test.hpp"
 
 #include "WindowManager.hpp"
-
-#pragma comment(lib, "icudt.lib")
-#pragma comment(lib, "icuin.lib")
-#pragma comment(lib, "icuuc.lib")
 
 namespace xhtml
 {
@@ -270,4 +265,3 @@ UNIT_TEST(text_tokenize)
 	res = xhtml::tokenize_text("Lorem \n\t\n\tipsum", true, true);
 	CHECK(res == xhtml::Line({xhtml::Word("Lorem"), xhtml::Word("\n"), xhtml::Word("\n"), xhtml::Word("ipsum")}), "collapse white-space test failed.");*/
 }
-

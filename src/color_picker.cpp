@@ -87,7 +87,7 @@ namespace gui
 		setDim(area.w(), area.h());
 
 		for(int n = 0; n != sizeof(default_palette)/sizeof(default_palette[0]); ++n) {
-			palette_.push_back(KRE::Color(default_palette[n]));
+			palette_.emplace_back(default_palette[n]);
 		}
 
 		primary_ = KRE::Color::colorBlack();
@@ -125,7 +125,7 @@ namespace gui
 		setDim(area.w(), area.h());
 
 		for(int n = 0; n != sizeof(default_palette)/sizeof(default_palette[0]); ++n) {
-			palette_.push_back(KRE::Color(default_palette[n]));
+			palette_.emplace_back(default_palette[n]);
 		}
 
 		primary_ = KRE::Color::colorBlack();
@@ -183,11 +183,11 @@ namespace gui
 		if(v.has_key("palette")) {
 			ASSERT_LOG(v["palette"].num_elements() <= 16, "'palette' attribute must have 16 or less elements.");
 			for(int n = 0; n != v["palette"].num_elements(); ++n) {
-				palette_.push_back(KRE::Color(v["palette"][n]));
+				palette_.emplace_back(v["palette"][n]);
 			}
 		} else {
 			for(int n = 0; n != sizeof(default_palette)/sizeof(default_palette[0]); ++n) {
-				palette_.push_back(KRE::Color(default_palette[n]));
+				palette_.emplace_back(default_palette[n]);
 			}
 		}
 
@@ -517,7 +517,7 @@ namespace gui
 		}
 		try {
 			val = std::max(0, std::min(boost::lexical_cast<int>(t_[n]->text()), 255));
-		} catch(boost::bad_lexical_cast&) {
+		} catch(const boost::bad_lexical_cast&) {
 			// passing on it, keep default.
 		}
 		switch(n) {

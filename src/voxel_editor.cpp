@@ -22,7 +22,7 @@
 */
 
 /* XXX -- needs a re-write
-#include <boost/array.hpp>
+#include <array>
 #include <boost/shared_array.hpp>
 #include "intrusive_ptr.hpp"
 
@@ -34,7 +34,7 @@
 #include <map>
 #include <vector>
 
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 #include "border_widget.hpp"
 #include "button.hpp"
@@ -340,7 +340,7 @@ private:
 	boost::shared_array<GLuint> render_buffer_id_;
 	boost::shared_array<GLuint> final_texture_id_;
 
-	boost::array<GLfloat, 3> vector_;
+	std::array<GLfloat, 3> vector_;
 
 	GLuint u_lightposition_;
 	GLuint u_lightpower_;

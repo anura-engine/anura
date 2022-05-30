@@ -29,7 +29,7 @@
 #include <string.h>
 #include <sstream>
 
-#include <cairo-ft.h>
+#include <cairo/cairo-ft.h>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -354,7 +354,7 @@ namespace {
 			std::string real_fname = module::map_file(fname);
 			ASSERT_LOG(sys::file_exists(real_fname), "Could not find svg file: " << fname);
 
-			handle = std::shared_ptr<KRE::SVG::parse>(new KRE::SVG::parse(real_fname));
+			handle = std::make_shared<KRE::SVG::parse>(real_fname);
 			cache[fname] = handle;
 		} else {
 			handle = itor->second;
@@ -498,13 +498,13 @@ namespace {
 		variant calculate_path(bool do_translate=true) const {
 			if(img_src_area != nullptr) {
 				std::vector<variant> fn_args;
-				fn_args.push_back(variant(img));
-				fn_args.push_back(variant(translate_x));
-				fn_args.push_back(variant(translate_y));
-				fn_args.push_back(variant(img_src_area->x()));
-				fn_args.push_back(variant(img_src_area->y()));
-				fn_args.push_back(variant(img_src_area->w()));
-				fn_args.push_back(variant(img_src_area->h()));
+				fn_args.emplace_back(img);
+				fn_args.emplace_back(translate_x);
+				fn_args.emplace_back(translate_y);
+				fn_args.emplace_back(img_src_area->x());
+				fn_args.emplace_back(img_src_area->y());
+				fn_args.emplace_back(img_src_area->w());
+				fn_args.emplace_back(img_src_area->h());
 
 				return variant(new cairo_op([=](cairo_context& context, const std::vector<variant>& args) {
 					cairo_save(context.get());
@@ -529,11 +529,11 @@ namespace {
 
 			} else if(img.empty() == false) {
 				std::vector<variant> fn_args;
-				fn_args.push_back(variant(img));
-				fn_args.push_back(variant(translate_x));
-				fn_args.push_back(variant(translate_y));
-				fn_args.push_back(variant(width));
-				fn_args.push_back(variant(height));
+				fn_args.emplace_back(img);
+				fn_args.emplace_back(translate_x);
+				fn_args.emplace_back(translate_y);
+				fn_args.emplace_back(width);
+				fn_args.emplace_back(height);
 				return variant(new cairo_op([=](cairo_context& context, const std::vector<variant>& args) {
 					cairo_save(context.get());
 
@@ -565,11 +565,11 @@ namespace {
 			} else if(svg.empty() == false) {
 
 				std::vector<variant> fn_args;
-				fn_args.push_back(variant(svg));
-				fn_args.push_back(variant(translate_x));
-				fn_args.push_back(variant(translate_y));
-				fn_args.push_back(variant(width));
-				fn_args.push_back(variant(height));
+				fn_args.emplace_back(svg);
+				fn_args.emplace_back(translate_x);
+				fn_args.emplace_back(translate_y);
+				fn_args.emplace_back(width);
+				fn_args.emplace_back(height);
 
 				return variant(new cairo_op([=](cairo_context& context, const std::vector<variant>& args) {
 					if(do_translate) {
@@ -588,11 +588,11 @@ namespace {
 			} else {
 
 				std::vector<variant> fn_args;
-				fn_args.push_back(variant(translate_x));
-				fn_args.push_back(variant(translate_y));
-				fn_args.push_back(variant(text));
-				fn_args.push_back(variant(font));
-				fn_args.push_back(variant(font_size));
+				fn_args.emplace_back(translate_x);
+				fn_args.emplace_back(translate_y);
+				fn_args.emplace_back(text);
+				fn_args.emplace_back(font);
+				fn_args.emplace_back(font_size);
 
 				return variant(new cairo_op([=](cairo_context& context, const std::vector<variant>& args) {
 
@@ -842,7 +842,7 @@ namespace {
 		float line_height = 0;
 
 		std::vector<LineOfText> output;
-		output.push_back(LineOfText());
+		output.emplace_back();
 
 		const TextMarkupFragment* first_item = f1;
 
@@ -912,7 +912,7 @@ namespace {
 					width += width_delta*line_height*scale_line_heights;
 					line_height = min_line_height;
 
-					output.push_back(LineOfText());
+					output.emplace_back();
 					output.back().align = align;
 				}
 
@@ -947,7 +947,7 @@ namespace {
 						width += width_delta*line_height*scale_line_heights;
 						line_height = min_line_height;
 
-						output.push_back(LineOfText());
+						output.emplace_back();
 						output.back().align = align;
 					} else {
 						while(i2 != line.end()) {
@@ -1010,7 +1010,7 @@ namespace {
 							width += width_delta*line_height*scale_line_heights;
 							line_height = min_line_height;
 
-							output.push_back(LineOfText());
+							output.emplace_back();
 							output.back().align = align;
 						}
 					} else if(img.empty() == false) {
@@ -1053,7 +1053,7 @@ namespace {
 							width += width_delta*line_height*scale_line_heights;
 							line_height = min_line_height;
 
-							output.push_back(LineOfText());
+							output.emplace_back();
 							output.back().align = align;
 						}
 
@@ -1196,7 +1196,7 @@ namespace {
 				res->ascent = static_cast<float>(fragment.font_extents.ascent);
 				res->descent = static_cast<float>(fragment.font_extents.descent);
 
-				result.push_back(variant(res));
+				result.emplace_back(res);
 			}
 
 			width += width_delta*line_height*scale_line_heights;
@@ -1215,7 +1215,7 @@ namespace {
 			args[ItalicStr] = variant::from_bool(true);
 		}
 		std::vector<variant> arg_list;
-		arg_list.push_back(variant(&args));
+		arg_list.emplace_back(&args);
 
 		return get_font_fn(arg_list).as_string();
 	}
@@ -1303,7 +1303,7 @@ namespace {
 								v = stack.back().tag.as_list();
 							}
 
-							v.push_back(variant(value));
+							v.emplace_back(value);
 							stack.back().tag = variant(&v);
 						} else if(attr == "info") {
 							stack.back().info = game_logic::Formula(variant(value)).execute();
@@ -1682,7 +1682,7 @@ namespace {
 		std::vector<std::vector<std::string>> lines;
 
 		for(std::string text : split_text) {
-			lines.push_back(std::vector<std::string>());
+			lines.emplace_back();
 
 			float width  = args[1].as_float();
 			float height = args[2].as_float();
@@ -2105,7 +2105,7 @@ namespace {
 			std::map<variant,variant> args;
 			args[variant("weight")] = variant(stack.back().font_weight);
 			std::vector<variant> arg_list;
-			arg_list.push_back(variant(&args));
+			arg_list.emplace_back(&args);
 
 			starting_font = get_font_fn(arg_list).as_string();
 		}
@@ -2177,8 +2177,8 @@ namespace {
 	BEGIN_DEFINE_FN(image_dim, "(string) ->[int,int]")
 		cairo_surface_t* surface = get_cairo_image(FN_ARG(0).as_string());
 		std::vector<variant> result;
-		result.push_back(variant(cairo_image_surface_get_width(surface)));
-		result.push_back(variant(cairo_image_surface_get_height(surface)));
+		result.emplace_back(cairo_image_surface_get_width(surface));
+		result.emplace_back(cairo_image_surface_get_height(surface));
 
 		return variant(&result);
 	END_DEFINE_FN

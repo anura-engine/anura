@@ -706,7 +706,7 @@ namespace editor_dialogs
 
 			lb->setText(id + " event handler");
 
-		} catch(validation_failure_exception&) {
+		} catch(const validation_failure_exception&) {
 			lb->setText(id + " event handler (Error)");
 		}
 	}

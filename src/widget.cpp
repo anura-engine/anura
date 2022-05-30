@@ -469,10 +469,10 @@ namespace gui
 
 	DEFINE_FIELD(draw_area, "[int]")
 		std::vector<variant> v;
-		v.push_back(variant(obj.x_));
-		v.push_back(variant(obj.y_));
-		v.push_back(variant(obj.w_));
-		v.push_back(variant(obj.h_));
+		v.emplace_back(obj.x_);
+		v.emplace_back(obj.y_);
+		v.emplace_back(obj.w_);
+		v.emplace_back(obj.h_);
 		return variant(&v);
 	DEFINE_SET_FIELD
 		std::vector<int> r = value.as_list_int();
@@ -482,10 +482,10 @@ namespace gui
 
 	DEFINE_FIELD(rect, "[int]")
 		std::vector<variant> v;
-		v.push_back(variant(obj.x_));
-		v.push_back(variant(obj.y_));
-		v.push_back(variant(obj.w_));
-		v.push_back(variant(obj.h_));
+		v.emplace_back(obj.x_);
+		v.emplace_back(obj.y_);
+		v.emplace_back(obj.w_);
+		v.emplace_back(obj.h_);
 		return variant(&v);
 	DEFINE_SET_FIELD
 		std::vector<int> r = value.as_list_int();
@@ -558,15 +558,15 @@ namespace gui
 
 	DEFINE_FIELD(frame_padding, "[int]")
 		std::vector<variant> v;
-		v.push_back(variant(obj.getPadWidth()));
-		v.push_back(variant(obj.getPadHeight()));
+		v.emplace_back(obj.getPadWidth());
+		v.emplace_back(obj.getPadHeight());
 		return variant(&v);
 
 	DEFINE_FIELD(children, "[builtin widget]")
 		std::vector<variant> v;
 		std::vector<WidgetPtr> w = obj.getChildren();
 		for(auto item : w) {
-			v.push_back(variant(item.get()));
+			v.emplace_back(item.get());
 		}
 
 		return variant(&v);

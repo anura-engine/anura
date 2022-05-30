@@ -26,14 +26,6 @@
 #endif
 #include <cmath>
 #include <glm/ext.hpp>
-#if defined(_MSC_VER)
-#if _MSC_VER >= 1800
-using std::round;
-#else
-#include <boost/math/special_functions/round.hpp>
-using boost::math::round;
-#endif // _MSC_VER >= 1800
-#endif // defined(_MSC_VER)
 
 #include "asserts.hpp"
 #include "CameraObject.hpp"
@@ -586,7 +578,7 @@ namespace KRE
 	{
 		float dti(float val)
 		{
-			return std::abs(val - round(val));
+			return std::abs(val - std::round(val));
 		}
 	}
 

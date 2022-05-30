@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
-
 #include "filesystem.hpp"
 #include "formula_callable.hpp"
 #include "variant.hpp"
@@ -202,7 +200,7 @@ namespace module
 		void on_error(std::string response, std::string url, std::string request);
 		void on_progress(int sent, int total, bool uploaded);
 
-		void on_chunk_error(std::string response, std::string url, std::string request, variant chunk, boost::shared_ptr<class http_client> client);
+		void on_chunk_error(std::string response, std::string url, std::string request, variant chunk, std::shared_ptr<class http_client> client);
 		int nchunk_errors_;
 
 		void perform_install(const variant& doc);
@@ -210,9 +208,9 @@ namespace module
 
 		variant doc_pending_chunks_;
 		std::vector<variant> chunks_to_get_;
-		std::vector<boost::shared_ptr<class http_client> > chunk_clients_;
+		std::vector<std::shared_ptr<class http_client> > chunk_clients_;
 
-		void on_chunk_response(std::string chunk_url, variant node, boost::shared_ptr<class http_client> client, std::string response);
+		void on_chunk_response(std::string chunk_url, variant node, std::shared_ptr<class http_client> client, std::string response);
 		void on_chunk_progress(std::string chunk_url, size_t received, size_t total, bool response);
 
 		std::map<std::string, size_t> chunk_progress_;

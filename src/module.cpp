@@ -410,7 +410,7 @@ namespace module
 			try {
 				variant v = json::parse(contents, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 				new game_logic::ConstantsLoader(v);
-			} catch(json::ParseError& e) {
+			} catch(const json::ParseError& e) {
 				ASSERT_LOG(false, "Error parsing file: " << e.errorMessage());
 			}
 		}
@@ -1244,7 +1244,7 @@ static const int ModuleProtocolVersion = 1;
 		}
 
 		client_->process();
-		std::vector<boost::shared_ptr<http_client> > chunk_clients = chunk_clients_;
+		std::vector<std::shared_ptr<http_client> > chunk_clients = chunk_clients_;
 		for(auto c : chunk_clients) {
 			c->process();
 		}
@@ -1267,7 +1267,7 @@ static const int ModuleProtocolVersion = 1;
 			sys::get_files_in_dir(preferences::dlc_path(), &files, &dirs);
 			std::vector<variant> result;
 			for(const std::string& m : dirs) {
-				result.push_back(variant(m));
+				result.emplace_back(m);
 			}
 
 			return variant(&result);
@@ -1289,7 +1289,7 @@ static const int ModuleProtocolVersion = 1;
 		doc_pending_chunks_ = variant();
 	}
 
-	void client::on_chunk_response(std::string chunk_url, variant node, boost::shared_ptr<http_client> client, std::string response)
+	void client::on_chunk_response(std::string chunk_url, variant node, std::shared_ptr<http_client> client, std::string response)
 	{
 		if(g_module_chunk_deflate) {
 			std::vector<char> data(response.begin(), response.end());
@@ -1316,7 +1316,7 @@ static const int ModuleProtocolVersion = 1;
 				operation_ = OPERATION_PENDING_INSTALL;
 			}
 		} else {
-			boost::shared_ptr<http_client> new_client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
+			std::shared_ptr<http_client> new_client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
 			new_client->set_timeout_and_retry();
 
 			variant chunk = chunks_to_get_.back();
@@ -1352,7 +1352,7 @@ static const int ModuleProtocolVersion = 1;
 		chunk_progress_[chunk_url] = received;
 	}
 
-	void client::on_chunk_error(std::string response, std::string url, std::string doc, variant chunk, boost::shared_ptr<http_client> client)
+	void client::on_chunk_error(std::string response, std::string url, std::string doc, variant chunk, std::shared_ptr<http_client> client)
 	{
 		auto progress_itor = chunk_progress_.find(url);
 		if(progress_itor != chunk_progress_.end()) {
@@ -1371,7 +1371,7 @@ static const int ModuleProtocolVersion = 1;
 		}
 		else
 		{
-			boost::shared_ptr<http_client> new_client(new http_client(host_, port_));
+			std::shared_ptr<http_client> new_client(new http_client(host_, port_));
 			new_client->set_timeout_and_retry();
 
 			new_client->send_request(url, doc,
@@ -1589,7 +1589,7 @@ static const int ModuleProtocolVersion = 1;
 				request.add("type", "download_chunk");
 				request.add("chunk_id", chunk["md5"]);
 
-				boost::shared_ptr<http_client> client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
+				std::shared_ptr<http_client> client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
 				client->set_timeout_and_retry();
 
 				const std::string url = g_module_chunk_query + chunk["md5"].as_string();
@@ -1621,7 +1621,7 @@ static const int ModuleProtocolVersion = 1;
 					}
 
 					sys::remove_file(path_str);
-				} catch(boost::filesystem::filesystem_error& e) {
+				} catch(const boost::filesystem::filesystem_error&) {
 					LOG_ERROR("FAILED TO DELETE FILE: " << path_str);
 				}
 			}
@@ -1713,7 +1713,7 @@ static const int ModuleProtocolVersion = 1;
 
 			try {
 				sys::write_file(path_str, contents);
-			} catch(boost::filesystem::filesystem_error& e) {
+			} catch(const boost::filesystem::filesystem_error&) {
 				bool fixed = false;
 				try {
 					if(!sys::is_file_writable(path_str)) {
@@ -1721,7 +1721,7 @@ static const int ModuleProtocolVersion = 1;
 						sys::write_file(path_str, contents);
 						fixed = true;
 					}
-				} catch(boost::filesystem::filesystem_error& e) {
+				} catch(const boost::filesystem::filesystem_error&) {
 				}
 
 				ASSERT_LOG(fixed, "Could not write file: " << path_str);
@@ -2026,4 +2026,3 @@ static const int ModuleProtocolVersion = 1;
 	}
 
 }
-

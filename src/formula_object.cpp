@@ -290,7 +290,7 @@ std::map<std::string, std::string>& class_path_map()
 
 				for(int n = 0; n != NUM_BASE_FIELDS; ++n) {
 					properties_[BaseFields[n]] = n;
-					slots_.push_back(Entry(BaseFields[n]));
+					slots_.emplace_back(BaseFields[n]);
 					switch(n) {
 					case FIELD_PRIVATE:
 					slots_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_MAP);
@@ -364,7 +364,7 @@ std::map<std::string, std::string>& class_path_map()
 
 						if(properties_.count(key.as_string()) == 0) {
 							properties_[key.as_string()] = static_cast<int>(slots_.size());
-							slots_.push_back(Entry(key.as_string()));
+							slots_.emplace_back(key.as_string());
 							if(key.as_string()[0] == '_') {
 								slots_.back().private_counter++;
 							}
@@ -1022,7 +1022,7 @@ std::map<std::string, std::string>& class_path_map()
 					assert_recover_scope recover_scope;
 					try {
 						result = build_class(type);
-					} catch(validation_failure_exception& e) {
+					} catch(const validation_failure_exception& e) {
 						edit_and_continue_class(type, e.msg);
 					}
 
@@ -1244,7 +1244,7 @@ variant FormulaObject::generateDiff(variant before, variant b)
 				}
 			}
 
-			deltas.push_back(variant(&node_delta));
+			deltas.emplace_back(&node_delta);
 		}
 	}
 
@@ -1294,7 +1294,7 @@ void FormulaObject::applyDiff(variant delta)
 	variant v = json::parse(std::string(data.begin(), data.end()));
 	for(variant obj_node : v["objects"].as_list()) {
 		game_logic::WmlSerializableFormulaCallablePtr obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();
-		ASSERT_LOG(obj.get() != NULL, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
+		ASSERT_LOG(obj.get() != nullptr, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
 
 		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(obj->uuid(), obj);
 	}
@@ -1947,7 +1947,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				continue;
 			}
 
-			inputs->push_back(FormulaInput(entry.name, type));
+			inputs->emplace_back(entry.name, type);
 		}
 	}
 
@@ -2036,7 +2036,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 					variant node;
 					try {
 						node = json::parse_from_file(p.second);
-					} catch(json::ParseError& e) {
+					} catch(const json::ParseError& e) {
 						ASSERT_LOG(false, "Error parsing " << p.second << ": " << e.errorMessage());
 					}
 

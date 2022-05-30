@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <cairo.h>
+#include <cairo/cairo.h>
 #include <stack>
 
 #include "asserts.hpp"

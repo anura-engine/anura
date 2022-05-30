@@ -21,8 +21,6 @@
 	   distribution.
 */
 
-#pragma comment(lib, "libcairo-2")
-
 #include "asserts.hpp"
 #include "AttributeSet.hpp"
 #include "DisplayDevice.hpp"

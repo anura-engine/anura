@@ -22,7 +22,7 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
-#include <boost/array.hpp>
+#include <array>
 #include <boost/shared_array.hpp>
 #include "intrusive_ptr.hpp"
 
@@ -35,7 +35,7 @@
 #include <map>
 #include <vector>
 
-#include "SDL.h"
+#include <SDL2/SDL.h>
 
 #include "asserts.hpp"
 #include "border_widget.hpp"

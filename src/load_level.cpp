@@ -77,7 +77,7 @@ public:
 		try {
 			variant node(json::parse_from_file(filename));
 			wml_cache().put(lvl_, node);
-		} catch(json::parse_error& e) {
+		} catch(const json::parse_error& e) {
 			ASSERT_LOG(false, "ERROR PARSING LEVEL WML FOR '" << filename << "': " << e.error_message());
 		}catch(...) {
 			std::cerr << "FAILED TO LOAD " << filename << "\n";
@@ -171,7 +171,7 @@ public:
 	level_loader(const std::string& lvl) : lvl_(lvl)
 	{}
 	void operator()() {
-		level* lvl = NULL;
+		level* lvl = nullptr;
 		try {
 			lvl = new level(lvl_);
 		} catch(const graphics::texture::worker_thread_error&) {
@@ -234,7 +234,7 @@ ffl::IntrusivePtr<level> load_level(const std::string& lvl)
 	delete itor->second.first;
 	ffl::IntrusivePtr<level> res;
 	res.reset(itor->second.second);
-	if(res.get() == NULL) {
+	if(res.get() == nullptr) {
 		res.reset(new level(lvl));
 	}
 	res->finish_loading();

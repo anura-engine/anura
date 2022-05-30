@@ -26,7 +26,7 @@
 #include <cstdint>
 #include <string>
 
-#include "boost/intrusive_ptr.hpp"
+#include <boost/intrusive_ptr.hpp>
 
 #include "geometry.hpp"
 

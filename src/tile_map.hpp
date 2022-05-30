@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/array.hpp>
+#include <array>
 #include <boost/regex.hpp>
 
 #include <map>
@@ -98,7 +98,7 @@ private:
 	int x_speed_, y_speed_;
 	int zorder_;
 
-	typedef boost::array<char, 4> tile_string;
+	typedef std::array<char, 4> tile_string;
 
 	//a map of all of our strings, which maps into pattern_index.
 	std::vector<std::vector<int>> map_;

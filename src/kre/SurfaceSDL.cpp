@@ -25,8 +25,8 @@
 #	define _USE_MATH_DEFINES	1
 #endif
 
-#include "SDL_image.h"
-#include "SDL_pixels.h"
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_pixels.h>
 
 #include "asserts.hpp"
 #include "formatter.hpp"
@@ -741,7 +741,7 @@ namespace KRE
 				return surf->convert(fmt, fn)->runGlobalAlphaFilter();
 			}
 			return surf->runGlobalAlphaFilter();
-		} catch(ImageLoadError& e) {
+		} catch(const ImageLoadError& e) {
 			throw ImageLoadError(formatter() << "Failed to load image file: '" << filename << "' : " << e.what());
 		}
 		return nullptr;

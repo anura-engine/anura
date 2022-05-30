@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "boost/lexical_cast.hpp"
+#include <boost/lexical_cast.hpp>
 #include "svg_gradient.hpp"
 
 namespace KRE

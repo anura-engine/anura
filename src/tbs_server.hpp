@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/array.hpp>
+#include <array>
 #include <boost/asio.hpp>
 
 #include "http_server.hpp"
@@ -33,7 +33,7 @@
 namespace tbs
 {
 	typedef http::web_server::socket_ptr socket_ptr;
-	typedef std::shared_ptr<boost::array<char, 1024> > buffer_ptr;
+	typedef std::shared_ptr<std::array<char, 1024> > buffer_ptr;
 
 	class server : public server_base
 	{

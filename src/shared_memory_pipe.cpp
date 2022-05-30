@@ -81,7 +81,7 @@ std::pair<SharedMemoryPipePtr,SharedMemoryPipePtr> SharedMemoryPipe::makeInMemor
 SharedMemoryPipe::SharedMemoryPipe()
 {
 	for(int i = 0; i != 2; ++i) {
-		buffers_.push_back(std::shared_ptr<std::vector<uint8_t>>(new std::vector<uint8_t>));
+		buffers_.push_back(std::make_shared<std::vector<uint8_t>>());
 		buffers_.back()->resize(AllocSize);
 		formatSharedMemory(&(*buffers_.back())[0]);
 	}

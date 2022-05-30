@@ -129,8 +129,8 @@ namespace gui
 
 		DEFINE_FIELD(image_wh, "[int,int]")
 			std::vector<variant> v;
-			v.emplace_back(variant(obj.area_.w()));
-			v.emplace_back(variant(obj.area_.h()));
+			v.emplace_back(obj.area_.w());
+			v.emplace_back(obj.area_.h());
 			return variant(&v);
 		DEFINE_SET_FIELD
 			obj.init(value[0].as_int(), value[1].as_int());

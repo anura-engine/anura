@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "intrusive_ptr.hpp"
-#include <boost/scoped_ptr.hpp>
 
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"

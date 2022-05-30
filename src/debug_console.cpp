@@ -264,7 +264,7 @@ namespace debug_console
 
 		try {
 			messages().push_back(KRE::Font::getInstance()->renderText(msg, KRE::Color::colorWhite(), 14, false));
-		} catch(KRE::FontError&) {
+		} catch(const KRE::FontError&) {
 			LOG_ERROR("FAILED TO ADD MESSAGE DUE TO FONT RENDERING FAILURE");
 			return;
 		}
@@ -489,7 +489,7 @@ namespace debug_console
 						debug_console::addMessage(output);
 						LOG_INFO("OUTPUT: " << output);
 
-					} catch(validation_failure_exception& e) {
+					} catch(const validation_failure_exception& e) {
 						//if this was a failure due to it not being a real command,
 						//that's fine, since we just want to output the result.
 						if(!strstr(e.msg.c_str(), "COMMAND WAS EXPECTED, BUT FOUND")) {
@@ -512,9 +512,9 @@ namespace debug_console
 
 
 
-			} catch(validation_failure_exception& e) {
+			} catch(const validation_failure_exception& e) {
 				debug_console::addMessage("error parsing formula: " + e.msg);
-			} catch(type_error& e) {
+			} catch(const type_error& e) {
 				debug_console::addMessage("error executing formula: " + e.message);
 			}
 		}

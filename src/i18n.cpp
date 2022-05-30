@@ -377,7 +377,7 @@ namespace i18n
 					std::string extension;
 					try {
 						extension = file.substr(file.find_last_of('.'));
-					} catch (std::out_of_range &) {}
+					} catch (const std::out_of_range &) {}
 
 					std::string path = dirname + file;
 					ASSERT_LOG(sys::file_exists(module::map_file(path)), "confused... file does not exist which was found earlier: " << path);
@@ -518,7 +518,7 @@ namespace i18n
 				hashmap.clear();
 
 				process_po_contents(doc);
-			} catch (validation_failure_exception &) {
+			} catch (const validation_failure_exception &) {
 				hashmap.clear();
 				return;
 			}

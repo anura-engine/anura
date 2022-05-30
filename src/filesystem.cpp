@@ -133,7 +133,7 @@ namespace sys
 		}
 		for(recursive_directory_iterator it = recursive_directory_iterator(p); it != recursive_directory_iterator(); ++it) {
 			if(!is_directory(it->path())) {
-				file_map->insert(std::pair<std::string,std::string>(prefix + it->path().filename().generic_string(), it->path().generic_string()));
+				file_map->emplace(prefix + it->path().filename().generic_string(), it->path().generic_string());
 			}
 		}
 	}
@@ -142,7 +142,7 @@ namespace sys
 	{
 		try {
 			create_directory(path(dir));
-		} catch(filesystem_error&) {
+		} catch(const filesystem_error&) {
 			return "";
 		}
 		return dir;
@@ -254,7 +254,7 @@ namespace sys
 			}
 			std::vector<std::string> cur_path;
 			std::string norm_path;
-			boost::split(cur_path, path, std::bind2nd(std::equal_to<char>(), '/'));
+			boost::split(cur_path, path, [](const char& c) { return c == '/'; });
 			for(const std::string& s : cur_path) {
 				if(s != ".") {
 					norm_path += s + "/";

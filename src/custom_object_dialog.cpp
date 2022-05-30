@@ -271,10 +271,10 @@ namespace editor_dialogs
 
 			AnimationWidgetPtr preview(new AnimationWidget(128, 128, object_template_));
 			addWidget(preview, width() - border_offset - 128, border_offset + 200);
-		} catch(validation_failure_exception& e) {
+		} catch(const validation_failure_exception& e) {
 			error_text_ = e.msg;
 			LOG_ERROR("error parsing formula: " << e.msg);
-		} catch(type_error& e) {
+		} catch(const type_error& e) {
 			error_text_ = e.message;
 			LOG_ERROR("error executing formula: " << e.message);
 		}
@@ -570,7 +570,7 @@ namespace editor_dialogs
 		if(object_template_.has_key("prototype")) {
 			v = object_template_["prototype"].as_list();
 		}
-		v.push_back(variant(choices[index]));
+		v.emplace_back(choices[index]);
 		object_template_.add_attr(variant("prototype"), variant(&v));
 
 		init();
@@ -615,8 +615,8 @@ namespace editor_dialogs
 	{
 		auto wnd = KRE::WindowManager::getMainWindow();
 		gui::filter_list f;
-		f.push_back(gui::filter_pair("Image Files", ".*?\\.(png|jpg|gif|bmp|tif|tiff|tga|webp|xpm|xv|pcx)"));
-		f.push_back(gui::filter_pair("All Files", ".*"));
+		f.emplace_back("Image Files", ".*?\\.(png|jpg|gif|bmp|tif|tiff|tga|webp|xpm|xv|pcx)");
+		f.emplace_back("All Files", ".*");
 		gui::FileChooserDialog open_dlg(
 			static_cast<int>(wnd->width() * 0.1f),
 			static_cast<int>(wnd->height() * 0.1f),

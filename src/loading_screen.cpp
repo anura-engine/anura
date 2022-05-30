@@ -56,7 +56,7 @@ LoadingScreen::LoadingScreen(int items)
 			splash_ = KRE::Texture::createTexture("splash-wide.jpg");
 		}
 		*/
-	} catch(KRE::ImageLoadError&) {
+	} catch(const KRE::ImageLoadError&) {
 	}
 }
 

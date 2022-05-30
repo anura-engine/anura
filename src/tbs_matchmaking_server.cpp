@@ -29,7 +29,6 @@
 #include <functional>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/bind.hpp>
 #include <iostream>
 
 #include <sys/types.h>
@@ -276,10 +275,10 @@ public:
 		});
 
 		db_timer_.expires_from_now(boost::posix_time::milliseconds(10));
-		db_timer_.async_wait(boost::bind(&matchmaking_server::db_process, this, boost::asio::placeholders::error));
+		db_timer_.async_wait(std::bind(&matchmaking_server::db_process, this, std::placeholders::_1));
 
 		timer_.expires_from_now(boost::posix_time::milliseconds(1000));
-		timer_.async_wait(boost::bind(&matchmaking_server::heartbeat, this, boost::asio::placeholders::error));
+		timer_.async_wait(std::bind(&matchmaking_server::heartbeat, this, std::placeholders::_1));
 
 		for(int i = 0; i != 256; ++i) {
 			available_ports_.push_back(21156+i);
@@ -303,7 +302,7 @@ public:
 	void db_process(const boost::system::error_code& error)
 	{
 		db_timer_.expires_from_now(boost::posix_time::milliseconds(10));
-		db_timer_.async_wait(boost::bind(&matchmaking_server::db_process, this, boost::asio::placeholders::error));
+		db_timer_.async_wait(std::bind(&matchmaking_server::db_process, this, std::placeholders::_1));
 
 		db_client_->process(1000);
 		registration_db_client_->process(1000);
@@ -423,8 +422,8 @@ public:
 					session.send_process_counter = 0;
 
 					std::vector<variant> args;
-					args.push_back(variant(this));
-					args.push_back(variant(session.user_id));
+					args.emplace_back(this);
+					args.emplace_back(session.user_id);
 					args.push_back(account_itor->second.account_info["info"]);
 
 					variant cmd = process_account_fn_(args);
@@ -440,7 +439,7 @@ public:
 		}
 
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_matchmaking_heartbeat_ms));
-		timer_.async_wait(boost::bind(&matchmaking_server::heartbeat, this, boost::asio::placeholders::error));
+		timer_.async_wait(std::bind(&matchmaking_server::heartbeat, this, std::placeholders::_1));
 	}
 
 	std::string get_dbdate(time_t cur_time)
@@ -499,7 +498,7 @@ public:
 					variant_builder response; \
 					response.add("type", type); \
 					response.add("message", msg); \
-					response.add("timestamp", static_cast<int>(time(NULL))); \
+					response.add("timestamp", static_cast<int>(time(nullptr))); \
 					send_response(socket, response.build()); \
 				}
 
@@ -507,7 +506,7 @@ public:
 					variant_builder response; \
 					response.add("type", "error"); \
 					response.add("message", msg); \
-					response.add("timestamp", static_cast<int>(time(NULL))); \
+					response.add("timestamp", static_cast<int>(time(nullptr))); \
 					send_response(socket, response.build()); \
 				}
 
@@ -515,7 +514,7 @@ public:
 					variant_builder response; \
 					response.add("type", "message"); \
 					response.add("message", msg); \
-					response.add("timestamp", static_cast<int>(time(NULL))); \
+					response.add("timestamp", static_cast<int>(time(nullptr))); \
 					send_response(socket, response.build()); \
 				}
 
@@ -525,12 +524,12 @@ public:
 		std::map<std::string, std::string>::const_iterator i = env.find("cookie");
 		if(i != env.end()) {
 			const char* cookie_start = strstr(i->second.c_str(), " session=");
-			if(cookie_start != NULL) {
+			if(cookie_start != nullptr) {
 				++cookie_start;
 			} else {
 				cookie_start = strstr(i->second.c_str(), "session=");
 				if(cookie_start != i->second.c_str()) {
-					cookie_start = NULL;
+					cookie_start = nullptr;
 				}
 			}
 
@@ -564,7 +563,7 @@ public:
 
 				if(handle_anon_request_fn_.is_function()) {
 					std::vector<variant> args;
-					args.push_back(variant(this));
+					args.emplace_back(this);
 					args.push_back(doc);
 					send_response(socket, handle_anon_request_fn_(args));
 				} else {
@@ -681,7 +680,7 @@ public:
 						response.add("username", variant(user_full));
 						response.add("info_version", variant(0));
 						response.add("info", account_info);
-						response.add("timestamp", static_cast<int>(time(NULL)));
+						response.add("timestamp", static_cast<int>(time(nullptr)));
 
 						if(remember) {
 							std::string cookie = write_uuid(generate_uuid());
@@ -705,7 +704,7 @@ public:
 									accounts = email_info.as_list();
 								}
 
-								accounts.push_back(variant(user_full));
+								accounts.emplace_back(user_full);
 								registration_db_client_->put(email_key, variant(&accounts),
 							            [](){}, [](){});
 							});
@@ -800,7 +799,7 @@ public:
 						response.add("username", given_user);
 						response.add("info_version", user_info["info_version"].as_int(0));
 						response.add("info", user_info["info"]);
-						response.add("timestamp", static_cast<int>(time(NULL)));
+						response.add("timestamp", static_cast<int>(time(nullptr)));
 
 						if(remember) {
 							std::string cookie = write_uuid(generate_uuid());
@@ -877,7 +876,7 @@ public:
 						response.add("username", variant(display_name));
 						response.add("info", user_info["info"]);
 						response.add("info_version", user_info["info_version"].as_int(0));
-						response.add("timestamp", static_cast<int>(time(NULL)));
+						response.add("timestamp", static_cast<int>(time(nullptr)));
 
 						send_response(socket, response.build());
 
@@ -1206,7 +1205,7 @@ public:
 					msg.add("nick", variant(get_display_name(info.user_id)));
 					msg.add("message", message);
 
-					msg.add("timestamp", variant(static_cast<int>(time(NULL))));
+					msg.add("timestamp", variant(static_cast<int>(time(nullptr))));
 
 					variant v = msg.build();
 
@@ -1403,7 +1402,7 @@ public:
 						variant_builder response;
 						response.add("type", "message");
 						response.add("message", formatter() << itor->second.user_id << " has declined your request to observe their game");
-						response.add("timestamp", static_cast<int>(time(NULL)));
+						response.add("timestamp", static_cast<int>(time(nullptr)));
 						queue_message(*target, response.build());
 					}
 				}
@@ -1541,7 +1540,7 @@ public:
 					variant info = doc["info"];
 					if(info.is_map()) {
 						std::vector<variant> args;
-						args.push_back(variant(this));
+						args.emplace_back(this);
 						args.push_back(info);
 
 						variant cmd = handle_game_over_message_fn_(args);
@@ -1626,9 +1625,9 @@ public:
 					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown user\" }", "");
 				} else {
 					std::vector<variant> args;
-					args.push_back(variant(this));
+					args.emplace_back(this);
 					args.push_back(doc);
-					args.push_back(variant(itor->second.user_id));
+					args.emplace_back(itor->second.user_id);
 					args.push_back(account_itor->second.account_info["info"]);
 
 					static const variant TrxVar("trx");
@@ -1657,7 +1656,7 @@ public:
 				}
 			}
 
-		} catch(validation_failure_exception& error) {
+		} catch(const validation_failure_exception& error) {
 			fprintf(stderr, "ERROR HANDLING POST: %s\n", error.msg.c_str());
 			disconnect(socket);
 		}
@@ -1672,8 +1671,8 @@ public:
 		} else {
 
 			std::vector<variant> v;
-			v.push_back(variant(this));
-			v.push_back(variant(session.user_id));
+			v.emplace_back(this);
+			v.emplace_back(session.user_id);
 			v.push_back(account_itor->second.account_info["info"]);
 			v.push_back(doc);
 			variant cmd = user_account_fn_(v);
@@ -1695,8 +1694,8 @@ public:
 				account_info_[str_tolower(user)].account_info = user_info;
 
 				std::vector<variant> v;
-				v.push_back(variant(this));
-				v.push_back(variant(user));
+				v.emplace_back(this);
+				v.emplace_back(user);
 				v.push_back(user_info["info"]);
 				v.push_back(doc["msg"]);
 				variant cmd = admin_account_fn_(v);
@@ -1778,7 +1777,7 @@ public:
 			variant_builder msg;
 			msg.add("type", "admin_message");
 			msg.add("message", "Executing...");
-			msg.add("timestamp", static_cast<int>(time(NULL)));
+			msg.add("timestamp", static_cast<int>(time(nullptr)));
 			send_msg(socket, "text/json", msg.build().write_json(), "");
 		}
 
@@ -1859,7 +1858,6 @@ public:
 			if(dates != args.end()) {
 				items = util::split(dates->second);
 			} else {
-				char buf[1024];
 				time_t cur_time = time(nullptr);
 				tm* ltime = localtime(&cur_time);
 
@@ -1934,8 +1932,8 @@ public:
 			}
 
 			std::vector<variant> fn_args;
-			fn_args.push_back(variant(this));
-			fn_args.push_back(variant(&a));
+			fn_args.emplace_back(this);
+			fn_args.emplace_back(&a);
 			send_response(socket, handle_anon_request_fn_(fn_args));
 			return;
 		} else if(url == "/generate_beta_key") {
@@ -2029,7 +2027,7 @@ private:
 		}
 
 		std::vector<variant> args;
-		args.push_back(variant(&info));
+		args.emplace_back(&info);
 		variant result = matchmake_fn_(args);
 
 		if(result.is_list() == false) {
@@ -2101,7 +2099,7 @@ private:
 				if(recent_games.is_list()) {
 					recent_games_var = recent_games.as_list();
 				}
-				recent_games_var.push_back(variant(game_id));
+				recent_games_var.emplace_back(game_id);
 				account_user_info.add_attr_mutation(variant("recent_games"), variant(&recent_games_var));
 
 				db_client_->put("user:" + session_info.user_id, account_info_itor->second.account_info, [](){}, [](){});
@@ -2181,7 +2179,7 @@ private:
 				cstr_argv.push_back(&s[0]);
 			}
 
-			cstr_argv.push_back(NULL);
+			cstr_argv.push_back(nullptr);
 
 			const pid_t pid = fork();
 			if(pid < 0) {
@@ -2234,7 +2232,7 @@ private:
 
 		std::map<variant,variant> logged_in_user_set;
 		for(auto p : logged_in_user_set_) {
-			logged_in_user_set.insert(std::pair<variant,variant>(variant(p.first), variant(p.second)));
+			logged_in_user_set.emplace(variant(p.first), variant(p.second));
 		}
 
 		doc.add("logged_in_user_set", variant(&logged_in_user_set));
@@ -2639,7 +2637,7 @@ private:
 		if(status_doc_delete_users_.empty() == false) {
 			std::vector<variant> v;
 			for(auto s : status_doc_delete_users_) {
-				v.push_back(variant(get_display_name(s)));
+				v.emplace_back(get_display_name(s));
 			}
 
 			delta.add("delete_users", variant(&v));
@@ -2663,7 +2661,7 @@ private:
 			std::vector<variant> v;
 			v.reserve(status_doc_delete_servers_.size());
 			for(auto value : status_doc_delete_servers_) {
-				v.push_back(variant(value));
+				v.emplace_back(value);
 			}
 
 			delta.add("delete_servers", variant(&v));
@@ -3004,7 +3002,7 @@ private:
 
 			if(channel.ops.is_null() || channel.ops.as_list().empty()) {
 				std::vector<variant> v;
-				v.push_back(variant(username));
+				v.emplace_back(username);
 				channel.ops = variant(&v);
 			}
 
@@ -3312,7 +3310,7 @@ COMMAND_LINE_UTILITY(db_script) {
 	arguments.pop_front();
 	std::vector<variant> arg;
 	for(auto s : arguments) {
-		arg.push_back(variant(s));
+		arg.emplace_back(s);
 	}
 
 	Formula f = Formula(variant(script));

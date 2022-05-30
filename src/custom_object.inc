@@ -86,7 +86,7 @@ CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_GREEN,                              "gr
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_BLUE,                               "blue", "int" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_ALPHA,                              "alpha", "int" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_TEXT_ALPHA,                         "text_alpha", "int" )
-CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_TEXT_ATTRS,                         "text_attrs", "null|map" /*"null|{text:string, size:int, align:int, alpha:int, dimensions:[int, int, int, int]}" This doesn't work.*/ )
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_TEXT_ATTRS,                         "text_attrs", "null|{text:string|null, size:int|null, align:int|null, alpha:int|null, dimensions:[int, int, int, int]|null}" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_DAMAGE,                             "damage", "int" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_HIT_BY,                             "hit_by", "null|custom_obj" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_IS_STANDING,                        "is_standing", "bool" )

@@ -746,7 +746,7 @@ namespace gui
 		DEFINE_FIELD(children, "[builtin widget]")
 			std::vector<variant> v;
 			for(WidgetPtr w : obj.cells_) {
-				v.push_back(variant(w.get()));
+				v.emplace_back(w.get());
 			}
 			return variant(&v);
 		DEFINE_SET_FIELD_TYPE("list")

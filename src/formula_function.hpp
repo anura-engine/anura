@@ -24,7 +24,6 @@
 #pragma once
 
 #include "intrusive_ptr.hpp"
-#include <boost/noncopyable.hpp>
 
 #include <assert.h>
 
@@ -287,8 +286,10 @@ namespace game_logic
 		const std::vector<variant_type_ptr>& variantTypes() const { return variant_types_; }
 	};
 
-	class FunctionSymbolTable : private boost::noncopyable
+	class FunctionSymbolTable
 	{
+		FunctionSymbolTable(const FunctionSymbolTable&) = delete;
+		FunctionSymbolTable& operator=(const FunctionSymbolTable&) = delete;
 		std::map<std::string, FormulaFunction> custom_formulas_;
 		const FunctionSymbolTable* backup_;
 	public:

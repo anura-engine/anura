@@ -81,7 +81,7 @@ namespace sys
 			}
 
 			std::vector<std::string> cur_path;
-			boost::split(cur_path, path, std::bind2nd(std::equal_to<char>(), '/'));
+			boost::split(cur_path, path, [](const char& c) { return c == '/'; });
 			for(const std::string& s : cur_path) {
 				if(s == ".") {
 				} else if(s == "..") {
@@ -117,7 +117,7 @@ namespace gui
 		  use_relative_paths_(false)
 	{
 		if(filters_.empty()) {
-			filters_.push_back(filter_pair("All files", ".*"));
+			filters_.emplace_back("All files", ".*");
 		}
 
 		relative_path_ = sys::get_absolute_path("");
@@ -152,7 +152,7 @@ namespace gui
 			for(size_t n = 0; n != v["filters"].num_elements(); ++n) {
 				ASSERT_LOG(v["filters"][n].is_list() && v["filters"][n].num_elements() == 2,
 					"Expected inner filter parameter to be a two element list");
-				filters_.push_back(filter_pair(v["filters"][n][0].as_string(), v["filters"][n][1].as_string()));
+				filters_.emplace_back(v["filters"][n][0].as_string(), v["filters"][n][1].as_string());
 			}
 		}
 		std::string def_path = preferences::user_data_path();

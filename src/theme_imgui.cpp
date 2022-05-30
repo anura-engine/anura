@@ -61,7 +61,7 @@ void theme_imgui_default()
 	style.Colors[ImGuiCol_ScrollbarGrab] =        ImVec4( 83/255.0f, 112/255.0f, 171/255.0f, 255/255.0f);
 	style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4( 71/255.0f, 171/255.0f, 204/255.0f, 150/255.0f);
 	style.Colors[ImGuiCol_ScrollbarGrabActive] =  ImVec4( 60/255.0f, 122/255.0f, 135/255.0f, 171/255.0f);
-	style.Colors[ImGuiCol_ComboBg] =              ImVec4( 89/255.0f,  98/255.0f, 100/255.0f, 255/255.0f);
+	style.Colors[ImGuiCol_PopupBg] =              ImVec4( 89/255.0f,  98/255.0f, 100/255.0f, 255/255.0f);
 	style.Colors[ImGuiCol_CheckMark] = ImVec4(0.48f, 0.47f, 0.47f, 0.71f);
 	style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.31f, 0.47f, 0.99f, 1.00f);
 	style.Colors[ImGuiCol_Button] =               ImVec4( 59/255.0f,  74/255.0f,  59/255.0f, 255/255.0f);
@@ -73,9 +73,6 @@ void theme_imgui_default()
 	style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.60f, 0.60f, 0.80f, 0.30f);
 	style.Colors[ImGuiCol_ResizeGripHovered] =    ImVec4(  0/255.0f,  75/255.0f, 178/255.0f, 255/255.0f);
 	style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(1.00f, 1.00f, 1.00f, 0.90f);
-	style.Colors[ImGuiCol_CloseButton] = ImVec4(0.41f, 0.75f, 0.98f, 0.50f);
-	style.Colors[ImGuiCol_CloseButtonHovered] = ImVec4(1.00f, 0.47f, 0.41f, 0.60f);
-	style.Colors[ImGuiCol_CloseButtonActive] = ImVec4(1.00f, 0.16f, 0.00f, 1.00f);
 	style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(1.00f, 0.99f, 0.54f, 0.43f);
 	style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 
@@ -127,8 +124,8 @@ ImVec2 variant_to_vec2(const variant& v)
 variant vec2_to_variant(const ImVec2& v)
 {
 	std::vector<variant> res;
-	res.emplace_back(variant(v.x));
-	res.emplace_back(variant(v.y));
+	res.emplace_back(v.x);
+	res.emplace_back(v.y);
 	return variant(&res);
 }
 
@@ -177,7 +174,7 @@ void imgui_theme_ui()
 		EditColor("Scrollbar Grab", &style.Colors[ImGuiCol_ScrollbarGrab]);
 		EditColor("Scrollbar Grab Hovered", &style.Colors[ImGuiCol_ScrollbarGrabHovered]);
 		EditColor("Scrollbar Grab Active", &style.Colors[ImGuiCol_ScrollbarGrabActive]);
-		EditColor("Combo Background", &style.Colors[ImGuiCol_ComboBg]);
+		EditColor("Popup Background", &style.Colors[ImGuiCol_PopupBg]);
 		EditColor("Slider Grab Active", &style.Colors[ImGuiCol_SliderGrabActive]);
 		EditColor("Button", &style.Colors[ImGuiCol_Button]);
 		EditColor("Button Hovered", &style.Colors[ImGuiCol_ButtonHovered]);
@@ -188,9 +185,6 @@ void imgui_theme_ui()
 		EditColor("Resize Grip", &style.Colors[ImGuiCol_ResizeGrip]);
 		EditColor("Resize Grip Hovered", &style.Colors[ImGuiCol_ResizeGripHovered]);
 		EditColor("Resize Grip Active", &style.Colors[ImGuiCol_ResizeGripActive]);
-		EditColor("Close Button", &style.Colors[ImGuiCol_CloseButton]);
-		EditColor("Close Button Hovered", &style.Colors[ImGuiCol_CloseButtonHovered]);
-		EditColor("Close Button Active", &style.Colors[ImGuiCol_CloseButtonActive]);
 		EditColor("Text Selected Background", &style.Colors[ImGuiCol_TextSelectedBg]);
 		EditColor("Modal Window Darkening", &style.Colors[ImGuiCol_ModalWindowDarkening]);
 	}
@@ -200,7 +194,7 @@ void imgui_theme_ui()
 		EditVec2("Window Min. Size", &style.WindowMinSize, 1.0f, 0.0f, 200.0f);
 		ImGui::DragFloat("Window Rounding", &style.WindowRounding, 0.1f, 0.0f, 10.0f);
 		EditVec2("Window Title Align", &style.WindowTitleAlign, 0.1f, 0.0f, 1.0f);
-		ImGui::DragFloat("Child Window Rounding", &style.ChildWindowRounding, 0.05f, 0.0f, 10.0f);
+		ImGui::DragFloat("Child Window Rounding", &style.ChildRounding, 0.05f, 0.0f, 10.0f);
 		EditVec2("Frame Padding", &style.FramePadding, 0.2f, 0.0f, 20.0f);
 		ImGui::DragFloat("Frame Rounding", &style.FrameRounding, 0.1f, 0.0f, 10.0f);
 		EditVec2("Item Spacing", &style.ItemSpacing, 0.05f, 0.0f, 10.0f);
@@ -216,7 +210,7 @@ void imgui_theme_ui()
 		EditVec2("Display Window Padding", &style.DisplayWindowPadding, 1.0f, 0.0f, 100.0f);
 		EditVec2("Display Safe Area", &style.DisplaySafeAreaPadding, 0.5f, 0.0f, 100.0f);
 		ImGui::Checkbox("Anti-Aliased Lines", &style.AntiAliasedLines);
-		ImGui::Checkbox("Anti-Aliased Shapes", &style.AntiAliasedShapes);
+		ImGui::Checkbox("Anti-Aliased Shapes", &style.AntiAliasedFill);
 		ImGui::DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.1f, 0.0f, 100.0f);
 	}
 	ImGui::End();
@@ -231,7 +225,7 @@ void save_imgui_theme()
 	res.add("window_padding", vec2_to_variant(style.WindowPadding));
 	res.add("window_rounding", style.WindowRounding);
 	res.add("window_min_size", vec2_to_variant(style.WindowMinSize));
-	res.add("child_window_rounding", style.ChildWindowRounding);
+	res.add("child_window_rounding", style.ChildRounding);
 	res.add("window_title_align", vec2_to_variant(style.WindowTitleAlign));
 	res.add("frame_padding", vec2_to_variant(style.FramePadding));
 	res.add("frame_rounding", style.FrameRounding);
@@ -248,7 +242,7 @@ void save_imgui_theme()
 	res.add("display_window_padding", vec2_to_variant(style.DisplayWindowPadding));
 	res.add("display_safe_area", vec2_to_variant(style.DisplaySafeAreaPadding));
 	res.add("anti_aliased_lines", style.AntiAliasedLines);
-	res.add("anti_aliased_shapes", style.AntiAliasedShapes);
+	res.add("anti_aliased_shapes", style.AntiAliasedFill);
 	res.add("curve_tessellation_tolerance", style.CurveTessellationTol);
 	sys::write_file(fname, res.build().write_json());
 }
@@ -267,7 +261,7 @@ void load_theme_from_variant(const variant& v)
 	if(v.has_key("window_title_align")) {
 		style.WindowTitleAlign = variant_to_vec2(v["window_title_align"]);
 	}
-	style.ChildWindowRounding = v["child_window_rounding"].as_float(style.ChildWindowRounding);
+	style.ChildRounding = v["child_window_rounding"].as_float(style.ChildRounding);
 	if(v.has_key("frame_padding")) {
 		style.FramePadding = variant_to_vec2(v["frame_padding"]);
 	}
@@ -297,7 +291,7 @@ void load_theme_from_variant(const variant& v)
 		style.DisplaySafeAreaPadding = variant_to_vec2(v["display_safe_area"]);
 	}
 	style.AntiAliasedLines = v["anti_aliased_lines"].as_bool(style.AntiAliasedLines);
-	style.AntiAliasedShapes = v["anti_aliased_shapes"].as_bool(style.AntiAliasedShapes);
+	style.AntiAliasedFill = v["anti_aliased_shapes"].as_bool(style.AntiAliasedFill);
 	style.CurveTessellationTol = v["curve_tessellation_tolerance"].as_float(style.CurveTessellationTol);
 }
 
@@ -307,7 +301,7 @@ void load_imgui_theme()
 	try {
 		variant v = json::parse_from_file(fname);
 		load_theme_from_variant(v);
-	} catch(json::ParseError& e) {
+	} catch(const json::ParseError& e) {
 		LOG_INFO("Failed to read file: " << fname << " : " << e.errorMessage());
 	}
 }

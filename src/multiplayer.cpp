@@ -128,7 +128,7 @@ namespace multiplayer
 			throw multiplayer::Error();
 		}
 
-		boost::array<char, 4> initial_response;
+		std::array<char, 4> initial_response;
 		size_t len = socket.read_some(boost::asio::buffer(initial_response), error);
 		if(error) {
 			LOG_INFO("ERROR READING INITIAL RESPONSE");
@@ -153,7 +153,7 @@ namespace multiplayer
 		udp_socket.reset(new udp::socket(io_service));
 		udp_socket->open(udp::v4());
 
-		boost::array<char, 4> udp_msg;
+		std::array<char, 4> udp_msg;
 		memcpy(&udp_msg[0], &id, 4);
 
 	//	udp_socket->send_to(boost::asio::buffer(udp_msg), receiver_endpoint);
@@ -267,7 +267,7 @@ namespace multiplayer
 	{
 		while(udp_packet_waiting()) {
 			udp::endpoint sender_endpoint;
-			boost::array<char, 4096> udp_msg;
+			std::array<char, 4096> udp_msg;
 			size_t len = udp_socket->receive(boost::asio::buffer(udp_msg));
 			if(len == 0 || udp_msg[0] != 'C') {
 				continue;
@@ -325,7 +325,7 @@ namespace multiplayer
 
 		boost::system::error_code error = boost::asio::error::host_not_found;
 
-		boost::array<char, 1024> response;
+		std::array<char, 1024> response;
 		size_t len = tcp_socket->read_some(boost::asio::buffer(response), error);
 		if(error) {
 			LOG_INFO("ERROR READING FROM SOCKET");
@@ -371,7 +371,7 @@ namespace multiplayer
 
 			LOG_INFO("SLOT " << n << " = " << host << " " << port);
 
-			udp_endpoint_peers.push_back(std::shared_ptr<udp::endpoint>(new udp::endpoint));
+			udp_endpoint_peers.push_back(std::make_shared<udp::endpoint>());
 			udp::resolver::query peer_query(udp::v4(), host, port);
 
 			*udp_endpoint_peers.back() = *udp_resolver.resolve(peer_query);
@@ -397,7 +397,7 @@ namespace multiplayer
 			}
 
 			while(udp_packet_waiting()) {
-				boost::array<char, 4096> udp_msg;
+				std::array<char, 4096> udp_msg;
 				udp::endpoint endpoint;
 				size_t len = udp_socket->receive_from(boost::asio::buffer(udp_msg), endpoint);
 				if(len == 6 && ::toupper(udp_msg[0]) == 'A') {
@@ -468,7 +468,7 @@ namespace multiplayer
 			int last_send = -1;
 
 			const int game_start = profile::get_tick_time() + 1000;
-			boost::array<char, 1024> receive_buf;
+			std::array<char, 1024> receive_buf;
 			while(profile::get_tick_time() < game_start) {
 				const int ticks = profile::get_tick_time();
 				const int start_in = game_start - ticks;
@@ -555,7 +555,7 @@ namespace multiplayer
 			}
 		} else {
 			std::vector<unsigned> start_time;
-			boost::array<char, 1024> buf;
+			std::array<char, 1024> buf;
 			for(;;) {
 				while(udp_packet_waiting()) {
 					size_t len = udp_socket->receive(boost::asio::buffer(buf));
@@ -659,7 +659,7 @@ COMMAND_LINE_UTILITY(hole_punch_test) {
 
 	std::vector<Peer> peers;
 
-	boost::array<char, 1024> buf;
+	std::array<char, 1024> buf;
 	for(;;) {
 		udp_socket.receive(boost::asio::buffer(buf));
 		LOG_INFO("RECEIVED {{{" << &buf[0] << "}}}\n");

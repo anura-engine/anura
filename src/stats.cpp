@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <vector>
 
-#include <boost/array.hpp>
+#include <array>
 #include <boost/asio.hpp>
 
 #include "checksum.hpp"
@@ -106,14 +106,14 @@ namespace stats
 				std::map<variant, variant> obj;
 				obj[variant("level")] = variant(i->first);
 				obj[variant("stats")] = variant(&i->second);
-				level_vec.push_back(variant(&obj));
+				level_vec.emplace_back(&obj);
 			}
 
 			attr[variant("levels")] = variant(&level_vec);
 
 			std::string msg_str = variant(&attr).write_json();
 			threading::lock lck(upload_queue_mutex());
-			upload_queue.push_back(std::pair<std::string,std::string>("upload-frogatto", msg_str));
+			upload_queue.emplace_back("upload-frogatto", msg_str);
 		}
 
 		namespace
@@ -163,7 +163,7 @@ namespace stats
 						while(!done) {
 							client.process();
 						}
-					} catch(std::exception& e) {
+					} catch(const std::exception& e) {
 						LOG_ERROR("Error sending stats: " << e.what() << "\n");
 					}
 				}
@@ -281,7 +281,7 @@ namespace stats
 	{
 		std::vector<variant> v;
 		for(const std::string& s : args) {
-			v.push_back(variant(s));
+			v.emplace_back(s);
 		}
 
 		program_args = variant(&v);

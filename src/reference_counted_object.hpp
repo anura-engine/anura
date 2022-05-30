@@ -27,7 +27,7 @@
 #include <mutex>
 #include <assert.h>
 
-#include "boost/intrusive_ptr.hpp"
+#include <boost/intrusive_ptr.hpp>
 
 //turn on multi-threaded protection for FFL constructs.
 //#define MT_FFL

@@ -212,11 +212,11 @@ std::string modify_variant_text(const std::string& contents, variant original, v
 
 				new_contents = modify_variant_text(new_contents, item.second, itor->second, l, c, indent + "\t") + (range.has_comma ? "" : ",");
 
-				mods.push_back(Modification(range.begin_value - contents.begin(), range.end_value - contents.begin(), new_contents));
+				mods.emplace_back(range.begin_value - contents.begin(), range.end_value - contents.begin(), new_contents);
 			} else {
 				//delete value
 				NameValuePairLocs range = find_pair_range(contents, line, col, item.first);
-				mods.push_back(Modification(range.begin_name - contents.begin(), range.end_comma - contents.begin(), ""));
+				mods.emplace_back(range.begin_name - contents.begin(), range.end_comma - contents.begin(), "");
 			}
 		}
 
@@ -244,7 +244,7 @@ std::string modify_variant_text(const std::string& contents, variant original, v
 			item.second.write_json_pretty(s, indent + "\t");
 			s << ",\n";
 
-			mods.push_back(Modification(t.end - contents.c_str(), t.end - contents.c_str(), s.str()));
+			mods.emplace_back(t.end - contents.c_str(), t.end - contents.c_str(), s.str());
 		}
 	} else if(v.is_list() && original.is_list()) {
 		std::vector<variant> a = original.as_list();
@@ -271,7 +271,7 @@ std::string modify_variant_text(const std::string& contents, variant original, v
 				int l = line, c = col;
 				advance_line_col(contents.begin(), contents.begin() + (ranges[n].first - contents.c_str()), l, c);
 				std::string str = modify_variant_text(std::string(ranges[n].first, ranges[n].second), a[n], b[n], l, c, indent + "\t");
-				mods.push_back(Modification(ranges[n].first - contents.c_str(), ranges[n].second - contents.c_str(), str));
+				mods.emplace_back(ranges[n].first - contents.c_str(), ranges[n].second - contents.c_str(), str);
 			}
 
 			std::ostringstream s;
@@ -290,7 +290,7 @@ std::string modify_variant_text(const std::string& contents, variant original, v
 			}
 
 			indent.resize(indent.size()-1);
-			mods.push_back(Modification(ranges.back().second - contents.c_str(), ranges.back().second - contents.c_str(), s.str()));
+			mods.emplace_back(ranges.back().second - contents.c_str(), ranges.back().second - contents.c_str(), s.str());
 		} else {
 			std::ostringstream s;
 			v.write_json_pretty(s, indent);
@@ -359,7 +359,7 @@ namespace
 			std::string new_contents = modify_variant_text(contents, original, v, 1, 1, "");
 			try {
 				json::parse(new_contents, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
-			} catch(json::ParseError& e) {
+			} catch(const json::ParseError& e) {
 				ASSERT_LOG(false, "ERROR: MODIFIED DOCUMENT " << fname << " COULD NOT BE PARSED. FILE NOT WRITTEN: " << e.errorMessage() << "\n" << new_contents);
 			}
 
@@ -379,12 +379,12 @@ namespace
 		for(const std::string& fname : files) {
 			try {
 				process_file(dir + "/" + fname, file_mappings);
-			} catch(json::ParseError&) {
+			} catch(const json::ParseError&) {
 				LOG_ERROR("FAILED TO PARSE " << fname);
-			} catch(type_error&) {
+			} catch(const type_error&) {
 				LOG_ERROR("TYPE ERROR PARSING " << fname);
 				error_files.push_back(fname);
-			} catch(validation_failure_exception& e) {
+			} catch(const validation_failure_exception& e) {
 				LOG_ERROR("PARSING " << fname << ": " << e.msg);
 				error_files.push_back(fname);
 			}

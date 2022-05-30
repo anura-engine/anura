@@ -139,8 +139,8 @@ namespace
 				current->setOnOpenList(false);
 				current->setOnClosedList(true);
 				if(current->G() <= max_cost) {
-					reachable.push_back(reachable_node(current->getNodeValue(),
-						is_pixel_alpha(s, current->getNodeValue())));
+					reachable.emplace_back(current->getNodeValue(),
+						is_pixel_alpha(s, current->getNodeValue()));
 				}
 				for(auto& p : pathfinding::get_neighbours_from_rect(current->getNodeValue(), 1, 1, r)) {
 					graph_node_list::const_iterator neighbour_node = node_list.find(p);
@@ -322,10 +322,10 @@ namespace gui
 
 		try {
 			setObject(v);
-		} catch(type_error&) {
-		} catch(Frame::Error&) {
-		} catch(validation_failure_exception&) {
-		} catch(KRE::ImageLoadError&) {
+		} catch(const type_error&) {
+		} catch(const Frame::Error&) {
+		} catch(const validation_failure_exception&) {
+		} catch(const KRE::ImageLoadError&) {
 		}
 	}
 
@@ -388,22 +388,22 @@ namespace gui
 
 		Button* b = new Button("+", std::bind(&AnimationPreviewWidget::zoomIn, this));
 		b->setLoc(x() + 10, y() + height() - b->height() - 5);
-		widgets_.push_back(WidgetPtr(b));
+		widgets_.emplace_back(b);
 		b = new Button("-", std::bind(&AnimationPreviewWidget::zoomOut, this));
 		b->setLoc(x() + 40, y() + height() - b->height() - 5);
-		widgets_.push_back(WidgetPtr(b));
+		widgets_.emplace_back(b);
 
 		zoom_label_ = new Label("Zoom: 100%");
 		zoom_label_->setLoc(b->x() + b->width() + 10, b->y());
-		widgets_.push_back(WidgetPtr(zoom_label_));
+		widgets_.emplace_back(zoom_label_);
 
 		pos_label_ = new Label("");
 		pos_label_->setLoc(zoom_label_->x() + zoom_label_->width() + 8, zoom_label_->y());
-		widgets_.push_back(WidgetPtr(pos_label_));
+		widgets_.emplace_back(pos_label_);
 
 		b = new Button("Reset", std::bind(&AnimationPreviewWidget::resetRect, this));
 		b->setLoc(pos_label_->x() + pos_label_->width() + 58, y() + height() - b->height() - 5);
-		widgets_.push_back(WidgetPtr(b));
+		widgets_.emplace_back(b);
 	}
 
 	void AnimationPreviewWidget::setObject(variant obj)
@@ -962,14 +962,13 @@ namespace gui
 		DEFINE_SET_FIELD
 			try {
 				obj.setObject(value);
-			} catch(type_error&) {
-			} catch(Frame::Error&) {
-			} catch(validation_failure_exception&) {
-			} catch(KRE::ImageLoadError&) {
+			} catch(const type_error&) {
+			} catch(const Frame::Error&) {
+			} catch(const validation_failure_exception&) {
+			} catch(const KRE::ImageLoadError&) {
 			}
 	END_DEFINE_CALLABLE(AnimationPreviewWidget)
 
 }
 
 #endif // !NO_EDITOR
-

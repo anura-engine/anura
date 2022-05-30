@@ -27,7 +27,7 @@
 #include <deque>
 #include <iostream>
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #if !defined(_MSC_VER)
 #include <sys/time.h>
@@ -204,7 +204,7 @@ namespace http
 			recv_buf.reset(new receive_buf);
 		}
 
-		buffer_ptr buf(new boost::array<char, 64*1024>);
+		buffer_ptr buf(new std::array<char, 64*1024>);
 		socket->socket.async_read_some(boost::asio::buffer(*buf), std::bind(&web_server::handle_receive, this, socket, buf, std::placeholders::_1, std::placeholders::_2, recv_buf));
 	}
 
@@ -352,7 +352,7 @@ namespace http
 
 			try {
 				doc = parse_message(std::string(payload, payload + payload_len));
-			} catch(json::ParseError& e) {
+			} catch(const json::ParseError& e) {
 				LOG_ERROR("ERROR PARSING JSON: " << e.errorMessage());
 				sys::write_file("./error_payload2.txt", std::string(payload));
 			} catch(...) {

@@ -255,7 +255,7 @@ namespace graphics
 				std::vector<variant> result;
 				result.reserve(v.size());
 				for(auto p : v) {
-					result.emplace_back(variant(new ParticleAffectorProxy(p)));
+					result.emplace_back(new ParticleAffectorProxy(p));
 				}
 				return variant(&result);
 			}
@@ -327,4 +327,3 @@ namespace graphics
 	END_DEFINE_CALLABLE(ParticleAffectorProxy)
 
 }
-

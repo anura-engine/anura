@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <boost/array.hpp>
+#include <array>
 #include <boost/asio.hpp>
 
 #include <deque>
@@ -82,7 +82,7 @@ private:
 		std::map<std::string,std::string> headers;
 		game_logic::MapFormulaCallablePtr callable;
 
-		boost::array<char, 65536> buf;
+		std::array<char, 65536> buf;
 
 		int expected_len;
 

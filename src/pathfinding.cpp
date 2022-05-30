@@ -54,7 +54,7 @@ namespace pathfinding
 				for(const auto& e1 : edge.second) {
 					from_to.push_back(edge.first);
 					from_to.push_back(e1);
-					edges.push_back(variant(&from_to));
+					edges.emplace_back(&from_to);
 				}
 			}
 			return variant(&edges);
@@ -164,7 +164,7 @@ namespace pathfinding
 					}
 				}
 			}
-		} catch (PathfindingException<variant>& e) {
+		} catch (const PathfindingException<variant>& e) {
 			LOG_ERROR(e.msg << " " << e.src.to_debug_string() << ", " << e.dest.to_debug_string());
 		}
 		wg->resetGraph();
@@ -178,8 +178,8 @@ namespace pathfinding
 
 	variant point_as_variant_list(const point& pt) {
 		std::vector<variant> v;
-		v.push_back(variant(pt.x));
-		v.push_back(variant(pt.y));
+		v.emplace_back(pt.x);
+		v.emplace_back(pt.y);
 		return variant(&v);
 	}
 
@@ -354,7 +354,7 @@ namespace pathfinding
 					}
 				}
 			}
-		} catch (PathfindingException<point>& e) {
+		} catch (const PathfindingException<point>& e) {
 			LOG_ERROR(e.msg << " (" << e.src.x << "," << e.src.y << ") : (" << e.dest.x << "," << e.dest.y << ")");
 		}
 		return variant(&path);
@@ -411,7 +411,7 @@ namespace pathfinding
 					}
 				}
 			}
-		} catch (PathfindingException<variant>& e) {
+		} catch (const PathfindingException<variant>& e) {
 			LOG_ERROR(e.msg << " " << e.src.to_debug_string() << ", " << e.dest.to_debug_string());
 		}
 		wg->resetGraph();

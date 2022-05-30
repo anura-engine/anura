@@ -98,19 +98,19 @@ namespace hex
 		// Load hex data from files -- order of initialization is important.
 		try {
 			hex::load_terrain_files(json::parse_from_file(base_path + "terrain-file-data.cfg"));
-		} catch(json::ParseError& e) {
+		} catch(const json::ParseError& e) {
 			ASSERT_LOG(false, "Error parsing hex " << (base_path + "terrain-file-data.cfg") << " file data: " << e.errorMessage());
 		}
 
 		try {
 			hex::load_tile_data(json::parse_from_file(base_path + "terrain.cfg"));
-		} catch(json::ParseError& e) {
+		} catch(const json::ParseError& e) {
 			ASSERT_LOG(false, "Error parsing hex " << (base_path + "terrain.cfg") << " file data: " << e.errorMessage());
 		}
 
 		try {
 			hex::load_terrain_data(json::parse_from_file(base_path + "terrain-graphics.cfg"));
-		} catch(json::ParseError& e) {
+		} catch(const json::ParseError& e) {
 			ASSERT_LOG(false, "Error parsing hex " << (base_path + "terrain-graphics.cfg") << " file data: " << e.errorMessage());
 		}
 
@@ -228,7 +228,7 @@ namespace hex
 	{
 		std::vector<variant> res;
 		for(const auto& tm : get_tile_map()) {
-			res.emplace_back(variant(tm.second.get()));
+			res.emplace_back(tm.second.get());
 		}
 		return res;
 	}

@@ -25,7 +25,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
-#include <cairo-ft.h>
+#include <cairo/cairo-ft.h>
 
 #include "asserts.hpp"
 #include "svg_element.hpp"
@@ -482,7 +482,7 @@ namespace KRE
 						try {
 							glyph_orientation_vertical_value_ = boost::lexical_cast<double>(go);
 							// test for 0,90,180,270 degree values
-						} catch(boost::bad_lexical_cast&) {
+						} catch(const boost::bad_lexical_cast&) {
 							ASSERT_LOG(false, "Bad numeric conversion of glyph-orientation-vertical value: " << go);
 						}
 					}
@@ -500,7 +500,7 @@ namespace KRE
 						try {
 							glyph_orientation_horizontal_value_ = boost::lexical_cast<double>(go);
 							// test for 0,90,180,270 degree values
-						} catch(boost::bad_lexical_cast&) {
+						} catch(const boost::bad_lexical_cast&) {
 							ASSERT_LOG(false, "Bad numeric conversion of glyph-orientation-horizontal value: " << go);
 						}
 					}
@@ -805,7 +805,7 @@ namespace KRE
 						opacity_ = OpacityAttrib::VALUE;
 						try {
 							opacity_value_ = boost::lexical_cast<double>(o);
-						} catch(boost::bad_lexical_cast&) {
+						} catch(const boost::bad_lexical_cast&) {
 							ASSERT_LOG(false, "Unable to obtain object/group opacity value: " << o);
 						}
 					}
@@ -932,7 +932,7 @@ namespace KRE
 						flood_opacity_ = OpacityAttrib::VALUE;
 						try {
 							flood_opacity_value_ = boost::lexical_cast<double>(o);
-						} catch(boost::bad_lexical_cast&) {
+						} catch(const boost::bad_lexical_cast&) {
 							ASSERT_LOG(false, "Unable to obtain flood_opacity value: " << o);
 						}
 					}
@@ -1030,7 +1030,7 @@ namespace KRE
 						stroke_opacity_ = OpacityAttrib::VALUE;
 						try {
 							stroke_opacity_value_ = boost::lexical_cast<double>(o);
-						} catch(boost::bad_lexical_cast&) {
+						} catch(const boost::bad_lexical_cast&) {
 							ASSERT_LOG(false, "Unable to obtain stroke-opacity value: " << o);
 						}
 					}
@@ -1046,14 +1046,14 @@ namespace KRE
 							stroke_width_ = StrokeWidthAttrib::PERCENTAGE;
 							try {
 								stroke_width_value_ = boost::lexical_cast<double>(sw) / 100.0;
-							} catch(boost::bad_lexical_cast&) {
+							} catch(const boost::bad_lexical_cast&) {
 								ASSERT_LOG(false, "Unable to obtain 'stroke-width' value: " << sw);
 							}
 						} else {
 							stroke_width_ = StrokeWidthAttrib::VALUE;
 							try {
 								stroke_width_value_ = boost::lexical_cast<double>(sw);
-							} catch(boost::bad_lexical_cast&) {
+							} catch(const boost::bad_lexical_cast&) {
 								ASSERT_LOG(false, "Unable to obtain 'stroke-width' value: " << sw);
 							}
 						}
@@ -1097,7 +1097,7 @@ namespace KRE
 						stroke_miter_limit_ = MiterLimitAttrib::VALUE;
 						try {
 							stroke_miter_limit_value_ = boost::lexical_cast<double>(sml);
-						} catch(boost::bad_lexical_cast&) {
+						} catch(const boost::bad_lexical_cast&) {
 							ASSERT_LOG(false, "Unable to obtain 'stroke-miterlimit' value: " << sml);
 						}
 						ASSERT_LOG(stroke_miter_limit_value_ >= 1.0, "'stroke-miterlimit' value must be greater than 1.0: " << stroke_miter_limit_value_);
@@ -1147,7 +1147,7 @@ namespace KRE
 						fill_opacity_ = OpacityAttrib::VALUE;
 						try {
 							fill_opacity_value_ = boost::lexical_cast<double>(o);
-						} catch(boost::bad_lexical_cast&) {
+						} catch(const boost::bad_lexical_cast&) {
 							ASSERT_LOG(false, "Unable to obtain fill-opacity value: " << o);
 						}
 					}

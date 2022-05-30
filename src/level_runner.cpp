@@ -88,7 +88,7 @@ extern bool g_desktop_fullscreen;
 extern bool g_particle_editor;
 extern int g_vsync;
 
-void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce, bool isFullscreen);
+void auto_select_resolution(const KRE::WindowPtr& wm, int& width, int& height, bool reduce, bool isFullscreen);
 
 namespace
 {
@@ -335,7 +335,7 @@ void mapSDLEventScreenCoordinatesToVirtual(SDL_Event& event)
 
 void addProcessFunction(std::function<void()> fn, void* tag)
 {
-	process_functions.push_back(std::pair<std::function<void()>,void*>(fn, tag));
+	process_functions.emplace_back(fn, tag);
 }
 
 void removeProcessFunction(void* tag)
@@ -630,7 +630,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 						g_mouse_event_swallowed = false;
 					}
 				}
-				items.push_back(variant(e.get()));
+				items.emplace_back(e.get());
 			}
 			// Handling for "catch all" mouse events.
 			callable->add("handled", variant::from_bool(handled));
@@ -1628,7 +1628,7 @@ bool LevelRunner::play_cycle()
 								width = preferences::requested_window_width();
 								height = preferences::requested_window_height();
 							} else {
-								auto_select_resolution(wnd, &width, &height, true, false);
+								auto_select_resolution(wnd, width, height, true, false);
 							}
 
 							preferences::adjust_virtual_width_to_match_physical(width, height);
@@ -1744,7 +1744,7 @@ bool LevelRunner::play_cycle()
 			try {
 				debug_console::process_graph();
 				lvl_->process();
-			} catch(InterruptGameException& e) {
+			} catch(const InterruptGameException& e) {
 				handle_pause_game_result(e.result);
 			}
 

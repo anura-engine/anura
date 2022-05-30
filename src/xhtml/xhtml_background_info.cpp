@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include <cairo.h>
+#include <cairo/cairo.h>
 
 #include "AttributeSet.hpp"
 #include "Blittable.hpp"
@@ -364,7 +364,7 @@ namespace xhtml
 
 		RenderablePtr new_clip_shape = nullptr;
 		if(clip_shape != nullptr) {
-			new_clip_shape = std::shared_ptr<Renderable>(new Renderable(*clip_shape));
+			new_clip_shape = std::make_shared<Renderable>(*clip_shape);
 		}
 
 		for(auto& shadow : box_shadows_) {
@@ -378,11 +378,11 @@ namespace xhtml
 				const float spread_height = static_cast<float>(box_height) + 2 * ssr;
 
 				if(std::abs(shadow.blur_radius) < FLT_EPSILON
-					|| !KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
+					|| !KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilities::RENDER_TO_TEXTURE)) {
 					rectf box_size(0, 0, spread_width, spread_height);
 					SolidRenderablePtr box = std::make_shared<SolidRenderable>(box_size, shadow.color);
 					if(clip_shape != nullptr) {
-						RenderablePtr new_clip_shape = std::shared_ptr<Renderable>(new Renderable(*clip_shape));
+						RenderablePtr new_clip_shape = std::make_shared<Renderable>(*clip_shape);
 						const float scalew = spread_width / static_cast<float>(box_width);
 						const float scaleh = spread_height / static_cast<float>(box_height);
 						new_clip_shape->setScale(scalew, scaleh);

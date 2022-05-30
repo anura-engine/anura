@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <boost/scoped_ptr.hpp>
 #include "intrusive_ptr.hpp"
 #include <deque>
 #include <set>
@@ -142,7 +141,7 @@ namespace tbs
 
 		server_base* server_;
 
-		boost::scoped_ptr<GameType> game_type_;
+		std::unique_ptr<GameType> game_type_;
 
 		int game_id_;
 

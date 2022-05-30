@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <boost/scoped_ptr.hpp>
 #include "intrusive_ptr.hpp"
 
 #include "frame.hpp"

@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/array.hpp>
+#include <array>
 #include <boost/asio.hpp>
 #include <map>
 
@@ -49,7 +49,7 @@ namespace http
 		};
 
 		typedef std::shared_ptr<SocketInfo> socket_ptr;
-		typedef std::shared_ptr<boost::array<char, 64*1024> > buffer_ptr;
+		typedef std::shared_ptr<std::array<char, 64*1024> > buffer_ptr;
 
 		explicit web_server(boost::asio::io_service& io_service, int port=23456);
 		virtual ~web_server();

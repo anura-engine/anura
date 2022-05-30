@@ -368,9 +368,9 @@ namespace graphics
 				std::vector<variant> result;
 				for(const glm::vec2& p : obj.points_) {
 					std::vector<variant> pos;
-					pos.emplace_back(variant(static_cast<int>(p.x)));
-					pos.emplace_back(variant(static_cast<int>(p.y)));
-					result.push_back(variant(&pos));
+					pos.emplace_back(static_cast<int>(p.x));
+					pos.emplace_back(static_cast<int>(p.y));
+					result.emplace_back(&pos);
 				}
 				return variant(&result);
 			DEFINE_SET_FIELD

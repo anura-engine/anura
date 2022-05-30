@@ -99,7 +99,7 @@ void BlurObject::draw(int x, int y)
 	decimal ratio = age_ >= duration_ ? decimal(1) : decimal(age_) / decimal(duration_);
 	if(easing_.is_function()) {
 		std::vector<variant> args;
-		args.emplace_back(variant(ratio));
+		args.emplace_back(ratio);
 		ratio = easing_(args).as_decimal();
 	}
 

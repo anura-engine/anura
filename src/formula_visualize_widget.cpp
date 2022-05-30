@@ -220,7 +220,7 @@ namespace gui
 		child_rows_[depth].push_back(children_.back());
 
 		if(parent) {
-			edges_.push_back(std::pair<WidgetPtr, WidgetPtr>(parent, children_.back()));
+			edges_.emplace_back(parent, children_.back());
 		}
 
 		parent = children_.back();

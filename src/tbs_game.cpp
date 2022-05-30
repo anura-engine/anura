@@ -93,10 +93,10 @@ namespace tbs
 
 		variant create(variant msg) { std::vector<variant> v; v.push_back(msg); return create_fn_(v); }
 		variant restart() { std::vector<variant> v; return restart_fn_(v); }
-		variant message(variant msg, int nplayer) { std::vector<variant> v; v.push_back(msg); v.push_back(variant(nplayer)); return message_fn_(v); }
-		variant add_bot(int session_id, const std::string& bot_type, variant args, variant bot_args) {std::vector<variant> v; v.push_back(variant(session_id)); v.push_back(variant(bot_type)); v.push_back(args); v.push_back(bot_args); return add_bot_fn_(v); }
+		variant message(variant msg, int nplayer) { std::vector<variant> v; v.push_back(msg); v.emplace_back(nplayer); return message_fn_(v); }
+		variant add_bot(int session_id, const std::string& bot_type, variant args, variant bot_args) {std::vector<variant> v; v.emplace_back(session_id); v.emplace_back(bot_type); v.push_back(args); v.push_back(bot_args); return add_bot_fn_(v); }
 		variant player_disconnected() { std::vector<variant> v; return player_disconnected_fn_(v); }
-		variant transform(variant msg, int nplayer) { std::vector<variant> v; v.push_back(msg); v.push_back(variant(nplayer)); return transform_fn_(v); }
+		variant transform(variant msg, int nplayer) { std::vector<variant> v; v.push_back(msg); v.emplace_back(nplayer); return transform_fn_(v); }
 		variant restore_state(variant state) { std::vector<variant> v; v.push_back(state); return restore_state_fn_(v); }
 		variant get_state() { std::vector<variant> v; return get_state_fn_(v); }
 		variant player_waiting_on() { std::vector<variant> v; return player_waiting_on_fn_(v); }
@@ -262,7 +262,7 @@ namespace tbs
 
 			std::vector<variant> players_val;
 			for(const player& p : players_) {
-				players_val.push_back(variant(p.name));
+				players_val.emplace_back(p.name);
 			}
 
 
@@ -272,7 +272,7 @@ namespace tbs
 			b.add("player_info", player_info_var);
 			b.add("replay", replay);
 			b.add("timestamp", start_timestamp_);
-			b.add("end_timestamp", static_cast<int>(time(NULL)));
+			b.add("end_timestamp", static_cast<int>(time(nullptr)));
 			b.add("winner", winner_);
 			v.push_back(b.build());
 			if(v.size() > 10) {
@@ -321,7 +321,7 @@ namespace tbs
 
 		std::vector<variant> players_val;
 		for(const player& p : players_) {
-			players_val.push_back(variant(p.name));
+			players_val.emplace_back(p.name);
 		}
 
 		result.add("players", variant(&players_val));
@@ -389,7 +389,7 @@ namespace tbs
 
 		std::vector<variant> players_val;
 		for(const player& p : players_) {
-			players_val.push_back(variant(p.name));
+			players_val.emplace_back(p.name);
 		}
 
 		result.add("players", variant(&players_val));
@@ -433,7 +433,7 @@ namespace {
 	{
 		std::vector<variant> v;
 		for(auto r : replay_) {
-			v.push_back(variant(r));
+			v.emplace_back(r);
 		}
 
 		std::string msg = variant(&v).write_json();
@@ -464,7 +464,7 @@ namespace {
 				p.allow_deltas = false;
 			}
 			LOG_INFO("restored state");
-		} catch(json::ParseError& e) {
+		} catch(const json::ParseError&) {
 			LOG_INFO("JSON ERROR RESTORING GAME STATE");
 		} catch(...) {
 			LOG_INFO("ERROR RESTORING GAME STATE");
@@ -481,7 +481,7 @@ namespace {
 	{
 		std::vector<variant> v;
 		for(auto r : replay_) {
-			v.push_back(variant(r));
+			v.emplace_back(r);
 		}
 
 		sys::write_file(fname, variant(&v).write_json());
@@ -589,7 +589,7 @@ namespace {
 		variant_builder result;
 		result.add("type", "error");
 		result.add("message", msg);
-		result.add("timestamp", static_cast<int>(time(NULL)));
+		result.add("timestamp", static_cast<int>(time(nullptr)));
 		queue_message(result.build(), nplayer);
 	}
 
@@ -598,7 +598,7 @@ namespace {
 		variant_builder result;
 		result.add("type", "message");
 		result.add("message", msg);
-		result.add("timestamp", static_cast<int>(time(NULL)));
+		result.add("timestamp", static_cast<int>(time(nullptr)));
 		queue_message(result.build(), nplayer);
 	}
 
@@ -797,7 +797,7 @@ namespace {
 
 #ifdef USE_DB_CLIENT
 		DEFINE_FIELD(db_client, "builtin db_client")
-			if(obj.db_client_.get() == NULL) {
+			if(obj.db_client_.get() == nullptr) {
 				obj.db_client_ = DbClient::create();
 			}
 
@@ -858,7 +858,7 @@ namespace {
 		DEFINE_FIELD(players_disconnected, "[int]")
 			std::vector<variant> result;
 			for(auto n : obj.players_disconnected_) {
-				result.push_back(variant(n));
+				result.emplace_back(n);
 			}
 			return variant(&result);
 
@@ -969,7 +969,7 @@ namespace {
 			return;
 		} else if(type == "chat_message") {
 			variant m = msg;
-			m.add_attr_mutation(variant("timestamp"), variant(static_cast<int>(time(NULL))));
+			m.add_attr_mutation(variant("timestamp"), variant(static_cast<int>(time(nullptr))));
 			if(nplayer >= 0) {
 				m.add_attr_mutation(variant("nick"), variant(players_[nplayer].name));
 			} else {

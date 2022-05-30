@@ -26,7 +26,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <cairo.h>
+#include <cairo/cairo.h>
 
 #include "svg_fwd.hpp"
 #include "svg_render.hpp"

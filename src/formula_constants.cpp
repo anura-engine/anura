@@ -104,17 +104,17 @@ namespace game_logic
 			return variant(decimal::epsilon());
 		} else if(id == "HEX_DIRECTIONS") {
 			std::vector<variant> v;
-			v.push_back(variant("n"));
-			v.push_back(variant("ne"));
-			v.push_back(variant("se"));
-			v.push_back(variant("s"));
-			v.push_back(variant("sw"));
-			v.push_back(variant("nw"));
+			v.emplace_back("n");
+			v.emplace_back("ne");
+			v.emplace_back("se");
+			v.emplace_back("s");
+			v.emplace_back("sw");
+			v.emplace_back("nw");
 			return variant(&v);
 		} else if(id == "BUILD_OPTIONS") {
 			std::vector<variant> v;
 			for(auto bo : preferences::get_build_options()) {
-				v.push_back(variant(bo));
+				v.emplace_back(bo);
 			}
 			return variant(&v);
 	} else if(id == "MODULE_NAME") {

@@ -406,7 +406,7 @@ namespace
 		variant properties = proto_properties + node_properties;
 		if(override_properties.empty() == false) {
 			std::vector<variant> overrides;
-			overrides.push_back(variant(&override_properties));
+			overrides.emplace_back(&override_properties);
 			properties = properties + variant(&overrides);
 		}
 
@@ -442,13 +442,13 @@ namespace
 
 			std::string parent = p.second;
 			const int parent_id = CustomObjectType::getObjectTypeIndex(parent);
-			ancestry_index().push_back(std::pair<int,int>(child_id, parent_id));
+			ancestry_index().emplace_back(child_id, parent_id);
 
 			auto itor = object_type_inheritance().find(parent);
 			while(itor != object_type_inheritance().end()) {
 				parent = itor->second;
 				const int parent_id = CustomObjectType::getObjectTypeIndex(parent);
-				ancestry_index().push_back(std::pair<int,int>(child_id, parent_id));
+				ancestry_index().emplace_back(child_id, parent_id);
 				itor = object_type_inheritance().find(parent);
 			}
 		}
@@ -665,6 +665,8 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 	for(auto p : proto_definitions) {
 		object_type_definitions()[p.first] = p.second;
 	}
+	
+	const bool objectHasAlreadyBeenAdded = !!object_type_definitions()[id_];
 
 	object_type_definitions()[id_] = callable_definition_;
 
@@ -725,25 +727,35 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 
 	callable_definition_->finalizeProperties();
 	callable_definition_->setStrict(is_strict_);
+	
+	if (!objectHasAlreadyBeenAdded) {
+		//[DDR 2022-04-13] Bad Hack: The above "if" is to work around an error
+		//where protos doesn't get fully populated for objects already added
+		//(it only sees the last prototype in the chain), which only triggers
+		//when you try to depend on the Frogatto module as a dependancy for
+		//your own module.
+		
+		for(auto f : g_object_validation_functions) {
+			std::vector<variant> protos;
 
-	for(auto f : g_object_validation_functions) {
-		std::vector<variant> protos;
-
-		while(prototype_derived_from != "") {
-			protos.push_back(variant(prototype_derived_from));
-			auto it = object_type_inheritance().find(prototype_derived_from);
-			if(it == object_type_inheritance().end()) {
-				break;
+			while(prototype_derived_from != "") {
+				LOG_INFO("Added " << prototype_derived_from << " to protos for " << id_ << ".");
+				protos.emplace_back(prototype_derived_from);
+				auto it = object_type_inheritance().find(prototype_derived_from);
+				if(it == object_type_inheritance().end()) {
+					break;
+				}
+				prototype_derived_from = it->second;
 			}
-			prototype_derived_from = it->second;
+			LOG_INFO("Done.\n");
+
+			std::vector<variant> args;
+			args.push_back(node);
+			args.emplace_back(&protos);
+
+			variant result = f(args);
+			ASSERT_LOG(result.is_null(), "Object validation failed for object " << id_ << ": " << result.as_string());
 		}
-
-		std::vector<variant> args;
-		args.push_back(node);
-		args.push_back(variant(&protos));
-
-		variant result = f(args);
-		ASSERT_LOG(result.is_null(), "Object validation failed for object " << id_ << ": " << result.as_string());
 	}
 }
 
@@ -810,6 +822,63 @@ FormulaCallableDefinitionPtr CustomObjectType::getDefinition(const std::string& 
 		itor = object_type_definitions().find(id);
 		ASSERT_LOG(itor != object_type_definitions().end(), "No definition for object " << id);
 		return itor->second;
+	}
+}
+
+bool CustomObjectType::hasDefinition(const std::string& id)
+{
+	std::map<std::string, FormulaCallableDefinitionPtr>::const_iterator itor = object_type_definitions().find(id);
+	if(itor != object_type_definitions().end()) {
+		return true;
+	} else {
+		if(object_file_paths().empty()) {
+			load_file_paths();
+		}
+
+		auto proto_path = module::find(prototype_file_paths(), id + ".cfg");
+		if(proto_path != prototype_file_paths().end()) {
+			if(getObjectPath(id) == nullptr) { return false; }
+			variant node = mergePrototype(json::parse_from_file(proto_path->second));
+			CustomObjectCallablePtr callableDefinition(new CustomObjectCallable);
+			callableDefinition->setTypeName("obj " + id);
+			int slot = -1;
+			init_object_definition(node, node["id"].as_string(), callableDefinition, slot, (!g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode)) || g_force_strict_mode);
+			std::map<std::string, FormulaCallableDefinitionPtr>::const_iterator itor = object_type_definitions().find(id);
+			ASSERT_LOG(itor != object_type_definitions().end(), "Could not load object prototype definition " << id);
+			return true;
+		}
+
+		std::string::const_iterator dot_itor = std::find(id.begin(), id.end(), '.');
+		std::string obj_id(id.begin(), dot_itor);
+
+		const std::string* path = getObjectPath(obj_id + ".cfg");
+		if(path == nullptr) { return false; }
+
+		std::map<std::string, variant> nodes;
+
+		variant node = mergePrototype(json::parse_from_file(*path));
+		nodes[obj_id] = node;
+		if(node["object_type"].is_list() || node["object_type"].is_map()) {
+			for(variant sub_node : node["object_type"].as_list()) {
+				const std::string sub_id = obj_id + "." + sub_node["id"].as_string();
+				ASSERT_LOG(nodes.count(sub_id) == 0, "Duplicate object: " << sub_id);
+				nodes[sub_id] = mergePrototype(sub_node);
+			}
+		}
+
+		for(auto p : nodes) {
+			if(object_type_definitions().count(p.first)) {
+				continue;
+			}
+
+			CustomObjectCallablePtr callableDefinition(new CustomObjectCallable);
+			callableDefinition->setTypeName("obj " + p.first);
+			int slot = -1;
+			init_object_definition(p.second, p.first, callableDefinition, slot, (!g_suppress_strict_mode && p.second["is_strict"].as_bool(custom_object_strict_mode)) || g_force_strict_mode);
+		}
+
+		itor = object_type_definitions().find(id);
+		return itor != object_type_definitions().end();
 	}
 }
 
@@ -957,7 +1026,7 @@ CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
 			object_prototype_paths[id] = proto_paths;
 
 			return result;
-		} catch(validation_failure_exception& e) {
+		} catch(const validation_failure_exception& e) {
 			static bool in_edit_and_continue = false;
 			if(in_edit_and_continue || preferences::edit_and_continue() == false) {
 				throw e;
@@ -969,9 +1038,9 @@ CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
 			return recreate(id, old_type);
 		}
 
-	} catch(json::ParseError& e) {
+	} catch(const json::ParseError& e) {
 		ASSERT_LOG(false, "Error parsing FML for custom object '" << id << "' in '" << path_itor->second << "': '" << e.errorMessage() << "'");
-	} catch(KRE::ImageLoadError& e) {
+	} catch(const KRE::ImageLoadError& e) {
 		ASSERT_LOG(false, "Error loading object '" << id << "': could not load needed image: " << e.what());
 	}
 	// We never get here, but this stops a compiler warning.
@@ -1096,7 +1165,7 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 			summary[variant("mod")] = variant(mod_time);
 			std::vector<variant> proto_paths_v;
 			for(const std::string& s : proto_paths) {
-				proto_paths_v.push_back(variant(s));
+				proto_paths_v.emplace_back(s);
 			}
 
 			summary[variant("prototype_paths")] = variant(&proto_paths_v);
@@ -1524,7 +1593,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		ffl::IntrusivePtr<Frame> f;
 		try {
 			f.reset(new Frame(anim));
-		} catch(Frame::Error&) {
+		} catch(const Frame::Error&) {
 			ASSERT_LOG(false, "ERROR LOADING FRAME IN OBJECT '" << id_ << "'");
 		}
 
@@ -1552,7 +1621,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	std::vector<variant> available_frames;
 	for(frame_map::const_iterator i = frames_.begin(); i != frames_.end(); ++i) {
-		available_frames.push_back(variant(i->first));
+		available_frames.emplace_back(i->first);
 	}
 
 	available_frames_ = variant(&available_frames);

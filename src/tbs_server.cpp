@@ -136,7 +136,7 @@ namespace tbs
 			if(cli_info.msg_queue.size() > 1 && socket->client_version >= 1) {
 				std::vector<variant> items;
 				for(const std::string& s : cli_info.msg_queue) {
-					items.push_back(variant(s));
+					items.emplace_back(s);
 				}
 
 				cli_info.msg_queue.clear();
@@ -326,16 +326,16 @@ namespace tbs
 
 			client_info& cli_info = clients[info.session_id];
 			if(cli_info.msg_queue.empty() == false) {
-				messages.push_back(std::pair<socket_ptr,std::string>(socket, cli_info.msg_queue.front()));
+				messages.emplace_back(socket, cli_info.msg_queue.front());
 				cli_info.msg_queue.pop_front();
 
 			sessions_to_waiting_connections_.erase(info.session_id);
 			} else if(send_heartbeat) {
 				if(!cli_info.game) {
-					messages.push_back(std::pair<socket_ptr,std::string>(socket, "{ \"type\": \"heartbeat\" }"));
+					messages.emplace_back(socket, "{ \"type\": \"heartbeat\" }");
 				} else {
 					variant v = create_heartbeat_packet(cli_info);
-					messages.push_back(std::pair<socket_ptr,std::string>(socket, v.write_json()));
+					messages.emplace_back(socket, v.write_json());
 				}
 
 				sessions_to_waiting_connections_.erase(info.session_id);

@@ -34,7 +34,7 @@
 #include "formula.hpp"
 #include "variant.hpp"
 
-#include <boost/array.hpp>
+#include <array>
 #include <unordered_map>
 
 #include <glm/glm.hpp>

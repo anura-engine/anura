@@ -147,6 +147,26 @@ public:
 	explicit variant(long unsigned int n) : type_(VARIANT_TYPE_INT), int_value_(n) { registerGlobalVariant(this); }
 	explicit variant(decimal d) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(d.value()) { registerGlobalVariant(this); }
 	explicit variant(double f) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(decimal(f).value()) { registerGlobalVariant(this); }
+#if defined(_MSC_VER)
+	/**
+	 * This is Windows-only because longs are 32 bit when building for 64 bit on Windows, as opposed to other platforms
+	 * where they are 64 bit when building for 64 bits. There, the unsigned long ctor matches when passed std::size_t,
+	 * but when building for Windows that is the equivalent of an unsigned long long, for which there is no ctor match.
+	 * uint64_t on Windows is thus an alias unsigned long long, since singular longs are 32 bits there.
+	 *
+	 * Optimally, this should't be gated to Windows only. On non-Windows, it causes a definition clash since uint64_t
+	 * just expands to unsigned long, for which there is a definition above. We should evaluate these ctors and see which
+	 * can used fixed width types.
+	 *
+	 * On another note, we deliberately truncate the integer to 32 bit. Using 64 bit ints would be possible, and could
+	 * be considered at some point.
+	 *
+	 * -- vultraz, 2022-03-16
+	 *
+	 * See https://stackoverflow.com/a/384672 for more info.
+	 */
+	explicit variant(uint64_t n) : type_(VARIANT_TYPE_INT), int_value_(static_cast<int>(n)) { registerGlobalVariant(this); }
+#endif
 	variant(int64_t n, DECIMAL_VARIANT_TYPE) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(n) { registerGlobalVariant(this); }
 	explicit variant(const game_logic::FormulaCallable* callable);
 	explicit variant(std::vector<variant>* array);
@@ -180,7 +200,7 @@ public:
 		}
 	}
 
-	variant(variant&& v) {
+	variant(variant&& v) noexcept {
 		registerGlobalVariant(this);
 		type_ = v.type_;
 		value_ = v.value_;
@@ -193,7 +213,7 @@ public:
 		}
 	}
 
-	const variant& operator=(variant&& v)
+	const variant& operator=(variant&& v) noexcept
 	{
 		if(&v != this) {
 			if (type_ > VARIANT_TYPE_DECIMAL) {

@@ -356,14 +356,14 @@ Level::Level(const std::string& level_cfg, variant node)
 	rmanager_ = KRE::RenderManager::getInstance();
 	rmanager_->addQueue(0, "Level::opaques");
 
-	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
+	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilities::RENDER_TO_TEXTURE)) {
 		have_render_to_texture_ = true;
 		auto& gs = graphics::GameScreen::get();
 
 		try {
 			const assert_recover_scope safe_scope;
 			rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, true);
-		} catch(validation_failure_exception& /*e*/) {
+		} catch(const validation_failure_exception& /*e*/) {
 			LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 			rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, false);
 		}
@@ -410,11 +410,11 @@ Level::Level(const std::string& level_cfg, variant node)
 	}
 
 	for(variant v : node["sub_components"].as_list_optional()) {
-		sub_components_.push_back(SubComponent(v));
+		sub_components_.emplace_back(v);
 	}
 
 	for(variant v : node["sub_component_usages"].as_list_optional()) {
-		sub_component_usages_.push_back(SubComponentUsage(v));
+		sub_component_usages_.emplace_back(v);
 	}
 
 	if(preferences::load_compiled() && (level_cfg == "save.cfg" || level_cfg == "autosave.cfg")) {
@@ -717,7 +717,7 @@ void Level::setRenderToTexture(int width, int height)
 			const assert_recover_scope safe_scope;
 			rt_ = KRE::RenderTarget::create(width, height, 1, false, true);
 			rt_->setBlendState(false);
-		} catch(validation_failure_exception& /*e*/) {
+		} catch(const validation_failure_exception& /*e*/) {
 			LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 			rt_ = KRE::RenderTarget::create(width, height, 1, false, false);
 			rt_->setBlendState(false);
@@ -1622,7 +1622,7 @@ variant Level::write() const
 				continue;
 			}
 
-			opaque.insert(std::pair<int,int>(t.x,t.y));
+			opaque.emplace(t.x,t.y);
 		}
 
 		LOG_INFO("BUILDING RECTS...");
@@ -1764,7 +1764,7 @@ variant Level::write() const
 		int id = 0;
 		while(p) {
 			if(p&1L) {
-				out.push_back(variant(graphics::get_palette_name(id)));
+				out.emplace_back(graphics::get_palette_name(id));
 			}
 
 			p >>= 1;
@@ -2041,7 +2041,7 @@ void Level::prepare_tiles_for_drawing()
 		}
 
 		if(t.object->isOpaque()) {
-			opaque.insert(std::pair<int,int>(t.x, t.y));
+			opaque.emplace(t.x, t.y);
 		}
 	}
 
@@ -2422,7 +2422,7 @@ KRE::RenderTargetPtr& Level::applyShaderToFrameBufferTexture(graphics::AnuraShad
 			try {
 				const assert_recover_scope safe_scope;
 				backup_rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, true);
-			} catch(validation_failure_exception& /*e*/) {
+			} catch(const validation_failure_exception& /*e*/) {
 				LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 				backup_rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, false);
 			}
@@ -2475,7 +2475,7 @@ void Level::shadersUpdated()
 
 void Level::calculateLighting(int x, int y, int w, int h) const
 {
-	bool fbo = KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE);
+	bool fbo = KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilities::RENDER_TO_TEXTURE);
 	if(!dark_ || editor_ || !fbo) {
 		return;
 	}
@@ -2523,6 +2523,7 @@ void Level::calculateLighting(int x, int y, int w, int h) const
 	wnd->render(rt.get());
 }
 
+//Show the white debug overlay for level solidity.
 void Level::draw_debug_solid(int x, int y, int w, int h) const
 {
 	if(preferences::show_debug_hitboxes() == false) {
@@ -2544,21 +2545,38 @@ void Level::draw_debug_solid(int x, int y, int w, int h) const
 			const int ypixel = (tile_y + ypos)*TileSize;
 
 			RectRenderable rr;
-			if(info->all_solid) {
-				rr.update(rect(xpixel, ypixel, TileSize, TileSize),
+			if(info->all_solid) { //Tile is all solid, draw a rect.
+				rr.update(xpixel, ypixel, TileSize, TileSize,
+					//I don't know why alpha isn't working here, I think ->render(&rr) isn't reading it correctly?
 					info->info.damage ? KRE::Color(255, 0, 0, 196) : KRE::Color(255, 255, 255, 196));
-			} else {
+			} else { //Tile is diagonal; probe solidity to draw a triangle.
 				std::vector<glm::u16vec2> v;
 
 				for(int suby = 0; suby != TileSize; ++suby) {
 					for(int subx = 0; subx != TileSize; ++subx) {
+						//The following if statement correctly loads a rectangle of
+						//coordinates into v. However, rr.update doesn't work. (I think.)
+						
+						//if(info->bitmap.test(suby*TileSize + subx)) {
+						//	v.emplace_back(xpixel + subx + 1, ypixel + suby + 1);
+						//}
+						
+						//Because rr.update doesn't work, I've added this much less efficient
+						//code which just draws the rectangle once for each pixel. >_<
 						if(info->bitmap.test(suby*TileSize + subx)) {
-							v.emplace_back(xpixel + subx + 1, ypixel + suby + 1);
+							rr.update(xpixel + subx, ypixel + suby, 1, 1,
+								info->info.damage ? KRE::Color(255, 0, 0, 196) : KRE::Color(255, 255, 255, 196));
+							KRE::WindowManager::getMainWindow()->render(&rr);
 						}
 					}
 				}
+				continue; //We just drew the thing, just continue to the next tile.
 
 				if(!v.empty()) {
+					//This is the call which does not work, which I do not know why.
+					//It basically... just doesn't update the rect?? At least not
+					//correctly. And the data structures underneath are not really
+					//human-readable in GDB, just a bunch of single-letter glm structs.
 					rr.update(&v, info->info.damage ? KRE::Color(255, 0, 0, 196) : KRE::Color(255, 255, 255, 196));
 				}
 
@@ -2861,7 +2879,7 @@ bool Level::isSolid(const LevelSolidMap& map, const Entity& e, const std::vector
 	const Frame& current_frame = e.getCurrentFrame();
 
 	for(std::vector<point>::const_iterator p = points.begin(); p != points.end(); ++p) {
-		int x, y;
+		int x = 0, y = 0;
 		if(prev_x != std::numeric_limits<int>::min()) {
 			const int diff_x = (p->x - (p-1)->x) * (e.isFacingRight() ? 1 : -1);
 			const int diff_y = p->y - (p-1)->y;
@@ -3337,10 +3355,10 @@ std::vector<point> Level::get_solid_contiguous_region(int xpos, int ypos) const
 
 		std::vector<tile_pos> new_positions;
 		for(const tile_pos& pos : positions) {
-			new_positions.push_back(std::make_pair(pos.first-1, pos.second));
-			new_positions.push_back(std::make_pair(pos.first+1, pos.second));
-			new_positions.push_back(std::make_pair(pos.first, pos.second-1));
-			new_positions.push_back(std::make_pair(pos.first, pos.second+1));
+			new_positions.emplace_back(pos.first-1, pos.second);
+			new_positions.emplace_back(pos.first+1, pos.second);
+			new_positions.emplace_back(pos.first, pos.second-1);
+			new_positions.emplace_back(pos.first, pos.second+1);
 		}
 
 		for(const tile_pos& pos : new_positions) {
@@ -3806,19 +3824,19 @@ DEFINE_FIELD(num_active, "int")
 DEFINE_FIELD(active_chars, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.active_chars_) {
-		v.push_back(variant(e.get()));
+		v.emplace_back(e.get());
 	}
 	return variant(&v);
 DEFINE_FIELD(chars, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.chars_) {
-		v.push_back(variant(e.get()));
+		v.emplace_back(e.get());
 	}
 	return variant(&v);
 DEFINE_FIELD(players, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.players()) {
-		v.push_back(variant(e.get()));
+		v.emplace_back(e.get());
 	}
 	return variant(&v);
 DEFINE_SET_FIELD
@@ -3853,7 +3871,7 @@ obj.instant_zoom_level_set_ = obj.cycle_;
 DEFINE_FIELD(focus, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.focus_override_) {
-		v.push_back(variant(e.get()));
+		v.emplace_back(e.get());
 	}
 	return variant(&v);
 DEFINE_SET_FIELD
@@ -3871,10 +3889,10 @@ DEFINE_FIELD(id, "string")
 
 DEFINE_FIELD(dimensions, "[int,int,int,int]")
 	std::vector<variant> v;
-	v.push_back(variant(obj.boundaries_.x()));
-	v.push_back(variant(obj.boundaries_.y()));
-	v.push_back(variant(obj.boundaries_.x2()));
-	v.push_back(variant(obj.boundaries_.y2()));
+	v.emplace_back(obj.boundaries_.x());
+	v.emplace_back(obj.boundaries_.y());
+	v.emplace_back(obj.boundaries_.x2());
+	v.emplace_back(obj.boundaries_.y2());
 	return variant(&v);
 DEFINE_SET_FIELD
 	ASSERT_EQ(value.num_elements(), 4);
@@ -3925,7 +3943,7 @@ DEFINE_SET_FIELD
 DEFINE_FIELD(chars_immune_from_time_freeze, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.chars_immune_from_time_freeze_) {
-		v.push_back(variant(e.get()));
+		v.emplace_back(e.get());
 	}
 	return variant(&v);
 DEFINE_SET_FIELD
@@ -3962,8 +3980,8 @@ DEFINE_FIELD(window_size, "[int, int]")
 DEFINE_FIELD(camera_position, "[int, int, int, int]")
 	std::vector<variant> pos;
 	pos.reserve(4);
-	pos.push_back(variant(last_draw_position().x/100));
-	pos.push_back(variant(last_draw_position().y/100));
+	pos.emplace_back(last_draw_position().x/100);
+	pos.emplace_back(last_draw_position().y/100);
 
 	auto& gs = graphics::GameScreen::get();
 	pos.emplace_back(int(round(gs.getVirtualWidth()  / last_draw_position().zoom)));
@@ -3978,8 +3996,8 @@ DEFINE_FIELD(camera_target, "[int,int]")
 	std::vector<variant> pos;
 	pos.reserve(2);
 
-	pos.push_back(variant(last_draw_position().target_xpos));
-	pos.push_back(variant(last_draw_position().target_ypos));
+	pos.emplace_back(last_draw_position().target_xpos);
+	pos.emplace_back(last_draw_position().target_ypos);
 
 	return variant(&pos);
 
@@ -4009,7 +4027,7 @@ DEFINE_FIELD(is_paused, "bool")
 DEFINE_FIELD(editor_selection, "[custom_obj]")
 	std::vector<variant> result;
 	for(EntityPtr s : obj.editor_selection_) {
-		result.push_back(variant(s.get()));
+		result.emplace_back(s.get());
 	}
 
 	return variant(&result);
@@ -4024,7 +4042,7 @@ DEFINE_FIELD(frame_buffer_shaders, "[{begin_zorder: int, end_zorder: int, shader
 		m[variant("shader_info")] = e.shader_node;
 
 		m[variant("shader")] = variant(e.shader.get());
-		v.push_back(variant(&m));
+		v.emplace_back(&m);
 	}
 
 	obj.fb_shaders_variant_ = variant(&v);
@@ -4064,8 +4082,8 @@ DEFINE_FIELD(preferences, "object")
 DEFINE_FIELD(lock_screen, "null|[int]")
 	if(obj.lock_screen_.get()) {
 		std::vector<variant> v;
-		v.push_back(variant(obj.lock_screen_->x));
-		v.push_back(variant(obj.lock_screen_->y));
+		v.emplace_back(obj.lock_screen_->x);
+		v.emplace_back(obj.lock_screen_->y);
 		return variant(&v);
 	} else {
 		return variant();
@@ -4145,7 +4163,7 @@ DEFINE_SET_FIELD_TYPE("null|map")
 DEFINE_FIELD(hex_masks, "[builtin mask_node]")
 	std::vector<variant> result;
 	for(auto mask : obj.hex_masks_) {
-		result.emplace_back(variant(mask.get()));
+		result.emplace_back(mask.get());
 	}
 
 	return variant(&result);
@@ -4519,7 +4537,7 @@ std::vector<EntityPtr> Level::predict_future(EntityPtr e, int ncycles)
 			process();
 			backup();
 			++nframes;
-		} catch(validation_failure_exception&) {
+		} catch(const validation_failure_exception&) {
 			LOG_INFO("ERROR WHILE PREDICTING FUTURE...");
 			break;
 		}
@@ -4795,7 +4813,7 @@ bool Level::relocate_object(EntityPtr e, int new_x, int new_y)
 						if(p.size() == 2) {
 							p[0] = variant(p[0].as_int() + delta_x);
 							p[1] = variant(p[1].as_int() + delta_y);
-							new_value.push_back(variant(&p));
+							new_value.emplace_back(&p);
 						}
 					}
 					e->handleEvent("editor_changing_variable");

@@ -54,7 +54,7 @@ namespace game_logic
 				visit(v->get_attr_mutable(key));
 			}
 		} else if(v->is_callable()) {
-			ptr_.push_back(FormulaCallableSuspendedPtr(new FormulaCallableSuspendedVariant(v)));
+			ptr_.emplace_back(new FormulaCallableSuspendedVariant(v));
 			visit(*v->as_callable());
 		} else if(v->is_function()) {
 			std::vector<ffl::IntrusivePtr<const FormulaCallable>*> items;

@@ -97,7 +97,7 @@ namespace KRE
 		RenderTargetPtr handleCreateRenderTarget(const variant& node) override;
 		void doBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch) override;
 
-		bool doCheckForFeature(DisplayDeviceCapabilties cap) override;
+		bool doCheckForFeature(DisplayDeviceCapabilities cap) override;
 
 		TexturePtr handleCreateTexture(const SurfacePtr& surface, TextureType type, int mipmap_levels) override;
 		TexturePtr handleCreateTexture(const SurfacePtr& surface, const variant& node) override;

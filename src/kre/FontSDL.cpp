@@ -21,8 +21,6 @@
 	   distribution.
 */
 
-#pragma comment(lib, "SDL2_ttf")
-
 #include "DisplayDevice.hpp"
 #include "FontSDL.hpp"
 #include "SurfaceSDL.hpp"
@@ -81,10 +79,10 @@ namespace KRE
 		try {
 			fp = Font::findFontPath(fontn + ".ttf");
 
-		} catch(FontError&) {
+		} catch(const FontError&) {
 			try {
 				fp = Font::findFontPath(fontn + ".otf");
-			} catch(FontError&) {
+			} catch(const FontError&) {
 				fp = Font::findFontPath(fontn);
 			}
 		}

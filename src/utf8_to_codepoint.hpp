@@ -33,9 +33,15 @@ namespace utils
 	class utf8_to_codepoint
 	{
 	public:
-		class iterator : public std::iterator<std::forward_iterator_tag, char32_t, std::string::difference_type, const char32_t*, const char32_t&>
+		class iterator
 		{
 		public:
+			using iterator_category = std::forward_iterator_tag;
+			using value_type        = char32_t;
+			using difference_type   = std::string::difference_type;
+			using pointer           = const char32_t*;
+			using reference         = const char32_t&;
+
 			iterator(std::string::const_iterator it)
 				: it_(it),
 				utf8_bitmask_1(0x80),

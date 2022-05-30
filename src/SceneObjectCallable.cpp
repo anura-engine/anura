@@ -98,7 +98,7 @@ namespace graphics
 		DEFINE_SET_FIELD
 			try {
 				obj.setOrder(boost::lexical_cast<size_t>(value.as_string()));
-			} catch(boost::bad_lexical_cast& e) {
+			} catch(const boost::bad_lexical_cast& e) {
 				ASSERT_LOG(false, "unable to convert order to integer" << e.what());
 			}
 

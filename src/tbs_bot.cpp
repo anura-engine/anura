@@ -21,9 +21,8 @@
 	   distribution.
 */
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
-#include <boost/bind.hpp>
 #include <cstdint>
 
 #include "asserts.hpp"
@@ -78,7 +77,7 @@ private:
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
 
 		timer_proxy_ = new tbs_bot_timer_proxy(this);
-		timer_.async_wait(boost::bind(&tbs_bot_timer_proxy::signal, timer_proxy_, boost::asio::placeholders::error));
+		timer_.async_wait(std::bind(&tbs_bot_timer_proxy::signal, timer_proxy_, std::placeholders::_1));
 	}
 
 	bot::~bot()
@@ -172,7 +171,7 @@ private:
 			msg[variant("type")] = variant("quit");
 			quit_msg[variant("send")] = variant(&msg);
 
-			script_.push_back(variant(&quit_msg));
+			script_.emplace_back(&quit_msg);
 
 		} else if(msg.is_map() && msg["type"] == variant("bye")) {
 			has_quit_ = true;
@@ -207,7 +206,7 @@ private:
 				}
 				m[variant("value")] = expression_result;
 
-				validations.push_back(variant(&m));
+				validations.emplace_back(&m);
 			}
 		}
 

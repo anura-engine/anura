@@ -21,10 +21,6 @@
 	   distribution.
 */
 
-#pragma comment(lib, "opengl32")
-#pragma comment(lib, "glu32")
-#pragma comment(lib, "glew32")
-
 #include <numeric>
 
 #include <GL/glew.h>
@@ -590,22 +586,22 @@ namespace KRE
 		return get_current_viewport();
 	}
 
-	bool DisplayDeviceOpenGL::doCheckForFeature(DisplayDeviceCapabilties cap)
+	bool DisplayDeviceOpenGL::doCheckForFeature(DisplayDeviceCapabilities cap)
 	{
 		bool ret_val = false;
 		switch(cap) {
-		case DisplayDeviceCapabilties::NPOT_TEXTURES:
+		case DisplayDeviceCapabilities::NPOT_TEXTURES:
 			return npot_textures_;
-		case DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE:
+		case DisplayDeviceCapabilities::BLEND_EQUATION_SEPERATE:
 			return seperate_blend_equations_;
-		case DisplayDeviceCapabilties::RENDER_TO_TEXTURE:
+		case DisplayDeviceCapabilities::RENDER_TO_TEXTURE:
 			return have_render_to_texture_;
-		case DisplayDeviceCapabilties::SHADERS:
+		case DisplayDeviceCapabilities::SHADERS:
 			return true;
-		case DisplayDeviceCapabilties::UNIFORM_BUFFERS:
+		case DisplayDeviceCapabilities::UNIFORM_BUFFERS:
 			return hardware_uniform_buffers_;
 		default:
-			ASSERT_LOG(false, "Unknown value for DisplayDeviceCapabilties given.");
+			ASSERT_LOG(false, "Unknown value for DisplayDeviceCapabilities given.");
 		}
 		return ret_val;
 	}
@@ -786,4 +782,3 @@ namespace KRE
 		return OpenGL::ShaderProgram::createGaussianShader(radius);
 	}
 }
-

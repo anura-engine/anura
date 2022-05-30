@@ -74,7 +74,7 @@ namespace KRE
 				for(auto it = tok.begin(); it != tok.end(); ++it) {
 					try {
 						res.push_back(boost::lexical_cast<double>(*it));
-					} catch(boost::bad_lexical_cast&) {
+					} catch(const boost::bad_lexical_cast&) {
 						ASSERT_LOG(false, "Unable to convert value '" << *it << "' to a number");
 					}
 				}

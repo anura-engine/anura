@@ -26,7 +26,7 @@
 #include <sstream>
 #include <cstring>
 
-#include "SDL.h"
+#include <SDL2/SDL.h>
 
 #if defined(_MSC_VER)
 #define __SHORT_FORM_OF_FILE__	\
@@ -85,4 +85,3 @@ void log_internal(SDL_LogPriority priority, const std::string& s);
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
 		log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str());							\
 	} while(0)
-

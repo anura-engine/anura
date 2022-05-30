@@ -116,7 +116,7 @@ BASE_CXXFLAGS += -fsanitize=undefined
 endif
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := -isystem external/header-only-libs $(shell $(MANDATORY_LIBS))
+INC := $(shell $(MANDATORY_LIBS))
 
 ifdef STEAM_RUNTIME_ROOT
 	INC += -isystem $(STEAM_RUNTIME_ROOT)/include
@@ -173,9 +173,9 @@ USE_IMGUI?=yes
 ifeq ($(USE_IMGUI),yes)
   BASE_CXXFLAGS += -DUSE_IMGUI
   INC += -Iimgui
-  CPPFLAGS += -Iexternal/header-only-libs -DIMGUI_INCLUDE_IMGUI_USER_INL
-  SRC += imgui/imgui.cpp imgui/imgui_draw.cpp
-  OBJ += imgui/imgui.o imgui/imgui_draw.o
+  CPPFLAGS += -DIMGUI_INCLUDE_IMGUI_USER_INL
+  SRC += imgui/imgui.cpp imgui/imgui_draw.cpp imgui/imgui_widgets.cpp
+  OBJ += imgui/imgui.o   imgui/imgui_draw.o   imgui/imgui_widgets.o
   SRC_DIR += ./imgui
 endif
 

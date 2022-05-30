@@ -21,14 +21,6 @@
 	   distribution.
 */
 
-#if defined(_MSC_VER) && _MSC_VER < 1800
-#include <boost/math/special_functions/round.hpp>
-using boost::math::round;
-#else
-#include <cmath>
-using std::round;
-#endif
-
 #include <set>
 #include "asserts.hpp"
 #include "DisplayDevice.hpp"
@@ -330,7 +322,7 @@ namespace KRE
 		// XXX For reasons (i.e. some video cards are problematic either hardware/drivers)
 		// we are forced to use power-of-two textures anyway if we want mip-mapping and
 		// address modes other than CLAMP.
-		if(!DisplayDevice::checkForFeature(DisplayDeviceCapabilties::NPOT_TEXTURES)) {
+		if(!DisplayDevice::checkForFeature(DisplayDeviceCapabilities::NPOT_TEXTURES)) {
 			tp->width = next_power_of_two(tp->surface_width);
 			tp->height = next_power_of_two(tp->surface_height);
 			ASSERT_LOG(tp->type != TextureType::TEXTURE_3D && tp->type != TextureType::TEXTURE_CUBIC, "fixme texture type3d or cubic");
@@ -491,17 +483,17 @@ namespace KRE
 		if(n < 0) {
 			for(auto tp = texture_params_.begin(); tp != texture_params_.end(); ++tp) {
 				tp->src_rect_norm = r;
-				tp->src_rect = rect::from_coordinates(static_cast<int>(round(r.x() * tp->width)),
-					static_cast<int>(round(r.y() * tp->height)),
-					static_cast<int>(round(r.x2() * tp->width)),
-					static_cast<int>(round(r.y2() * tp->height)));
+				tp->src_rect = rect::from_coordinates(static_cast<int>(std::round(r.x() * tp->width)),
+					static_cast<int>(std::round(r.y() * tp->height)),
+					static_cast<int>(std::round(r.x2() * tp->width)),
+					static_cast<int>(std::round(r.y2() * tp->height)));
 			}
 		} else {
 			texture_params_[n].src_rect_norm = r;
-			texture_params_[n].src_rect = rect::from_coordinates(static_cast<int>(round(r.x() * texture_params_[n].width)),
-				static_cast<int>(round(r.y() * texture_params_[n].height)),
-				static_cast<int>(round(r.x2() * texture_params_[n].width)),
-				static_cast<int>(round(r.y2() * texture_params_[n].height)));
+			texture_params_[n].src_rect = rect::from_coordinates(static_cast<int>(std::round(r.x() * texture_params_[n].width)),
+				static_cast<int>(std::round(r.y() * texture_params_[n].height)),
+				static_cast<int>(std::round(r.x2() * texture_params_[n].width)),
+				static_cast<int>(std::round(r.y2() * texture_params_[n].height)));
 		}
 	}
 
@@ -709,4 +701,3 @@ namespace KRE
 		return res;
 	}
 }
-

@@ -21,18 +21,14 @@
 	   distribution.
 */
 
-#pragma comment(lib, "SDL2")
-#pragma comment(lib, "SDL2main")
-#pragma comment(lib, "SDL2_image")
-
 #include <cctype>
 #include <sstream>
 
 #include "asserts.hpp"
 #include "DisplayDevice.hpp"
 #include "SurfaceSDL.hpp"
-#include "SDL.h"
-#include "SDL_image.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include "WindowManager.hpp"
 
 #ifdef USE_IMGUI

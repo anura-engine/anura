@@ -28,7 +28,7 @@
 #include <string>
 #include <sstream>
 
-#include "SDL.h"
+#include <SDL2/SDL.h>
 
 namespace SDL
 {
@@ -39,9 +39,9 @@ namespace SDL
 		{}
 		init_error(const std::string& msg) : exception(), msg_(msg)
 		{}
-		virtual ~init_error() throw()
+		virtual ~init_error() noexcept
 		{}
-		virtual const char* what() const throw() override { return msg_.c_str(); }
+		virtual const char* what() const noexcept override { return msg_.c_str(); }
 	private:
 		std::string msg_;
 	};

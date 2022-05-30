@@ -126,7 +126,7 @@ public:
 #define ASSERT_FATAL(_b)										\
 	do {														\
 		std::ostringstream _s;									\
-		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERTION FAILED: " << _b << "\n"; \
+		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " FATAL ASSERTION FAILED: " << _b << "\n"; \
 		if(throw_validation_failure_on_assert()) {				\
 			throw validation_failure_exception(_s.str());		\
 		} else {												\

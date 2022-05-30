@@ -118,7 +118,7 @@ namespace xhtml
 			for(auto& element : pt) {
 				nodes.emplace_back(std::make_shared<ParserNode>(element.first, element.second));
 			}
-		} catch(ptree_error& e) {
+		} catch(const ptree_error& e) {
 			ASSERT_LOG(false, "Error parsing XHTML: " << e.what() << " : " << filename);
 		}
 		auto frag = DocumentFragment::create();
@@ -142,7 +142,7 @@ namespace xhtml
 			for(auto& element : pt) {
 				nodes.emplace_back(std::make_shared<ParserNode>(element.first, element.second));
 			}
-		} catch(ptree_error& e) {
+		} catch(const ptree_error& e) {
 			ASSERT_LOG(false, "Error parsing XHTML: " << e.what() << " : " << str);
 		}
 		auto frag = DocumentFragment::create();

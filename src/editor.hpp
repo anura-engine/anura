@@ -37,7 +37,7 @@
 #include "stats.hpp"
 
 static const int EDITOR_MENUBAR_HEIGHT = 40;
-static const int EDITOR_SIDEBAR_WIDTH = 220;
+static const int EDITOR_SIDEBAR_WIDTH = 330;
 
 namespace gui
 {
@@ -187,7 +187,7 @@ public:
 	void autosave_level();
 	void zoomIn();
 	void zoomOut();
-	int zoom() const { return zoom_; }
+	float zoom() const { return zoom_; }
 
 	void undo_command();
 	void redo_command();
@@ -337,7 +337,7 @@ protected:
 	LevelPtr lvl_;
 
 	std::vector<LevelPtr> levels_;
-	int zoom_;
+	float zoom_;
 	int xpos_, ypos_;
 	int anchorx_, anchory_;
 

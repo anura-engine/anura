@@ -26,7 +26,7 @@
 #include <deque>
 #include <iostream>
 
-#include "SDL.h"
+#include <SDL2/SDL.h>
 
 #if !defined(_MSC_VER)
 #include <sys/time.h>
@@ -552,7 +552,7 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 		} else {
 			ASSERT_LOG(false, "Unknown message type");
 		}
-	} catch(validation_failure_exception& e) {
+	} catch(const validation_failure_exception& e) {
 		response[variant("status")] = variant("error");
 		response[variant("message")] = variant(e.msg);
 	}
@@ -622,7 +622,7 @@ void ModuleWebServer::handleGet(socket_ptr socket, const std::string& url, const
 		} else {
 			response[variant("message")] = variant("Unknown path");
 		}
-	} catch(validation_failure_exception& e) {
+	} catch(const validation_failure_exception& e) {
 		response[variant("status")] = variant("error");
 		response[variant("message")] = variant(e.msg);
 	}

@@ -68,6 +68,7 @@ public:
 	static void setPlayerVariantType(variant type_str);
 
 	static game_logic::FormulaCallableDefinitionPtr getDefinition(const std::string& id);
+	static bool hasDefinition(const std::string& id);
 	static bool isDerivedFrom(const std::string& base, const std::string& derived);
 	static bool isDerivedFrom(int base, int derived);
 	static variant mergePrototype(variant node, std::vector<std::string>* proto_paths=nullptr);

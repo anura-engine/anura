@@ -110,10 +110,10 @@ namespace test
 				get_test_map().at(test)();
 				LOG_INFO("TEST " << test << " PASSED");
 				++npass;
-			} catch(FailureException&) {
+			} catch(const FailureException&) {
 				LOG_ERROR("TEST " << test << " FAILED!!");
 				++nfail;
-			} catch(std::out_of_range&) {
+			} catch(const std::out_of_range&) {
 				LOG_ERROR("TEST " << test << " NOT FOUND.");
 				++nfail;
 			}
@@ -199,7 +199,7 @@ namespace test
 			} else {
 				try {
 					run_benchmark(benchmark, get_benchmark_map().at(benchmark));
-				} catch (std::out_of_range &) {
+				} catch (const std::out_of_range &) {
 					LOG_INFO("BENCHMARK " << benchmark << " NOT FOUND.");
 				}
 			}
@@ -210,7 +210,7 @@ namespace test
 	{
 		try {
 			run_benchmark(benchmark_name, std::bind(get_cl_benchmark_map().at(benchmark_name), std::placeholders::_1, arg));
-		} catch (std::out_of_range&) {
+		} catch (const std::out_of_range&) {
 			LOG_INFO("COMMAND-LINE BENCHMARK " << benchmark_name << " NOT FOUND.");
 		}
 	}

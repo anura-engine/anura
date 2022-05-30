@@ -1334,7 +1334,7 @@ namespace KRE
 
 		void ShaderProgram::configureUniforms(UniformBufferBase& uniforms)
 		{
-			/*if(DisplayDevice::checkForFeature(DisplayDeviceCapabilties::UNIFORM_BUFFERS)) {
+			/*if(DisplayDevice::checkForFeature(DisplayDeviceCapabilities::UNIFORM_BUFFERS)) {
 				auto hw = std::unique_ptr<UniformHardwareOGL>(new UniformHardwareOGL(uniforms.getName()));
 				uniforms.setHardware(std::move(hw));
 			}*/

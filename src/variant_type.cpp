@@ -88,7 +88,7 @@ std::map<std::string, std::vector<variant> > load_named_variant_info()
 				key.erase(key.begin(), colon+1);
 
 				if(directive == "extends") {
-					extends.push_back(std::pair<std::string,variant>(key, p.second));
+					extends.emplace_back(key, p.second);
 				} else {
 					ASSERT_LOG(false, "Unknown type directive: " << directive << ":" << key);
 				}
@@ -117,7 +117,7 @@ std::map<std::string, std::vector<variant> > load_named_variant_info()
 				key.erase(key.begin(), colon+1);
 
 				if(directive == "extends") {
-					extends.push_back(std::pair<std::string,variant>(key, p.second));
+					extends.emplace_back(key, p.second);
 				} else {
 					ASSERT_LOG(false, "Unknown type directive: " << directive << ":" << key);
 				}
@@ -1053,11 +1053,11 @@ public:
 		variant_type_ptr value_type = type->is_list_of();
 		if(value_type) {
 			bool result = variant_types_compatible(value_type_, value_type);
-			if(!result && why != NULL && type->is_specific_list()) {
+			if(!result && why != nullptr && type->is_specific_list()) {
 				variant_type_ptr mismatching_element;
 				for(variant_type_ptr eltype : *type->is_specific_list()) {
 					if(variant_types_compatible(value_type_, eltype) == false) {
-						if(mismatching_element.get() == NULL) {
+						if(mismatching_element.get() == nullptr) {
 							mismatching_element = eltype;
 						} else {
 							mismatching_element = variant_type_ptr();
@@ -1066,7 +1066,7 @@ public:
 					}
 				}
 
-				if(mismatching_element.get() != NULL) {
+				if(mismatching_element.get() != nullptr) {
 					*why << "Element of list does not match: " << mismatching_element->to_string() << "\nExpected " << value_type_->to_string() << "\n";
 					if(mismatching_element->get_expr() && mismatching_element->get_expr()->hasDebugInfo()) {
 						*why << mismatching_element->get_expr()->debugPinpointLocation() << "\n";
@@ -2107,7 +2107,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			ASSERT_COND(i1 != i2, "EXPECTED TYPE NAME BUT FOUND EMPTY EXPRESSION:\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
 			std::string class_name(i1->begin, i1->end);
 
-			ASSERT_COND(is_class || std::binary_search(CustomObjectType::possibleIdsIncludingPrototypes().begin(), CustomObjectType::possibleIdsIncludingPrototypes().end(), class_name), "Type obj " << class_name << "is invalid because there is no definition for a '" << class_name << "' object or object prototype:\n" << game_logic::pinpoint_location(original_str, i1->begin));
+			ASSERT_COND(is_class || std::binary_search(CustomObjectType::possibleIdsIncludingPrototypes().begin(), CustomObjectType::possibleIdsIncludingPrototypes().end(), class_name), "Type obj " << class_name << " is invalid because there is no definition for a '" << class_name << "' object or object prototype:\n" << game_logic::pinpoint_location(original_str, i1->begin));
 
 			while(i1+1 != i2 && i1+2 != i2 && (i1+1)->equals(".")) {
 				class_name += ".";
@@ -2285,7 +2285,7 @@ variant_type_ptr parse_variant_type(const variant& type)
 			if(tok.type != FFL_TOKEN_TYPE::WHITESPACE && tok.type != FFL_TOKEN_TYPE::COMMENT) {
 				tokens.push_back(tok);
 			}
-		} catch(TokenError& e) {
+		} catch(const TokenError& e) {
 			ASSERT_LOG(false, "ERROR PARSING TYPE: " << e.msg << " IN '" << s << "' AT " << type.debug_location());
 		}
 	}
@@ -2391,7 +2391,7 @@ variant_type_ptr parse_optional_function_type(const variant& type)
 			if(tok.type != FFL_TOKEN_TYPE::WHITESPACE && tok.type != FFL_TOKEN_TYPE::COMMENT) {
 				tokens.push_back(tok);
 			}
-		} catch(TokenError& e) {
+		} catch(const TokenError& e) {
 			ASSERT_LOG(false, "ERROR PARSING TYPE: " << e.msg << " IN '" << s << "' AT " << type.debug_location());
 		}
 	}
@@ -2428,7 +2428,7 @@ variant_type_ptr parse_optional_formula_type(const variant& type)
 			if(tok.type != FFL_TOKEN_TYPE::WHITESPACE && tok.type != FFL_TOKEN_TYPE::COMMENT) {
 				tokens.push_back(tok);
 			}
-		} catch(TokenError& e) {
+		} catch(const TokenError& e) {
 			ASSERT_LOG(false, "ERROR PARSING TYPE: " << e.msg << " IN '" << s << "' AT " << type.debug_location());
 		}
 	}

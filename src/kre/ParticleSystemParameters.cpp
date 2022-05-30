@@ -153,8 +153,8 @@ namespace KRE
 					res.add("type", "curved_linear");
 					std::vector<variant> v;
 					for(const auto& cp : curved_.control_points) {
-						v.emplace_back(variant(cp.first));
-						v.emplace_back(variant(cp.second));
+						v.emplace_back(cp.first);
+						v.emplace_back(cp.second);
 						res.add("control_point", &v);
 					}
 					break;
@@ -163,8 +163,8 @@ namespace KRE
 					res.add("type", "curved_spline");
 					std::vector<variant> v;
 					for(const auto& cp : curved_.control_points) {
-						v.emplace_back(variant(cp.first));
-						v.emplace_back(variant(cp.second));
+						v.emplace_back(cp.first);
+						v.emplace_back(cp.second);
 						res.add("control_point", &v);
 					}
 					break;

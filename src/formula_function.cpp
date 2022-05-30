@@ -47,12 +47,6 @@
 #include <iomanip>
 #include <stack>
 #include <cmath>
-#if defined(_MSC_VER)
-#include <boost/math/special_functions/round.hpp>
-#define bmround	boost::math::round
-#else
-#define bmround	round
-#endif
 
 #include <stdlib.h>
 
@@ -110,14 +104,6 @@
 #include "Cursor.hpp"
 
 #include <boost/regex.hpp>
-#if defined(_MSC_VER) && _MSC_VER < 1800
-#include <boost/math/special_functions/asinh.hpp>
-#include <boost/math/special_functions/acosh.hpp>
-#include <boost/math/special_functions/atanh.hpp>
-using boost::math::asinh;
-using boost::math::acosh;
-using boost::math::atanh;
-#endif
 
 using namespace formula_vm;
 
@@ -183,7 +169,7 @@ namespace game_logic
 
 	std::vector<ConstExpressionPtr> FormulaExpression::queryChildrenRecursive() const {
 		std::vector<ConstExpressionPtr> result;
-		result.push_back(ConstExpressionPtr(this));
+		result.emplace_back(this);
 		for(ConstExpressionPtr child : queryChildren()) {
 			if(child.get() != this) {
 				std::vector<ConstExpressionPtr> items = child->queryChildrenRecursive();
@@ -391,7 +377,7 @@ namespace game_logic
 			std::vector<variant> res;
 			res.reserve(v.size());
 			for(const std::string& str : v) {
-				res.push_back(variant(str));
+				res.emplace_back(str);
 			}
 
 			return variant(&res);
@@ -455,7 +441,7 @@ namespace game_logic
 				lru_.front().obj = value;
 				lru_.front().key = key;
 
-				bool succeeded = cache_.insert(std::pair<variant,std::list<Entry>::iterator>(key, lru_.begin())).second;
+				bool succeeded = cache_.emplace(key, lru_.begin()).second;
 				ASSERT_LOG(succeeded, "Inserted into cache when there is already a valid entry: " << key.write_json());
 
 				if(cache_.size() > max_entries_) {
@@ -549,7 +535,7 @@ namespace game_logic
 		DEFINE_FIELD(all, "[builtin ffl_cache]")
 			std::vector<variant> v;
 			for(auto item : get_all_ffl_caches()) {
-				v.push_back(variant(item));
+				v.emplace_back(item);
 			}
 
 			return variant(&v);
@@ -627,8 +613,8 @@ namespace game_logic
 			}
 
 			std::vector<variant> v;
-			v.push_back(variant(xi));
-			v.push_back(variant(yi));
+			v.emplace_back(xi);
+			v.emplace_back(yi);
 			return variant(&v);
 
 		END_DEFINE_FN
@@ -1275,8 +1261,8 @@ namespace game_logic
 				}
 
 				return f->execute(*callable);
-			} catch(type_error&) {
-			} catch(validation_failure_exception&) {
+			} catch(const type_error&) {
+			} catch(const validation_failure_exception&) {
 			}
 			LOG_ERROR("ERROR IN EVAL");
 			return variant();
@@ -1343,7 +1329,7 @@ namespace game_logic
 
 					std::map<variant,variant> m_empty;
 					m[AttrStr] = variant(&m_empty);
-					res.push_back(variant(&m));
+					res.emplace_back(&m);
 				}
 
 				continue;
@@ -1369,7 +1355,7 @@ namespace game_logic
 			std::map<variant,variant> m_empty;
 			m[AttrStr] = variant(&m_empty);
 
-			res.push_back(variant(&m));
+			res.emplace_back(&m);
 
 			parse_xml_to_json_internal(itor->second, res);
 
@@ -1377,7 +1363,7 @@ namespace game_logic
 			m[DataStr] = variant(itor->first);
 
 			m[AttrStr] = variant(&m_empty);
-			res.push_back(variant(&m));
+			res.emplace_back(&m);
 		}
 	}
 
@@ -1453,7 +1439,7 @@ namespace game_logic
 			const assert_recover_scope recovery_scope;
 			try {
 				return args()[0]->evaluate(variables);
-			} catch(validation_failure_exception& e) {
+			} catch(const validation_failure_exception& e) {
 				g_handle_errors_error_message = e.msg;
 				return args()[1]->evaluate(variables);
 			}
@@ -1776,9 +1762,9 @@ namespace game_logic
 			KRE::Color c(a[0].as_float(), a[1].as_float(), a[2].as_float());
 			auto vec = c.to_hsv_vec4();
 			std::vector<variant> res;
-			res.push_back(variant(vec[0]));
-			res.push_back(variant(vec[1]));
-			res.push_back(variant(vec[2]));
+			res.emplace_back(vec[0]);
+			res.emplace_back(vec[1]);
+			res.emplace_back(vec[2]);
 			return variant(&res);
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("[decimal,decimal,decimal]");
@@ -1789,9 +1775,9 @@ namespace game_logic
 			variant a = EVAL_ARG(0);
 			KRE::Color c = KRE::Color::from_hsv(a[0].as_float(), a[1].as_float(), a[2].as_float());
 			std::vector<variant> res;
-			res.push_back(variant(c.r()));
-			res.push_back(variant(c.g()));
-			res.push_back(variant(c.b()));
+			res.emplace_back(c.r());
+			res.emplace_back(c.g());
+			res.emplace_back(c.b());
 			return variant(&res);
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("[decimal,decimal,decimal]");
@@ -1804,7 +1790,7 @@ namespace game_logic
 				std::vector<variant> v;
 				const std::vector<FormulaInput> inputs = map.as_callable()->inputs();
 				for(const FormulaInput& in : inputs) {
-					v.push_back(variant(in.name));
+					v.emplace_back(in.name);
 				}
 
 				return variant(&v);
@@ -1967,7 +1953,7 @@ namespace game_logic
 
 		FUNCTION_DEF(asinh, 1, 1, "asinh(x): Standard arc hyperbolic sine function.")
 			const float ratio = EVAL_ARG(0).as_float();
-			return variant(static_cast<decimal>(asinh(ratio)));
+			return variant(static_cast<decimal>(std::asinh(ratio)));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("int|decimal");
 		FUNCTION_TYPE_DEF
@@ -1976,7 +1962,7 @@ namespace game_logic
 
 		FUNCTION_DEF(acosh, 1, 1, "acosh(x): Standard arc hyperbolic cosine function.")
 			const float ratio = EVAL_ARG(0).as_float();
-			return variant(static_cast<decimal>(acosh(ratio)));
+			return variant(static_cast<decimal>(std::acosh(ratio)));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("int|decimal");
 		FUNCTION_TYPE_DEF
@@ -1985,7 +1971,7 @@ namespace game_logic
 
 		FUNCTION_DEF(atanh, 1, 1, "atanh(x): Standard arc hyperbolic tangent function.")
 			const float ratio = EVAL_ARG(0).as_float();
-			return variant(static_cast<decimal>(atanh(ratio)));
+			return variant(static_cast<decimal>(std::atanh(ratio)));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("int|decimal");
 		FUNCTION_TYPE_DEF
@@ -2028,7 +2014,7 @@ namespace game_logic
 			const float b = EVAL_ARG(1).as_float();
 			const float c = EVAL_ARG(2).as_float();
 			const float d = EVAL_ARG(3).as_float();
-			return variant(static_cast<int64_t>(bmround((atan2(a-c, b-d)*radians_to_degrees+90)*VARIANT_DECIMAL_PRECISION)*-1), variant::DECIMAL_VARIANT);
+			return variant(static_cast<int64_t>(std::round((atan2(a-c, b-d)*radians_to_degrees+90)*VARIANT_DECIMAL_PRECISION)*-1), variant::DECIMAL_VARIANT);
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("int|decimal");
 			ARG_TYPE("int|decimal");
@@ -2068,8 +2054,8 @@ namespace game_logic
 
 			std::vector<variant> result;
 			result.reserve(2);
-			result.push_back(variant(decimal(u)));
-			result.push_back(variant(decimal(v)));
+			result.emplace_back(decimal(u));
+			result.emplace_back(decimal(v));
 
 			return variant(&result);
 		FUNCTION_ARGS_DEF
@@ -2092,7 +2078,7 @@ namespace game_logic
 
 		FUNCTION_DEF(round, 1, 1, "Returns the smaller near integer. 3.9 -> 3, 3.3 -> 3, 3 -> 3")
 			const double a = EVAL_ARG(0).as_float();
-			return variant(static_cast<int>(bmround(a)));
+			return variant(static_cast<int>(std::round(a)));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("decimal");
 		FUNCTION_TYPE_DEF
@@ -2468,7 +2454,7 @@ FUNCTION_DEF_IMPL
 
 			std::vector<variant> vl;
 			for(int n = 0; n < static_cast<int>(v.size()); ++n) {
-				vl.push_back(variant(&v[n]));
+				vl.emplace_back(&v[n]);
 			}
 			return variant(&vl);
 		FUNCTION_ARGS_DEF
@@ -2676,8 +2662,8 @@ FUNCTION_DEF_IMPL
 
  				variant cmp(EVAL_ARG(1));
 				std::vector<variant> fn_args;
-				fn_args.push_back(variant());
-				fn_args.push_back(variant());
+				fn_args.emplace_back();
+				fn_args.emplace_back();
 
 				for(auto edges = dg->getEdges()->begin();
 						edges != dg->getEdges()->end();
@@ -3891,7 +3877,7 @@ FUNCTION_DEF_IMPL
 		variant create_static_range_list() {
 			std::vector<variant> result;
 			for (int i = 0; i < StaticRangeListSize; ++i) {
-				result.push_back(variant(i));
+				result.emplace_back(i);
 			}
 
 			return variant(&result);
@@ -3933,7 +3919,7 @@ FUNCTION_DEF_IMPL
 				v.reserve(nelem/step);
 
 				for(int n = 0; n < nelem; n += step) {
-					v.push_back(variant(start+n));
+					v.emplace_back(start+n);
 				}
 			}
 
@@ -4018,7 +4004,7 @@ FUNCTION_DEF_IMPL
 			std::multimap<std::string, std::string> file_paths;
 			module::get_all_filenames_under_dir(EVAL_ARG(0).as_string(), &file_paths);
 			for(std::multimap<std::string, std::string>::const_iterator i = file_paths.begin(); i != file_paths.end(); ++i) {
-				v.push_back(variant(i->second));
+				v.emplace_back(i->second);
 			}
 			return variant(&v);
 		FUNCTION_ARGS_DEF
@@ -4037,8 +4023,8 @@ FUNCTION_DEF_IMPL
 				dirname += '/';
 			}
 			module::get_files_in_dir(dirname, &files);
-			for(std::vector<std::string>::const_iterator i = files.begin(); i != files.end(); ++i) {
-				v.push_back(variant(*i));
+			for(const std::string& i : files) {
+				v.emplace_back(i);
 			}
 			return variant(&v);
 		FUNCTION_ARGS_DEF
@@ -4308,7 +4294,7 @@ FUNCTION_DEF_IMPL
 			std::vector<variant> res;
 			for(size_t i=0; i<chopped.size(); ++i) {
 				const std::string& part = chopped[i];
-				res.push_back(variant(part));
+				res.emplace_back(part);
 			}
 
 			return variant(&res);
@@ -4994,7 +4980,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 								for(const auto& p : stats.as_map()) {
 									map_[p.first.as_string()] = NodeInfo(p.second);
 								}
-							} catch(json::ParseError&) {
+							} catch(const json::ParseError&) {
 							}
 						}
 
@@ -5003,7 +4989,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 								map_[p.first.as_string()].value = p.second;
 							}
 						}
-					} catch(json::ParseError& e) {
+					} catch(const json::ParseError& e) {
 						ASSERT_LOG(false, "Error parsing json for backed map in " << docname_ << ": " << e.errorMessage());
 					}
 				}
@@ -5300,7 +5286,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 					get_doc_cache(prefs_directory)[docname] = result;
 				}
 				return result;
-			} catch(json::ParseError& e) {
+			} catch(const json::ParseError& e) {
 				if(allow_failure) {
 					if(use_cache) {
 						get_doc_cache(prefs_directory)[docname] = variant();
@@ -5851,7 +5837,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		try {
 			assert_recover_scope scope;
 			return EVAL_ARG(0);
-		} catch (validation_failure_exception& e) {
+		} catch (const validation_failure_exception& e) {
 			bool success = false;
 			std::function<void()> fn(std::bind(run_expression_for_edit_and_continue, args()[0], &variables, &success));
 
@@ -5990,7 +5976,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			}
 
 			seen_textures.push_back(t);
-			v.push_back(variant(new TextureObject(t->shared_from_this())));
+			v.emplace_back(new TextureObject(t->shared_from_this()));
 		}
 
 		return variant(&v);
@@ -6050,7 +6036,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		for(auto p : all_obj) {
 			FormulaCallable* obj = dynamic_cast<FormulaCallable*>(p);
 			if(obj) {
-				result.push_back(variant(obj));
+				result.emplace_back(obj);
 			}
 		}
 
@@ -6179,7 +6165,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		variant commands_fn = EVAL_ARG(1);
 
 		std::vector<variant> args;
-		args.push_back(variant(obj.get()));
+		args.emplace_back(obj.get());
 		variant commands = commands_fn(args);
 
 		obj->executeCommand(commands);
@@ -6271,7 +6257,7 @@ FUNCTION_DEF(rotate_rect, 4, 4, "rotate_rect(int|decimal center_x, int|decimal c
 		std::vector<variant> res;
 		res.reserve(8);
 		for(int n = 0; n != v.num_elements(); ++n) {
-			res.push_back(variant(r[n]));
+			res.emplace_back(r[n]);
 		}
 	} else {
 		short r[8];
@@ -6287,7 +6273,7 @@ FUNCTION_DEF(rotate_rect, 4, 4, "rotate_rect(int|decimal center_x, int|decimal c
 
 		res.reserve(8);
 		for(int n = 0; n != v.num_elements(); ++n) {
-			res.push_back(variant(r[n]));
+			res.emplace_back(r[n]);
 		}
 	}
 	return variant(&res);
@@ -6369,7 +6355,7 @@ FUNCTION_DEF(points_along_curve, 1, 2, "points_along_curve([[decimal,decimal]], 
         }
 
         float y = curve_unit_interval(p[1], p[3], m0*x_dist, m1*x_dist, t);
-        result.push_back(variant(y));
+        result.emplace_back(y);
     }
 
     return variant(&result);
@@ -6572,7 +6558,7 @@ FUNCTION_DEF(sprintf, 1, -1, "sprintf(string, ...): Format the string using stan
 
 		std::string res = formatter() << f;
 		return variant(res);
-	} catch(boost::exception& e) {
+	} catch(const boost::exception& e) {
 		ASSERT_LOG(false, "Error when formatting string: " << boost::diagnostic_information(e) << "\n" << debugPinpointLocation());
 	}
 FUNCTION_ARGS_DEF

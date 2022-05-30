@@ -30,10 +30,10 @@
 #include <string.h>
 #include <sstream>
 
-#include "boost/algorithm/string/replace.hpp"
-#include "boost/lexical_cast.hpp"
-#include "boost/property_tree/ptree.hpp"
-#include "boost/property_tree/json_parser.hpp"
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include "asserts.hpp"
 #include "ffl_weak_ptr.hpp"
@@ -167,8 +167,8 @@ std::string get_call_stack()
 	std::string res;
 	std::vector<CallStackEntry> reversed_call_stack = g_variant_thread_info->call_stack;
 	std::reverse(reversed_call_stack.begin(), reversed_call_stack.end());
-	for(std::vector<CallStackEntry>::const_iterator i = reversed_call_stack.begin(); i != reversed_call_stack.end(); ++i) {
-		const game_logic::FormulaExpression* p = i->expression;
+	for(const CallStackEntry& i : reversed_call_stack) {
+		const game_logic::FormulaExpression* p = i.expression;
 		if(p && p->getParentFormula() != current_frame) {
 			current_frame = p->getParentFormula();
 			const variant::debug_info* info = current_frame.get_debug_info();
@@ -189,8 +189,8 @@ std::string get_typed_call_stack()
 	std::string res;
 	std::vector<CallStackEntry> reversed_call_stack = g_variant_thread_info->call_stack;
 	std::reverse(reversed_call_stack.begin(), reversed_call_stack.end());
-	for(std::vector<CallStackEntry>::const_iterator i = reversed_call_stack.begin(); i != reversed_call_stack.end(); ++i) {
-		const game_logic::FormulaExpression* p = i->expression;
+	for(const CallStackEntry& i : reversed_call_stack) {
+		const game_logic::FormulaExpression* p = i.expression;
 		if(p && p->getParentFormula() != current_frame) {
 			current_frame = p->getParentFormula();
 			const variant::debug_info* info = current_frame.get_debug_info();
@@ -2792,12 +2792,12 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 		sprintf(buf, "(%p)", fn_);
 		s << buf << "(";
 		bool first = true;
-		for(std::vector<std::string>::const_iterator i = fn_->type->arg_names.begin(); i != fn_->type->arg_names.end(); ++i) {
+		for(const std::string& i : fn_->type->arg_names) {
 			if (first)
 				first = false;
 			else
 				s << ", ";
-			s << *i;
+			s << i;
 		}
 		s << ")";
 
@@ -2812,12 +2812,12 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 		s << "<>";
 		s << buf << "(";
 		bool first = true;
-		for(std::vector<std::string>::const_iterator i = generic_fn_->type->arg_names.begin(); i != generic_fn_->type->arg_names.end(); ++i) {
+		for(const std::string& i : generic_fn_->type->arg_names) {
 			if (first)
 				first = false;
 			else
 				s << ", ";
-			s << *i;
+			s << i;
 		}
 		s << ")";
 		break;
@@ -3534,7 +3534,7 @@ UNIT_TEST(bad_variant_exponentiation_0) {
 		const assert_recover_scope unit_test_exception_expected;
 		try {
 			b = a ^ variant(32);
-		} catch (validation_failure_exception vfe) {
+		} catch (const validation_failure_exception vfe) {
 			excepted = true;
 		}
 	}
@@ -3584,7 +3584,7 @@ UNIT_TEST(bad_variant_exponentiation_1) {
 		const assert_recover_scope unit_test_exception_expected;
 		try {
 			b = a ^ variant(16);
-		} catch (validation_failure_exception vfe) {
+		} catch (const validation_failure_exception vfe) {
 			excepted = true;
 		}
 	}
@@ -4203,7 +4203,7 @@ UNIT_TEST(bad_variant_exponentiation_30) {
 		const assert_recover_scope unit_test_exception_expected;
 		try {
 			b = a ^ variant(2);
-		} catch (validation_failure_exception vfe) {
+		} catch (const validation_failure_exception vfe) {
 			excepted = true;
 		}
 	}
@@ -4498,8 +4498,8 @@ UNIT_TEST(function_call_valid_passing_excess_arguments_is_invalid) {
 	check::type_is_function(execution_result);
 	const variant function = execution_result;
 	std::vector<variant> args;
-	args.push_back(variant(0));
-	args.push_back(variant("a"));
+	args.emplace_back(0);
+	args.emplace_back("a");
 	std::string message;
 	message.resize(128);
 	const bool call_valid = function.function_call_valid(args, & message, false);
@@ -4515,7 +4515,7 @@ UNIT_TEST(function_call_valid_passing_argument_of_unexpected_type_is_invalid) {
 	check::type_is_function(execution_result);
 	const variant function = execution_result;
 	std::vector<variant> args;
-	args.push_back(variant(decimal::from_string("0.32993")));
+	args.emplace_back(decimal::from_string("0.32993"));
 	std::string message;
 	message.resize(128);
 	const bool call_valid = function.function_call_valid(args, & message, false);
@@ -4531,9 +4531,9 @@ UNIT_TEST(function_call_passing_wrong_number_of_arguments_generates_error) {
 	check::type_is_function(execution_result);
 	const variant function = execution_result;
 	std::vector<variant> args;
-	args.push_back(variant(0));
-	args.push_back(variant(1));
-	args.push_back(variant(decimal::from_string("0.32993")));
+	args.emplace_back(0);
+	args.emplace_back(1);
+	args.emplace_back(decimal::from_string("0.32993"));
 	bool excepted = false;
 	{
 		const assert_recover_scope unit_test_exception_expected;
@@ -4625,7 +4625,7 @@ UNIT_TEST(empty_list_variant_as_list_ref_FAILS) {
 
 UNIT_TEST(list_variant_as_list_ref) {
 	std::vector<variant> variants_vector;
-	variants_vector.push_back(variant(32993));
+	variants_vector.emplace_back(32993);
 	const variant empty_list(& variants_vector);
 	check::type_is_list(empty_list);
 	const std::vector<variant> vector = empty_list.as_list_ref();
@@ -4719,8 +4719,8 @@ UNIT_TEST(string_variant_plus_int_variant) {
 
 UNIT_TEST(list_variant_plus_string_variant) {
 	std::vector<variant> variants_vector;
-	variants_vector.push_back(variant(1));
-	variants_vector.push_back(variant(2));
+	variants_vector.emplace_back(1);
+	variants_vector.emplace_back(2);
 	const variant list_variant(& variants_vector);
 	const std::string string = "null";
 	const variant string_variant(string);
@@ -4801,9 +4801,9 @@ UNIT_TEST(dictionary_plus_dictionary_returns_dictionary) {
 	const variant value(decimal::from_string(pi_as_string));
 	const variant value_(variant::from_bool(true));
 	std::pair<std::map<variant, variant>::iterator, bool> ret;
-	ret = variants_map.insert(std::pair<variant, variant>(key, value));
+	ret = variants_map.emplace(key, value);
 	CHECK_EQ(true, ret.second);
-	ret = variants_map_.insert(std::pair<variant, variant>(key_, value_));
+	ret = variants_map_.emplace(key_, value_);
 	CHECK_EQ(true, ret.second);
 	const variant dictionary_variant(& variants_map);
 	const variant dictionary_variant_(& variants_map_);
@@ -4950,9 +4950,9 @@ UNIT_TEST(serialize_dictionary_variant_to_string) {
 	const variant value(decimal::from_string(pi_as_string));
 	const variant value_(variant::from_bool(true));
 	std::pair<std::map<variant, variant>::iterator, bool> ret;
-	ret = variants_map.insert(std::pair<variant, variant>(key, value));
+	ret = variants_map.emplace(key, value);
 	CHECK_EQ(true, ret.second);
-	ret = variants_map.insert(std::pair<variant, variant>(key_, value_));
+	ret = variants_map.emplace(key_, value_);
 	CHECK_EQ(true, ret.second);
 	const variant dictionary_variant(& variants_map);
 	std::string serialization = "";
@@ -5038,8 +5038,8 @@ UNIT_TEST(deserialize_string_variant_from_crashy_formula_in_string) {
 
 UNIT_TEST(list_variant_refcount_0) {
 	std::vector<variant> variants_vector;
-	variants_vector.push_back(variant("tdfgdsfgdfsdfgdsfgdsf33gg"));
-	variants_vector.push_back(variant(2534564567452436457586222.0));
+	variants_vector.emplace_back("tdfgdsfgdfsdfgdsfgdsf33gg");
+	variants_vector.emplace_back(2534564567452436457586222.0);
 	const variant list_variant(& variants_vector);
 	const uint_fast8_t refs_count = list_variant.refcount();
 	CHECK_EQ(1, refs_count);
@@ -5047,7 +5047,7 @@ UNIT_TEST(list_variant_refcount_0) {
 
 UNIT_TEST(list_variant_refcount_1) {
 	std::vector<variant> variants_vector;
-	variants_vector.push_back(variant("3454536-----'sdfasdfasdf3"));
+	variants_vector.emplace_back("3454536-----'sdfasdfasdf3");
 	const variant list_variant(& variants_vector);
 	const uint_fast8_t refs_count = list_variant.refcount();
 	CHECK_EQ(1, refs_count);
@@ -5091,9 +5091,9 @@ UNIT_TEST(dictionary_variant_string_cast) {
 	const variant value(decimal::from_string(pi_as_string));
 	const variant value_(variant::from_bool(true));
 	std::pair<std::map<variant, variant>::iterator, bool> ret;
-	ret = variants_map.insert(std::pair<variant, variant>(key, value));
+	ret = variants_map.emplace(key, value);
 	CHECK_EQ(true, ret.second);
-	ret = variants_map.insert(std::pair<variant, variant>(key_, value_));
+	ret = variants_map.emplace(key_, value_);
 	CHECK_EQ(true, ret.second);
 	const variant variant_(& variants_map);
 	check::type_is_dictionary(variant_);

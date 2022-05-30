@@ -550,7 +550,7 @@ namespace gui
 		DEFINE_FIELD(item_list, "[string]")
 			std::vector<variant> v;
 			for(auto& s : obj.list_) {
-				v.emplace_back(variant(s));
+				v.emplace_back(s);
 			}
 			return variant(&v);
 		DEFINE_FIELD(type, "string")

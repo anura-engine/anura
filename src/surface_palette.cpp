@@ -55,7 +55,7 @@ namespace graphics
 						}
 					}
 				}
-			} catch(json::ParseError&) {
+			} catch(const json::ParseError&) {
 			}
 		}
 

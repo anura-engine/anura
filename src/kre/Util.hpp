@@ -26,21 +26,20 @@
 #include <vector>
 #include <string>
 
-#define DISALLOW_ASSIGN(TypeName) \
-	void operator=(const TypeName&)
+#define DISALLOW_ASSIGN(TypeName) void operator=(const TypeName&) = delete
 
-#define DISALLOW_ASSIGN_AND_DEFAULT(TypeName) \
-    TypeName();                                     \
-	void operator=(const TypeName&)
+#define DISALLOW_ASSIGN_AND_DEFAULT(TypeName)                                                                          \
+	TypeName() = delete;                                                                                               \
+	void operator=(const TypeName&) = delete
 
-#define DISALLOW_COPY_AND_ASSIGN(TypeName)  \
-    TypeName(const TypeName&);              \
-    void operator=(const TypeName&)
+#define DISALLOW_COPY_AND_ASSIGN(TypeName)                                                                             \
+	TypeName(const TypeName&) = delete;                                                                                \
+	void operator=(const TypeName&) = delete
 
-#define DISALLOW_COPY_ASSIGN_AND_DEFAULT(TypeName)  \
-    TypeName();                                     \
-    TypeName(const TypeName&);                      \
-    void operator=(const TypeName&)
+#define DISALLOW_COPY_ASSIGN_AND_DEFAULT(TypeName)                                                                     \
+	TypeName() = delete;                                                                                               \
+	TypeName(const TypeName&) = delete;                                                                                \
+	void operator=(const TypeName&) = delete
 
 // Is noexcept supported?
 #if defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190023026 || \

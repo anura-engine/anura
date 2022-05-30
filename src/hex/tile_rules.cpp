@@ -332,7 +332,7 @@ namespace hex
 							}
 						}
 						ASSERT_LOG(found, "No tile for pos: " << pos);
-					} catch(boost::bad_lexical_cast&) {
+					} catch(const boost::bad_lexical_cast&) {
 						ASSERT_LOG(false, "Unable to convert to number" << str);
 					}
 				}
@@ -1003,4 +1003,3 @@ UNIT_TEST(pixel_distance)
 	CHECK_EQ(pixel_distance(point(0,0), point(0,1), 72), point(0, 72));
 	CHECK_EQ(pixel_distance(point(0,0), point(1,0), 72), point(54, -36));
 }
-

@@ -22,7 +22,7 @@
 */
 
 #include <string>
-#include <cairo.h>
+#include <cairo/cairo.h>
 
 #include "Texture.hpp"
 

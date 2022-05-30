@@ -461,9 +461,9 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 						assert_recover_scope scope;
 						v = json::parse(doc);
 					}
-				} catch(json::ParseError& e) {
+				} catch(const json::ParseError& e) {
 					LOG_ERROR("Error parsing database data to JSON: " << doc);
-				} catch(validation_failure_exception& e) {
+				} catch(const validation_failure_exception& e) {
 					LOG_ERROR("Error parsing database data to JSON: " << e.msg << ": " << doc);
 				}
 			}
@@ -498,7 +498,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 				variant key = item["key"];
 				result.push_back(key);
 			}
-		} catch(json::ParseError& e) {
+		} catch(const json::ParseError& e) {
 			LOG_ERROR("Error parsing db http response: " << e.errorMessage());
 		}
 
