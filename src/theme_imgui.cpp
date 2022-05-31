@@ -23,12 +23,10 @@
 
 #include "theme_imgui.hpp"
 
-#ifdef USE_IMGUI
-
+#include <imgui.h>
 #include <string>
 
 #include "asserts.hpp"
-#include "imgui.h"
 #include "json_parser.hpp"
 #include "filesystem.hpp"
 #include "preferences.hpp"
@@ -49,7 +47,7 @@ void theme_imgui_default()
 	style.Colors[ImGuiCol_TextDisabled] =         ImVec4(175/255.0f, 175/255.0f, 175/255.0f, 255/255.0f);
 	style.Colors[ImGuiCol_WindowBg] =             ImVec4( 29/255.0f,  28/255.0f,  34/255.0f, 255/255.0f);
 	style.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.74f, 0.74f, 0.94f, 1.00f);
-	style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.68f, 0.68f, 0.68f, 0.00f);
+	style.Colors[ImGuiCol_ChildBg] = ImVec4(0.68f, 0.68f, 0.68f, 0.00f);
 	style.Colors[ImGuiCol_Border] = ImVec4(0.50f, 0.50f, 0.50f, 0.60f);
 	style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 	style.Colors[ImGuiCol_FrameBg] =              ImVec4( 84/255.0f,  94/255.0f,  97/255.0f, 143/255.0f);
@@ -74,7 +72,7 @@ void theme_imgui_default()
 	style.Colors[ImGuiCol_ResizeGripHovered] =    ImVec4(  0/255.0f,  75/255.0f, 178/255.0f, 255/255.0f);
 	style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(1.00f, 1.00f, 1.00f, 0.90f);
 	style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(1.00f, 0.99f, 0.54f, 0.43f);
-	style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+	style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 
 	style.Alpha = 1.0f;
 	style.FrameRounding = 4;
@@ -162,7 +160,7 @@ void imgui_theme_ui()
 		EditColor("TextDisabled", &style.Colors[ImGuiCol_TextDisabled]);
 		EditColor("Window Background", &style.Colors[ImGuiCol_WindowBg]);
 		EditColor("Menu Bar Background", &style.Colors[ImGuiCol_MenuBarBg]);
-		EditColor("Child Window Background", &style.Colors[ImGuiCol_ChildWindowBg]);
+		EditColor("Child Window Background", &style.Colors[ImGuiCol_ChildBg]);
 		EditColor("Border", &style.Colors[ImGuiCol_Border]);
 		EditColor("Border Shadow", &style.Colors[ImGuiCol_BorderShadow]);
 		EditColor("Frame Background", &style.Colors[ImGuiCol_FrameBg]);
@@ -186,7 +184,7 @@ void imgui_theme_ui()
 		EditColor("Resize Grip Hovered", &style.Colors[ImGuiCol_ResizeGripHovered]);
 		EditColor("Resize Grip Active", &style.Colors[ImGuiCol_ResizeGripActive]);
 		EditColor("Text Selected Background", &style.Colors[ImGuiCol_TextSelectedBg]);
-		EditColor("Modal Window Darkening", &style.Colors[ImGuiCol_ModalWindowDarkening]);
+		EditColor("Modal Window Darkening", &style.Colors[ImGuiCol_ModalWindowDimBg]);
 	}
 	if(ImGui::CollapsingHeader("Styles")) {
 		ImGui::SliderFloat("Global Opacity", &style.Alpha, 0.2f, 1.0f);
@@ -305,21 +303,3 @@ void load_imgui_theme()
 		LOG_INFO("Failed to read file: " << fname << " : " << e.errorMessage());
 	}
 }
-
-#else
-void theme_imgui_default()
-{
-}
-
-void imgui_theme_ui()
-{
-}
-
-void save_imgui_theme()
-{
-}
-
-void load_imgui_theme()
-{
-}
-#endif

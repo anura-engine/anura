@@ -31,10 +31,7 @@
 #include <SDL2/SDL_image.h>
 #include "WindowManager.hpp"
 
-#ifdef USE_IMGUI
-#include "imgui.h"
 #include "imgui_impl_sdl_gl3.h"
-#endif
 
 namespace KRE
 {
@@ -252,9 +249,8 @@ namespace KRE
 				break;
 			}
 			window_.reset(SDL_CreateWindow(getTitle().c_str(), x, y, w, h, wnd_flags), [&](SDL_Window* wnd){
-#ifdef USE_IMGUI
 				ImGui_ImplSdlGL3_Shutdown();
-#endif
+
 				getDisplayDevice().reset();
 				if(context_) {
 					SDL_GL_DeleteContext(context_);
@@ -263,9 +259,7 @@ namespace KRE
 				SDL_DestroyWindow(wnd);
 			});
 
-#ifdef USE_IMGUI
 			ImGui_ImplSdlGL3_Init(window_.get());
-#endif
 
 			ASSERT_LOG(window_.get() != nullptr, "Could not create window: " << x << ", " << y << ", " << w << ", " << h << " / wnd_flags = " << wnd_flags);
 
@@ -308,24 +302,23 @@ namespace KRE
 			// Since it may have changed by some sneaky render target user.
 			getDisplayDevice()->setClearColor(clear_color_);
 			getDisplayDevice()->clear(f);
-#ifdef USE_IMGUI
+
 			if(new_frame_ == 0) {
 				ImGui_ImplSdlGL3_NewFrame(window_.get());
 				++new_frame_;
 			}
-#endif
 		}
 
 		void swap() override {
 			// This is a little bit hacky -- ideally the display device should swap buffers.
 			// But SDL provides a device independent way of doing it which is really nice.
 			// So we use that.
-#ifdef USE_IMGUI
 			ImGui::Render();
+			ImGui_ImplSdlGL3_RenderDrawLists(ImGui::GetDrawData());
 			if(--new_frame_ < 0) {
 				new_frame_ = 0;
 			}
-#endif
+
 			if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL || getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGLES) {
 				SDL_GL_SwapWindow(window_.get());
 			} else {

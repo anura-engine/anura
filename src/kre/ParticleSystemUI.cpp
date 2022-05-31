@@ -34,10 +34,8 @@
 #include "ParticleSystemParameters.hpp"
 #include "WindowManager.hpp"
 
-#ifdef USE_IMGUI
-#include "imgui.h"
 #include "imgui_impl_sdl_gl3.h"
-#endif
+#include "imgui_additions/imgui_custom.h"
 
 namespace {
 PREF_BOOL(particle_ui_show_save, true, "");
@@ -45,14 +43,6 @@ PREF_BOOL(particle_ui_show_camera, true, "");
 }
 
 PREF_BOOL(particle_ui_2d, false, "");
-
-namespace ImGui
-{
-	int Curve(const char *label, const ImVec2& size, int maxpoints, ImVec2 *points);
-	float CurveValue(float p, int maxpoints, const ImVec2 *points);
-
-	bool Spline(const char *label, const ImVec2& size, int maxpoints, ImVec2 *points);
-}
 
 namespace KRE
 {

@@ -18,6 +18,7 @@
       "libvorbis",
       "libogg",
       "cairo",
+      "imgui",
       "boost-iostreams",
       "boost-interprocess",
       "boost-filesystem",

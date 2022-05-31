@@ -125,6 +125,7 @@
     <ClInclude Include="..\src\i18n.hpp" />
     <ClInclude Include="..\src\image_widget.hpp" />
     <ClInclude Include="..\src\image_widget_fwd.hpp" />
+    <ClInclude Include="..\src\imgui_additions\imgui_custom.h" />
     <ClInclude Include="..\src\input.hpp" />
     <ClInclude Include="..\src\iphone_device_info.h" />
     <ClInclude Include="..\src\iphone_sound.h" />
@@ -392,17 +393,10 @@
     <ClInclude Include="..\src\xhtml\xslider.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\imgui\imgui_user.inl" />
     <None Include="..\src\custom_object.inc" />
     <None Include="..\src\kre\geometry.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\imgui\imgui.cpp">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">IMGUI_INCLUDE_IMGUI_USER_INL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_INCLUDE_IMGUI_USER_INL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\src\achievements.cpp" />
     <ClCompile Include="..\src\animation_creator.cpp" />
     <ClCompile Include="..\src\animation_preview_widget.cpp" />
@@ -503,6 +497,7 @@
     <ClCompile Include="..\src\http_server.cpp" />
     <ClCompile Include="..\src\i18n.cpp" />
     <ClCompile Include="..\src\image_widget.cpp" />
+    <ClCompile Include="..\src\imgui_additions\imgui_custom.cpp" />
     <ClCompile Include="..\src\input.cpp" />
     <ClCompile Include="..\src\isochunk.cpp" />
     <ClCompile Include="..\src\isoworld.cpp" />
@@ -835,8 +830,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;NOMINMAX;USE_SVG;USE_IMGUI;_WIN32_WINNT=_WIN32_WINNT_WIN10;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_LIB;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\hex;..\src\kre;..\src\svg;..\src\tiled;..\src\xhtml;..\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;NOMINMAX;USE_SVG;IMGUI_USER_CONFIG="$(SolutionDIr)..\src\imgui_additions\imconfig.h";_WIN32_WINNT=_WIN32_WINNT_WIN10;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_LIB;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\hex;..\src\kre;..\src\svg;..\src\tiled;..\src\xhtml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
