@@ -21,7 +21,6 @@
     <ClInclude Include="..\src\array_callable.hpp" />
     <ClInclude Include="..\src\asserts.hpp" />
     <ClInclude Include="..\src\auto_update_window.hpp" />
-    <ClInclude Include="..\src\b2d_ffl.hpp" />
     <ClInclude Include="..\src\background.hpp" />
     <ClInclude Include="..\src\background_task_pool.hpp" />
     <ClInclude Include="..\src\bar_widget.hpp" />
@@ -233,7 +232,6 @@
     <ClInclude Include="..\src\loading_screen.hpp" />
     <ClInclude Include="..\src\load_level.hpp" />
     <ClInclude Include="..\src\logger.hpp" />
-    <ClInclude Include="..\src\lua_iface.hpp" />
     <ClInclude Include="..\src\md5.hpp" />
     <ClInclude Include="..\src\message_dialog.hpp" />
     <ClInclude Include="..\src\module.hpp" />
@@ -250,7 +248,6 @@
     <ClInclude Include="..\src\pause_game_dialog.hpp" />
     <ClInclude Include="..\src\playable_custom_object.hpp" />
     <ClInclude Include="..\src\player_info.hpp" />
-    <ClInclude Include="..\src\play_vpx.hpp" />
     <ClInclude Include="..\src\point_map.hpp" />
     <ClInclude Include="..\src\poly_line_widget.hpp" />
     <ClInclude Include="..\src\poly_map.hpp" />
@@ -413,7 +410,6 @@
     <ClCompile Include="..\src\anura_shader.cpp" />
     <ClCompile Include="..\src\asserts.cpp" />
     <ClCompile Include="..\src\auto_update_window.cpp" />
-    <ClCompile Include="..\src\b2d_ffl.cpp" />
     <ClCompile Include="..\src\background.cpp" />
     <ClCompile Include="..\src\background_task_pool.cpp" />
     <ClCompile Include="..\src\bar_widget.cpp" />
@@ -595,7 +591,6 @@
     <ClCompile Include="..\src\load_level.cpp" />
     <ClCompile Include="..\src\load_level_nothread.cpp" />
     <ClCompile Include="..\src\logger.cpp" />
-    <ClCompile Include="..\src\lua_iface.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\md5.cpp" />
     <ClCompile Include="..\src\message_dialog.cpp" />
@@ -613,7 +608,6 @@
     <ClCompile Include="..\src\pause_game_dialog.cpp" />
     <ClCompile Include="..\src\playable_custom_object.cpp" />
     <ClCompile Include="..\src\player_info.cpp" />
-    <ClCompile Include="..\src\play_vpx.cpp" />
     <ClCompile Include="..\src\poly_line_widget.cpp" />
     <ClCompile Include="..\src\poly_map.cpp" />
     <ClCompile Include="..\src\preferences.cpp" />
