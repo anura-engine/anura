@@ -34,10 +34,6 @@
 #include "variant.hpp"
 #include "wml_formula_callable.hpp"
 
-#ifdef USE_LUA
-#include "lua_iface.hpp"
-#endif
-
 namespace game_logic
 {
 	class FormulaClass;
@@ -92,12 +88,6 @@ namespace game_logic
 		variant_type_ptr getPropertySetType(const std::string& key) const;
 
 		bool getConstantValue(const std::string& id, variant* result) const override;
-
-#if defined(USE_LUA)
-		const ffl::IntrusivePtr<lua::LuaContext> & get_lua_context() const {
-			return lua_ptr_;
-		}
-#endif
 	private:
 		//construct with type and constructor parameters.
 		//Don't call directly, use create() instead.
@@ -125,12 +115,6 @@ namespace game_logic
 
 		ffl::IntrusivePtr<const FormulaClass> class_;
 
-		// for lua integration
-#if defined(USE_LUA)
-		void init_lua();
-		ffl::IntrusivePtr<lua::LuaContext> lua_ptr_;
-#endif
-
 		variant tmp_value_;
 
 		//if this is non-zero, then private_data_ will be exposed via getValue.
@@ -146,14 +130,4 @@ namespace game_logic
 
 	bool can_load_library_instance(const std::string& id);
 	FormulaCallablePtr get_library_instance(const std::string& id);
-
-#if defined(USE_LUA)
-	class formula_class_unit_test_helper {
-	public:
-		formula_class_unit_test_helper();
-		~formula_class_unit_test_helper();
-		void add_class_defn(const std::string & name, const variant & node);
-		//friend void TEST_lua_in_ffl_objects();
-	};
-#endif
 }

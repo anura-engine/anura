@@ -79,7 +79,6 @@
 #include "hex.hpp"
 #include "hex_helper.hpp"
 #include "level_runner.hpp"
-#include "lua_iface.hpp"
 #include "md5.hpp"
 #include "module.hpp"
 #include "random.hpp"
@@ -1176,34 +1175,6 @@ namespace game_logic
 
 			return variant::create_delayed(f, callable);
 		END_FUNCTION_DEF(delay_until_end_of_loading)
-
-		#if defined(USE_LUA)
-		FUNCTION_DEF(eval_lua, 1, 1, "eval_lua(str)")
-			Formula::failIfStaticContext();
-			variant value = EVAL_ARG(0);
-
-			return variant(new FnCommandCallableArg("eval_lua", [=](FormulaCallable* callable) {
-				lua::LuaContext context;
-				context.execute(value, callable);
-			}));
-
-		FUNCTION_ARGS_DEF
-			ARG_TYPE("string|builtin lua_compiled");
-		FUNCTION_TYPE_DEF
-			return variant_type::get_commands();
-		END_FUNCTION_DEF(eval_lua)
-
-		FUNCTION_DEF(compile_lua, 1, 1, "compile_lua(str)")
-			Formula::failIfStaticContext();
-			const std::string s = EVAL_ARG(0).as_string();
-
-			lua::LuaContext ctx;
-			return variant(ctx.compile("", s).get());
-		FUNCTION_ARGS_DEF
-			ARG_TYPE("string");
-			RETURN_TYPE("builtin lua_compiled");
-		END_FUNCTION_DEF(compile_lua)
-		#endif
 
 		FUNCTION_DEF(eval_no_recover, 1, 2, "eval_no_recover(str, [arg]): evaluate the given string as FFL")
 			ConstFormulaCallablePtr callable(&variables);
@@ -4081,25 +4052,6 @@ FUNCTION_DEF_IMPL
 		FUNCTION_TYPE_DEF
 			return variant_type::get_type(variant::VARIANT_TYPE_INT);
 		END_FUNCTION_DEF(index)
-
-#if defined(USE_LUA)
-		FUNCTION_DEF(CompileLua, 3, 3, "CompileLua(object, string, string) Compiles a lua script against a lua-enabled object. Returns the compiled script as an object with an execute method. The second argument is the 'name' of the script as will appear in lua debugging output (normally a filename). The third argument is the script.")
-			game_logic::FormulaCallable* callable = const_cast<game_logic::FormulaCallable*>(EVAL_ARG(0).as_callable());
-			ASSERT_LOG(callable != nullptr, "Argument to CompileLua was not a formula callable");
-			game_logic::FormulaObject * object = dynamic_cast<game_logic::FormulaObject*>(callable);
-			ASSERT_LOG(object != nullptr, "Argument to CompileLua was not a formula object");
-			ffl::IntrusivePtr<lua::LuaContext> ctx = object->get_lua_context();
-			ASSERT_LOG(ctx, "Argument to CompileLua was not a formula object with a lua context. (Check class definition?)");
-			std::string name = EVAL_ARG(1).as_string();
-			std::string script = EVAL_ARG(2).as_string();
-			lua::LuaCompiledPtr result = ctx->compile(name, script);
-			return variant(result.get());
-		FUNCTION_ARGS_DEF
-			ARG_TYPE("object")
-			ARG_TYPE("string")
-			ARG_TYPE("string")
-		END_FUNCTION_DEF(CompileLua)
-#endif
 
 		namespace
 		{

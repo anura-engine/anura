@@ -572,13 +572,6 @@ private:
 
 	std::vector<int> properties_requiring_dynamic_initialization_;
 
-	// for lua integration
-#if defined(USE_LUA)
-	void init_lua();
-	std::unique_ptr<lua::LuaContext> lua_ptr_;
-	std::unique_ptr<lua::CompiledChunk> lua_chunk_;
-#endif
-
 	graphics::AnuraShaderPtr shader_;
 	unsigned int shader_flags_;
 	std::vector<graphics::AnuraShaderPtr> effects_shaders_;

@@ -1302,9 +1302,6 @@ namespace preferences
 #if defined(USE_BULLET)
 			res.insert("bullet");
 #endif
-#if defined(USE_LUA)
-			res.insert("lua");
-#endif
 		}
 		return res;
 	}

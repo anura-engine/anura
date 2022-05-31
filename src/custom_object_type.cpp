@@ -665,7 +665,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 	for(auto p : proto_definitions) {
 		object_type_definitions()[p.first] = p.second;
 	}
-	
+
 	const bool objectHasAlreadyBeenAdded = !!object_type_definitions()[id_];
 
 	object_type_definitions()[id_] = callable_definition_;
@@ -727,14 +727,14 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 
 	callable_definition_->finalizeProperties();
 	callable_definition_->setStrict(is_strict_);
-	
+
 	if (!objectHasAlreadyBeenAdded) {
 		//[DDR 2022-04-13] Bad Hack: The above "if" is to work around an error
 		//where protos doesn't get fully populated for objects already added
 		//(it only sees the last prototype in the chain), which only triggers
 		//when you try to depend on the Frogatto module as a dependancy for
 		//your own module.
-		
+
 		for(auto f : g_object_validation_functions) {
 			std::vector<variant> protos;
 
@@ -1933,12 +1933,6 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	}
 #endif
 
-#if defined(USE_LUA)
-	if(node.has_key("lua")) {
-		lua_node_ = node["lua"];
-	}
-#endif
-
 	if(node.has_key("shader")) {
 		if(node["shader"].is_string()) {
 			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(node["shader"].as_string()));
@@ -2026,18 +2020,6 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 CustomObjectType::~CustomObjectType()
 {
 }
-
-#ifdef USE_LUA
-const std::shared_ptr<lua::CompiledChunk> & CustomObjectType::getLuaInit(lua::LuaContext & ctx) const {
-	if (lua_compiled_) {
-		return lua_compiled_;
-	}
-	if (lua_node_.has_key("init")) {
-		lua_compiled_.reset(ctx.compileChunk(lua_node_.has_key("debug_name") ? lua_node_["debug_name"].as_string() : ("custom object " + id() + " lua"), lua_node_["init"].as_string()));
-	}
-	return lua_compiled_;
-}
-#endif
 
 namespace
 {

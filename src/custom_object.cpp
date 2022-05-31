@@ -441,12 +441,6 @@ CustomObject::CustomObject(variant node)
 	}
 #endif
 
-#if defined(USE_LUA)
-	if(type_->has_lua()) {
-		lua_ptr_.reset(new lua::LuaContext());
-	}
-#endif
-
 	if(type_->getShader() != nullptr) {
 		shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(*type_->getShader()));
 	}
@@ -654,12 +648,6 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 
 	next_animation_formula_ = type_->nextAnimationFormula();
 
-#if defined(USE_LUA)
-	if(type_->has_lua()) {
-		lua_ptr_.reset(new lua::LuaContext());
-	}
-#endif
-
 	setMouseoverDelay(type_->getMouseoverDelay());
 	if(type_->getMouseOverArea().w() != 0) {
 		setMouseOverArea(type_->getMouseOverArea());
@@ -764,12 +752,6 @@ CustomObject::CustomObject(const CustomObject& o)
 	setMouseoverDelay(o.getMouseoverDelay());
 	setMouseOverArea(o.getMouseOverArea());
 
-#if defined(USE_LUA)
-	if(type_->has_lua()) {
-		lua_ptr_.reset(new lua::LuaContext());
-	}
-#endif
-
 	if(o.shader_ != nullptr) {
 		shader_.reset(new graphics::AnuraShader(*o.shader_));
 	}
@@ -867,10 +849,6 @@ void CustomObject::finishLoading(Level* lvl)
 	}
 #endif
 
-#if defined(USE_LUA)
-	init_lua();
-#endif
-
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
 		//LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
@@ -879,19 +857,6 @@ void CustomObject::finishLoading(Level* lvl)
 		eff->setParent(this);
 	}
 }
-
-
-#if defined(USE_LUA)
-void CustomObject::init_lua()
-{
-	if(lua_ptr_) {
-		lua_ptr_->setSelfCallable(*this);
-		if (auto init_script = type_->getLuaInit(*lua_ptr_)) {
-			init_script->run(*lua_ptr_);
-		}
-	}
-}
-#endif
 
 void CustomObject::createParticles(const variant& node)
 {
@@ -6330,13 +6295,6 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 	for(auto eff : effects_shaders_) {
 		eff->setParent(this);
 	}
-
-#if defined(USE_LUA)
-	if(type_->has_lua()) {
-	//	lua_ptr_.reset(new lua::lua_context());
-		init_lua();
-	}
-#endif
 
 	handleEvent(OBJECT_EVENT_TYPE_UPDATED);
 }

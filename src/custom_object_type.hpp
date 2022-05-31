@@ -34,7 +34,6 @@
 #include "formula_callable.hpp"
 #include "formula_function.hpp"
 #include "frame.hpp"
-#include "lua_iface.hpp"
 #include "particle_system.hpp"
 #include "solid_map_fwd.hpp"
 #include "variant.hpp"
@@ -288,12 +287,6 @@ public:
 
 	bool isShadow() const { return is_shadow_; }
 
-#if defined(USE_LUA)
-	bool has_lua() const { return !lua_node_.is_null(); }
-	const variant & getLuaNode() const { return lua_node_; }
-	const std::shared_ptr<lua::CompiledChunk> & getLuaInit( lua::LuaContext & ) const ;
-#endif
-
 	bool autoAnchor() const { return auto_anchor_; }
 
 	graphics::AnuraShaderPtr getShader() const { return shader_; }
@@ -447,12 +440,6 @@ private:
 	//components.
 	bool is_shadow_;
 
-#ifdef USE_LUA
-	// For lua integration
-	variant lua_node_;
-	mutable std::shared_ptr<lua::CompiledChunk> lua_compiled_;
-#endif
-
 	std::vector<const PropertyEntry*> shader_flags_;
 	variant shader_node_;
 
@@ -469,4 +456,3 @@ private:
 
 	std::string draw_batch_id_;
 };
-

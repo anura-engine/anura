@@ -47,7 +47,6 @@
 #include "formula_vm.hpp"
 #include "formula_where.hpp"
 #include "i18n.hpp"
-#include "lua_iface.hpp"
 #include "preferences.hpp"
 #include "random.hpp"
 #include "string_utils.hpp"
@@ -381,25 +380,6 @@ namespace game_logic
 			variant variant_;
 			bool can_reduce_to_variant_;
 		};
-
-		#if defined(USE_LUA)
-		class LuaFnExpression : public FormulaExpression {
-		public:
-			explicit LuaFnExpression(lua::LuaFunctionReference* fn_ref)
-				: fn_ref_(fn_ref)
-			{
-			}
-			variant execute(const FormulaCallable& variables) const override
-			{
-				return fn_ref_->call();
-			}
-		private:
-			variant_type_ptr getVariantType() const override {
-				return variant_type::get_any();
-			}
-			lua::LuaFunctionReferencePtr fn_ref_;
-		};
-		#endif
 
 		class FunctionListExpression : public FormulaExpression {
 		public:
@@ -4979,11 +4959,6 @@ Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaC
 	}
 
 	if(str_.is_callable()) {
-#if defined(USE_LUA)
-		lua::LuaFunctionReference* fn_ref = val.try_convert<lua::LuaFunctionReference>();
-		ASSERT_LOG(fn_ref != nullptr, "FATAL: Couldn't convert function reference to the correct type.");
-		expr_.reset(new LuaFnExpression(fn_ref));
-#endif
 		return;
 	}
 
