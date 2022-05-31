@@ -1927,12 +1927,6 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	game_logic::register_formula_callable_definition("object_type", callable_definition_);
 
-#ifdef USE_BOX2D
-	if(node.has_key("body")) {
-		body_.reset(new box2d::body(node["body"]));
-	}
-#endif
-
 	if(node.has_key("shader")) {
 		if(node["shader"].is_string()) {
 			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(node["shader"].as_string()));

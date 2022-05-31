@@ -410,7 +410,7 @@ void LevelRunner::video_resize_event(const SDL_Event &event)
 	game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 	callable->add("width", variant(KRE::WindowManager::getMainWindow()->width()));
 	callable->add("height", variant(KRE::WindowManager::getMainWindow()->height()));
-    
+
     std::vector<EntityPtr> chars = lvl_->get_chars();
     for(EntityPtr e : chars) {
         e->handleEvent(WindowResizeEventID, callable.get());
@@ -904,12 +904,12 @@ bool LevelRunner::play_level()
 		}
 	}
 
-    
+
     std::vector<EntityPtr> chars = lvl_->get_chars();
     for(EntityPtr e : chars) {
         e->handleEvent(OBJECT_EVENT_BEING_REMOVED);
     }
-    
+
 	return quit_;
 }
 
@@ -957,13 +957,6 @@ bool LevelRunner::play_cycle()
 	if(controls::num_players() > 1) {
 		lvl_->backup();
 	}
-
-#if defined(USE_BOX2D)
-	box2d::world_ptr world = box2d::world::our_world_ptr();
-	if(world && !paused) {
-		world->step(1.0f/50.0f);
-	}
-#endif
 
 	std::unique_ptr<controls::local_controls_lock> controls_lock;
 #ifndef NO_EDITOR
@@ -1889,15 +1882,6 @@ bool LevelRunner::play_cycle()
 			formula_profiler::draw();
 #endif
 		}
-
-#if defined(USE_BOX2D)
-	box2d::world_ptr world = box2d::world::our_world_ptr();
-	if(world) {
-		if(world->draw_debug_data()) {
-			world->getCurrentPtr()->DrawDebugData();
-		}
-	}
-#endif
 
 		performance_data perf(current_max_,current_fps_, current_cycles_, current_delay_, current_draw_, current_process_, current_flip_, cycle, current_events_, profiling_summary_);
 

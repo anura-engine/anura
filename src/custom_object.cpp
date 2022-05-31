@@ -435,12 +435,6 @@ CustomObject::CustomObject(variant node)
 
 	// XXX Process shader and effects here if needed.
 
-#ifdef USE_BOX2D
-	if(node.has_key("body")) {
-		body_.reset(new box2d::body(node["body"]));
-	}
-#endif
-
 	if(type_->getShader() != nullptr) {
 		shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(*type_->getShader()));
 	}
@@ -623,12 +617,6 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 		}
 	}
 
-#ifdef USE_BOX2D
-	if(type_->body()) {
-		body_.reset(new box2d::body(*type_->body()));
-	}
-#endif
-
 	setSolidDimensions(type_->getSolidDimensions(),
 	                     type_->getWeakSolidDimensions());
 	setCollideDimensions(type_->getCollideDimensions(),
@@ -743,12 +731,6 @@ CustomObject::CustomObject(const CustomObject& o)
 	getAll().insert(this);
 	getAll(base_type_->id()).insert(this);
 
-#ifdef USE_BOX2D
-	std::stringstream ss;
-	if(o.body_) {
-		body_.reset(new box2d::body(*o.body_));
-	}
-#endif
 	setMouseoverDelay(o.getMouseoverDelay());
 	setMouseOverArea(o.getMouseOverArea());
 
@@ -842,12 +824,6 @@ void CustomObject::finishLoading(Level* lvl)
 	}
 
 	// XXX Do shader/effects initialisation here (like setting object on them)
-
-#ifdef USE_BOX2D
-	if(body_) {
-		body_->finishLoading(this);
-	}
-#endif
 
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
@@ -1061,12 +1037,6 @@ variant CustomObject::write() const
 
 
 	// XXX write out shader and effects here.
-
-#if defined(USE_BOX2D)
-	if(body_) {
-		res.add("body", body_->write());
-	}
-#endif
 
 	if(zorder() != type_->zorder()) {
 		res.add("zorder", zorder());
@@ -1677,24 +1647,6 @@ void CustomObject::process(Level& lvl)
 	if(paused_) {
 		return;
 	}
-
-#if defined(USE_BOX2D)
-	box2d::world_ptr world = box2d::world::our_world_ptr();
-	if(body_) {
-		const b2Vec2 v = body_->get_body_ptr()->GetPosition();
-		const double a = body_->get_body_ptr()->GetAngle();
-		setRotateZ(decimal(a * 180.0 / M_PI));
-		setX(int(v.x * world->scale() - (solidRect().w() ? (solidRect().w()/2) : getCurrentFrame().width()/2)));
-		setY(int(v.y * world->scale() - (solidRect().h() ? (solidRect().h()/2) : getCurrentFrame().height()/2)));
-		//setY(graphics::screen_height() - v.y * world->scale() - getCurrentFrame().height());
-		/*setX((v.x + world->x1()) * graphics::screen_width() / (world->x2() - world->x1()));
-		if(world->y2() < 0) {
-			setY(graphics::screen_height() - (v.y + world->y1()) * graphics::screen_height() / -(world->y2() + world->y1()));
-		} else {
-			setY((v.y + world->y1()) * graphics::screen_height() / (world->y2() - world->y1()));
-		}*/
-	}
-#endif
 
 	if(type_->useImageForCollisions()) {
 		//anything that uses their image for collisions is a static,
@@ -2481,26 +2433,6 @@ void CustomObject::process(Level& lvl)
 		--fall_through_platforms_;
 	}
 
-#if defined(USE_BOX2D)
-	if(body_) {
-		for(b2ContactEdge* ce = body_->get_body_ptr()->GetContactList(); ce != nullptr; ce = ce->next) {
-			b2Contact* c = ce->contact;
-			// process c
-			if(c->IsTouching()) {
-				using namespace game_logic;
-				//std::cerr << "bodies touching: 0x" << std::hex << uint32_t(body_->get_body_ptr()) << " 0x" << uint32_t(ce->other) << std::dec << std::endl;
-				//b2WorldManifold wmf;
-				//c->GetWorldManifold(&wmf);
-				//std::cerr << "Collision points: " << wmf.points[0].x << ", " << wmf.points[0].y << "; " << wmf.points[1].x << "," << wmf.points[1].y << "; " << wmf.normal.x << "," << wmf.normal.y << std::endl;
-				MapFormulaCallablePtr fc = MapFormulaCallablePtr(new MapFormulaCallable);
-				fc->add("collide_with", variant((box2d::body*)ce->other->GetUserData()));
-				handleEvent("b2collide", fc.get());
-			}
-			//c->GetManifold()->
-		}
-	}
-#endif
-
 	if(Level::current().cycle() > int(getMouseoverTriggerCycle())) {
 		if(isMouseOverEntity() == false) {
 			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
@@ -2914,21 +2846,10 @@ void CustomObject::beingRemoved()
 	for(auto w : widgets_) {
 		w->onHide();
 	}
-
-#if defined(USE_BOX2D)
-	if(body_) {
-		body_->set_active(false);
-	}
-#endif
 }
 
 void CustomObject::beingAdded()
 {
-#if defined(USE_BOX2D)
-	if(body_) {
-		body_->set_active();
-	}
-#endif
 	handleEvent(OBJECT_EVENT_BEING_ADDED);
 }
 
@@ -3571,12 +3492,6 @@ variant CustomObject::getValueBySlot(int slot) const
 		return variant(&v);
 	}
 
-#if defined(USE_BOX2D)
-	case CUSTOM_OBJECT_BODY: {
-		return variant(body_.get());
-	}
-#endif
-
 	case CUSTOM_OBJECT_PAUSED: {
 		return variant::from_bool(paused_);
 	}
@@ -4068,11 +3983,6 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		use_absolute_screen_coordinates_ = value.as_bool();
 	} else if(key == "mouseover_delay") {
 		setMouseoverDelay(value.as_int());
-#if defined(USE_BOX2D)
-	} else if(key == "body") {
-		body_.reset(new box2d::body(value));
-		body_->finishLoading(this);
-#endif
 	} else if(key == "mouseover_area") {
 		setMouseOverArea(rect(value));
 	} else if(!type_->isStrict()) {
@@ -4929,14 +4839,6 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		break;
 	}
 
-#if defined(USE_BOX2D)
-	case CUSTOM_OBJECT_BODY: {
-		body_.reset(new box2d::body(value));
-		body_->finishLoading(this);
-		break;
-	}
-#endif
-
 	case CUSTOM_OBJECT_PAUSED: {
 		paused_ = value.as_bool();
 		handleEvent("paused");
@@ -5261,23 +5163,11 @@ void CustomObject::die()
 {
 	hitpoints_ = 0;
 	handleEvent(OBJECT_EVENT_DIE);
-
-#if defined(USE_BOX2D)
-	if(body_) {
-		body_->set_active(false);
-	}
-#endif
 }
 
 void CustomObject::dieWithNoEvent()
 {
 	hitpoints_ = 0;
-
-#if defined(USE_BOX2D)
-	if(body_) {
-		body_->set_active(false);
-	}
-#endif
 }
 
 
@@ -6394,11 +6284,6 @@ void CustomObject::addToLevel()
 {
 	Entity::addToLevel();
 	standing_on_.reset();
-#if defined(USE_BOX2D)
-	if(body_) {
-		body_->set_active();
-	}
-#endif
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
 		//LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());

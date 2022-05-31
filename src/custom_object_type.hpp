@@ -38,9 +38,6 @@
 #include "solid_map_fwd.hpp"
 #include "variant.hpp"
 #include "variant_type.hpp"
-#ifdef USE_BOX2D
-#include "b2d_ffl.hpp"
-#endif
 
 #include "ParticleSystemFwd.hpp"
 
@@ -157,11 +154,6 @@ public:
 	bool isBodyPassthrough() const { return body_passthrough_; }
 	bool hasIgnoreCollide() const { return ignore_collide_; }
 	bool editorOnly() const { return editor_only_; }
-
-#ifdef USE_BOX2D
-	box2d::body_ptr body() { return body_; }
-	box2d::const_body_ptr body() const { return body_; }
-#endif
 
 	int getMouseoverDelay() const { return mouseover_delay_; }
 	const rect& getMouseOverArea() const { return mouse_over_area_; }
@@ -428,10 +420,6 @@ private:
 	bool stateless_;
 
 	std::vector<int> platform_offsets_;
-
-#ifdef USE_BOX2D
-	box2d::body_ptr body_;
-#endif
 
 	//does this object use strict checking?
 	bool is_strict_;

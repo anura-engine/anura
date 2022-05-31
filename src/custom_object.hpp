@@ -501,10 +501,6 @@ private:
 	//at the end of every cycle.
 	int fall_through_platforms_;
 
-#ifdef USE_BOX2D
-	box2d::body_ptr body_;
-#endif
-
 	bool always_active_;
 
 	mutable std::stack<const FormulaCallable*> backup_callable_stack_;

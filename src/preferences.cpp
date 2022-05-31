@@ -1296,9 +1296,6 @@ namespace preferences
 			res.insert("sdl2");
 			res.insert("save_png");
 			res.insert("svg");
-#if defined(USE_BOX2D)
-			res.insert("box2d");
-#endif
 #if defined(USE_BULLET)
 			res.insert("bullet");
 #endif

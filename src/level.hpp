@@ -36,9 +36,6 @@
 #include "geometry.hpp"
 
 #include "anura_shader.hpp"
-#if defined(USE_BOX2D)
-#include "b2d_ffl.hpp"
-#endif
 #include "background.hpp"
 #include "entity.hpp"
 #include "formula.hpp"
@@ -679,11 +676,6 @@ private:
 	//A list of properties that each object in the level should display
 	//for debugging purposes.
 	std::vector<std::string> debug_properties_;
-
-#if defined(USE_BOX2D)
-	// List of static bodies present in the level.
-	std::vector<box2d::body_ptr> bodies_;
-#endif
 
 	bool mouselook_enabled_;
 	bool mouselook_inverted_;

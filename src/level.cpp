@@ -665,15 +665,6 @@ Level::Level(const std::string& level_cfg, variant node)
 
 	allow_touch_controls_ = node["touch_controls"].as_bool(true);
 
-#ifdef USE_BOX2D
-	if(node.has_key("bodies") && node["bodies"].is_list()) {
-		for(int n = 0; n != node["bodies"].num_elements(); ++n) {
-			bodies_.push_back(new box2d::body(node["bodies"][n]));
-			LOG_INFO("level create body: " << std::hex << intptr_t(bodies_.back().get()) << " " << intptr_t(bodies_.back()->get_raw_body_ptr()) << std::dec);
-		}
-	}
-#endif
-
 	if(node.has_key("shader")) {
 		if(node["shader"].is_string()) {
 			shader_.reset(new graphics::AnuraShader(node["shader"].as_string()));
@@ -1015,13 +1006,6 @@ void Level::finishLoading()
 
 		chars_.erase(std::remove(chars_.begin(), chars_.end(), EntityPtr()), chars_.end());
 	}
-
-#if defined(USE_BOX2D)
-	for(auto it : bodies_) {
-		it->finishLoading();
-		LOG_INFO("level body finish loading: " << std::hex << intptr_t(it.get()) << " " << intptr_t(it->get_raw_body_ptr()) << std::dec);
-	}
-#endif
 
 	//iterate over all our objects and let them do any final loading actions.
 	for(EntityPtr e : objects_not_in_level) {
@@ -1779,14 +1763,6 @@ variant Level::write() const
 	}
 
 	res.add("vars", vars_);
-
-#if defined(USE_BOX2D)
-	for(std::vector<box2d::body_ptr>::const_iterator it = bodies_.begin();
-		it != bodies_.end();
-		++it) {
-		res.add("bodies", (*it)->write());
-	}
-#endif
 
 	variant result = res.build();
 	result.add_attr(variant("serialized_objects"), serialization_scope.writeObjects(result));
@@ -2556,11 +2532,11 @@ void Level::draw_debug_solid(int x, int y, int w, int h) const
 					for(int subx = 0; subx != TileSize; ++subx) {
 						//The following if statement correctly loads a rectangle of
 						//coordinates into v. However, rr.update doesn't work. (I think.)
-						
+
 						//if(info->bitmap.test(suby*TileSize + subx)) {
 						//	v.emplace_back(xpixel + subx + 1, ypixel + suby + 1);
 						//}
-						
+
 						//Because rr.update doesn't work, I've added this much less efficient
 						//code which just draws the rectangle once for each pixel. >_<
 						if(info->bitmap.test(suby*TileSize + subx)) {
@@ -3928,13 +3904,8 @@ DEFINE_SET_FIELD
 DEFINE_FIELD(module_args, "object")
 	return variant(module::get_module_args().get());
 
-#if defined(USE_BOX2D)
-DEFINE_FIELD(world, "object")
-	return variant(box2d::world::our_world_ptr().get());
-#else
 DEFINE_FIELD(world, "null")
 	return variant();
-#endif
 
 DEFINE_FIELD(time_freeze, "int")
 	return variant(obj.time_freeze_);
@@ -3973,7 +3944,7 @@ DEFINE_FIELD(window_size, "[int, int]")
 //DEFINE_SET_FIELD_TYPE("[decimal, decimal]")
 //	ASSERT_EQ(value.num_elements(), 2);
 //	graphics::GameScreen::get().setVirtualDimensions(
-//		value[0].as_int(), 
+//		value[0].as_int(),
 //		value[1].as_int()
 //	);
 

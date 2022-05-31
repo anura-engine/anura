@@ -106,10 +106,6 @@
     #endif
 #endif
 
-#if defined(USE_BOX2D)
-#include "b2d_ffl.hpp"
-#endif
-
 #define DEFAULT_MODULE "frogatto4"
 
 variant g_auto_update_info;
@@ -1140,10 +1136,6 @@ int main(int argcount, char* argvec[])
 #ifndef NO_EDITOR
 	const ExternalTextEditor::Manager editor_manager;
 #endif // NO_EDITOR
-
-#if defined(USE_BOX2D)
-	box2d::manager b2d_manager;
-#endif
 
 	const load_level_manager load_manager;
 
