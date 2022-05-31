@@ -45,7 +45,6 @@
 #include "label.hpp"
 #include "layout_widget.hpp"
 #include "ParticleSystemWidget.hpp"
-#include "play_vpx.hpp"
 #include "poly_line_widget.hpp"
 #include "poly_map.hpp"
 #include "preview_tileset_widget.hpp"
@@ -128,10 +127,6 @@ namespace widget_factory
 			return WidgetPtr(new geometry::PolyMap(v, e));
 		} else if(wtype == "particle_system_widget") {
 			return WidgetPtr(new ParticleSystemWidget(v, e));
-	#if defined(USE_LIBVPX)
-		} else if(wtype == "movie") {
-			return WidgetPtr(new movie::vpx(v, e));
-	#endif
 		//} else if(wtype == "scrollable") {
 		//} else if(wtype == "widget") {
 		} else if(wtype == "tree") {
@@ -202,10 +197,6 @@ namespace widget_factory
 			return "builtin poly_map";
 		} else if(wtype == "particle_system_widget") {
 			return "builtin particle_system_widget";
-	#if defined(USE_LIBVPX)
-		} else if(wtype == "movie") {
-			return "builtin movie";
-	#endif
 		//} else if(wtype == "scrollable") {
 		} else if(wtype == "tree") {
 			return "builtin tree_view_widget";
