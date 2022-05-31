@@ -125,6 +125,7 @@
     <ClInclude Include="..\src\i18n.hpp" />
     <ClInclude Include="..\src\image_widget.hpp" />
     <ClInclude Include="..\src\image_widget_fwd.hpp" />
+    <ClInclude Include="..\src\imgui_additions\imgui_custom.h" />
     <ClInclude Include="..\src\input.hpp" />
     <ClInclude Include="..\src\iphone_device_info.h" />
     <ClInclude Include="..\src\iphone_sound.h" />
@@ -392,7 +393,6 @@
     <ClInclude Include="..\src\xhtml\xslider.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\imgui\imgui_user.inl" />
     <None Include="..\src\custom_object.inc" />
     <None Include="..\src\kre\geometry.inl" />
   </ItemGroup>

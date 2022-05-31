@@ -141,7 +141,7 @@ else
 USE_SVG=no
 endif
 
-MODULES   := kre svg tiled hex xhtml
+MODULES   := kre svg tiled hex xhtml imgui_additions
 
 SRC_DIR   := $(addprefix src/,$(MODULES)) src
 BUILD_DIR := $(addprefix build/,$(MODULES)) build
@@ -151,15 +151,22 @@ OBJ       := $(patsubst src/%.cpp,./build/%.o,$(SRC))
 DEPS      := $(patsubst src/%.cpp,./build/%.d,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR))
 
-USE_IMGUI?=yes
-ifeq ($(USE_IMGUI),yes)
-  BASE_CXXFLAGS += -DUSE_IMGUI
-  INC += -Iimgui
-  CPPFLAGS += -DIMGUI_INCLUDE_IMGUI_USER_INL
-  SRC += imgui/imgui.cpp imgui/imgui_draw.cpp imgui/imgui_widgets.cpp
-  OBJ += imgui/imgui.o   imgui/imgui_draw.o   imgui/imgui_widgets.o
-  SRC_DIR += ./imgui
-endif
+CPPFLAGS += -DIMGUI_USER_CONFIG=\"$(abspath src/imgui_additions/imconfig.h)\"
+
+INC += -Iimgui
+
+SRC += imgui/imgui.cpp
+SRC += imgui/imgui_draw.cpp
+SRC += imgui/imgui_tables.cpp
+SRC += imgui/imgui_widgets.cpp
+
+OBJ += imgui/imgui.o
+OBJ += imgui/imgui_draw.o
+OBJ += imgui/imgui_tables.o
+OBJ += imgui/imgui_widgets.o
+
+SRC_DIR += imgui
+BUILD_DIR += imgui
 
 vpath %.cpp $(SRC_DIR)
 

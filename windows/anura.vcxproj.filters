@@ -1182,6 +1182,9 @@
     <ClInclude Include="..\src\theme_imgui.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\imgui_additions\imgui_custom.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\kre\geometry.inl">
@@ -1189,9 +1192,6 @@
     </None>
     <None Include="..\src\custom_object.inc">
       <Filter>Header Files</Filter>
-    </None>
-    <None Include="..\imgui\imgui_user.inl">
-      <Filter>Source Files\kre</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
