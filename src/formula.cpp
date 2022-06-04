@@ -34,6 +34,7 @@
 #include <random>
 
 #include "asserts.hpp"
+#include "logger.hpp"
 #include "formatter.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
@@ -1028,13 +1029,25 @@ namespace {
 						}
 
 						std::sort(known_v.begin(), known_v.end());
-						std::string known;
+
+						std::string some_known = "";
+						std::string all_known = "";
+
+						const uint_fast8_t some_known_limit = 3;
+						uint_fast8_t some_known_index = 0;
 
 						// Suggest a correction
 						boost::optional<std::string> candidate_match;
 						size_t candidate_value = std::min(static_cast<size_t>(4), id_.size());
 						for(const std::string& k : known_v) {
-							known += k + " \n";
+
+							all_known += k + '\n';
+
+							if (some_known_index < some_known_limit) {
+
+								some_known += k + '\n';
+								some_known_index++;
+							}
 
 							size_t d = edit_distance_calculator(id_, k)();
 							if (candidate_value > d) {
@@ -1049,11 +1062,37 @@ namespace {
 						if (candidate_match) {
 							suggested_match = "\nMaybe you meant '" + *candidate_match + "'?\n";
 						}
+
 						if(callable_def_->getTypeName() != nullptr) {
-							STRICT_ERROR("Unknown symbol '" << id_ << "' in " << *callable_def_->getTypeName() << " " << debugPinpointLocation() << suggested_match << "\nKnown symbols: (excluding built-in functions)\n" << known << "\n");
+							LOG_WARN_WO_SDL(
+									"Unknown symbol '" << id_ << "' in " <<
+									* callable_def_->getTypeName() << ' ' <<
+									debugPinpointLocation() << suggested_match <<
+									"\nKnown symbols: (excluding built-in functions)\n" <<
+									all_known << '\n');
+
+							STRICT_ERROR(
+									"Unknown symbol '" << id_ << "' in " <<
+									* callable_def_->getTypeName() << ' ' <<
+									debugPinpointLocation() << suggested_match <<
+									"\nThere are " << known_v.size() << " known symbols (excluding " <<
+									"built-in functions), check recent console output to find the " <<
+									"list of known symbols.\n");
 						} else {
-							STRICT_ERROR("Unknown identifier '" << id_ << "' " << debugPinpointLocation() << suggested_match << "\nIdentifiers that are valid in this scope:\n" << known << "\n");
+							LOG_WARN_WO_SDL(
+									"Unknown identifier '" << id_ << "' " <<
+									debugPinpointLocation() << suggested_match <<
+									"\nIdentifiers that are valid in this scope:\n" <<
+									all_known << '\n');
+
+							STRICT_ERROR(
+									"Unknown identifier '" << id_ << "' " <<
+									debugPinpointLocation() << suggested_match <<
+									"\nThere are " << known_v.size() << " known identifiers valid " <<
+									"in this scope, check recent console output to find the list " <<
+									"of valid identifiers.\n");
 						}
+
 					} else if(callable_def_) {
 						std::string type_name = "unk";
 						if(callable_def_->getTypeName()) {

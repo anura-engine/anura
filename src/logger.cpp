@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include <iostream>
+
 #include "logger.hpp"
 
 namespace
@@ -41,3 +43,13 @@ void log_internal(SDL_LogPriority priority, const std::string& str)
 	}
 }
 
+/**
+ * Helps the fact that a very large message can not be logged using
+ * `SDL_LogMessage(4)`.
+ */
+void log_internal_wo_SDL(
+		const SDL_LogPriority priority, const std::string & str)
+{
+	//   XXX Change for something more worked, such as `https://github.com/xeekworx/logger`.
+	std::cout << str; /* XXX */
+}
