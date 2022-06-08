@@ -64,6 +64,9 @@
 #endif // _MSC_VER < 1900
 #endif // _MSC_VER
 
+#ifndef _MSC_VER
+#include <random>
+#endif
 
 using namespace tbs;
 
@@ -2052,7 +2055,7 @@ private:
 		return;
 #else
 
-		std::random_shuffle(match_sessions.begin(), match_sessions.end());
+		std::shuffle(match_sessions.begin(), match_sessions.end(), std::mt19937{});
 
 		if(!available_ports_.empty()) {
 			//spawn off a server to play this game.
