@@ -524,9 +524,9 @@ void render_scene(Level& lvl, const screen_position& pos)
 		  main_font->dimensions(description).w()
 		  ) + 8;
 
-		const int xpos = wnd->width() - 16 - left->width() - right->width() - width;
+		const int xpos = screen_width - 16 - left->width() - right->width() - width;
 		const int ypos = 16;
-
+		
 		const float alpha = current_achievement_duration > 10 ? 1.0f : current_achievement_duration/10.0f;
 
 		KRE::Canvas::ColorManager cm1(KRE::Color(1.0f, 1.0f, 1.0f, alpha));
