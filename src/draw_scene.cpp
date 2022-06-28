@@ -129,7 +129,7 @@ void set_scene_title(const std::string& msg, int duration)
 void set_displayed_Achievement(AchievementPtr a)
 {
 	current_achievement = a;
-	current_achievement_duration = 250;
+	current_achievement_duration = 400;
 }
 
 void draw_scene(const Level& lvl, screen_position& pos, const Entity* focus, bool doDraw)
