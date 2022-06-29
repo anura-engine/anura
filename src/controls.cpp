@@ -320,6 +320,29 @@ namespace controls
 				}
 			}
 
+			//joystick support.
+			if(joystick::up()) {
+				state.keys |= 0x01;
+			}
+			if(joystick::down()) {
+				state.keys |= 0x02;
+			}
+			if(joystick::left()) {
+				state.keys |= 0x04;
+			}
+			if(joystick::right()) {
+				state.keys |= 0x08;
+			}
+			if(joystick::button(0)) {
+				state.keys |= 0x10;
+			}
+			if(joystick::button(1)) {
+				state.keys |= 0x20;
+			}
+			if(joystick::button(2)) {
+				state.keys |= 0x40;
+			}
+
 			if(g_user_ctrl_output.is_null() == false) {
 				state.user = g_user_ctrl_output.write_json();
 			}
