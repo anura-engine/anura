@@ -473,14 +473,16 @@ void render_scene(Level& lvl, const screen_position& pos)
 	}
 
 	//draw borders around the screen if the screen is bigger than the level.
-	if(pos.x_border > 0) {
-		canvas->drawSolidRect(rect(0, 0, pos.x_border, screen_height), KRE::Color::colorBlack());
-		canvas->drawSolidRect(rect(screen_width - pos.x_border, 0, pos.x_border, screen_width), KRE::Color::colorBlack());
-	}
+	if(!lvl.in_editor()) {
+		if(pos.x_border > 0) {
+			canvas->drawSolidRect(rect(0, 0, pos.x_border, screen_height), KRE::Color::colorBlack());
+			canvas->drawSolidRect(rect(screen_width - pos.x_border, 0, pos.x_border, screen_width), KRE::Color::colorBlack());
+		}
 
-	if(pos.y_border > 0) {
-		canvas->drawSolidRect(rect(pos.x_border, 0, screen_width - pos.x_border*2, pos.y_border), KRE::Color::colorBlack());
-		canvas->drawSolidRect(rect(pos.x_border, screen_height - pos.y_border, screen_width - pos.x_border*2, pos.y_border), KRE::Color::colorBlack());
+		if(pos.y_border > 0) {
+			canvas->drawSolidRect(rect(pos.x_border, 0, screen_width - pos.x_border*2, pos.y_border), KRE::Color::colorBlack());
+			canvas->drawSolidRect(rect(pos.x_border, screen_height - pos.y_border, screen_width - pos.x_border*2, pos.y_border), KRE::Color::colorBlack());
+		}
 	}
 
 
