@@ -167,7 +167,12 @@ bool point_standable(const Level& lvl, const Entity& e, const std::vector<Entity
 			ypos = translate_y_for_inverted_solid(ypos, obj->frameRect(), solid->area());
 		}
 
-		if(solid && solid->isSolidAt(x - obj->x(), ypos, info ? &info->collide_with_area_id : nullptr)) {
+		int xpos = x - obj->x();
+		if(obj->isFacingRight() == false) {
+			xpos = f.width() - xpos - 1;
+		}
+
+		if(solid && solid->isSolidAt(xpos, ypos, info ? &info->collide_with_area_id : nullptr)) {
 			if(info) {
 				info->collide_with = obj;
 				info->friction = obj->getSurfaceFriction();
@@ -294,14 +299,22 @@ bool entity_collides_with_entity(const Entity& e, const Entity& other, Collision
 
 	for(int y = area.y(); y <= area.y2(); ++y) {
 		for(int x = area.x(); x < area.x2(); ++x) {
-			const int our_x = e.isFacingRight() ? x - e.x() : (e.x() + our_frame.width()-1) - x;
+			int our_x = x - e.x();
+			if(e.isFacingRight() == false) {
+				our_x = our_frame.width() - our_x - 1;
+			}
+
 			int our_y = y - e.y();
 			if(e.isUpsideDown()) {
 				our_y = translate_y_for_inverted_solid(our_y, e.frameRect(), our_solid->area());
 			}
 
 			if(our_solid->isSolidAt(our_x, our_y, info ? &info->area_id : nullptr)) {
-				const int other_x = other.isFacingRight() ? x - other.x() : (other.x() + other_frame.width()-1) - x;
+				int other_x = x - other.x();
+				if(other.isFacingRight() == false) {
+					other_x = other_frame.width() - other_x - 1;
+				}
+
 				int other_y = y - other.y();
 				if(other.isUpsideDown()) {
 					other_y = translate_y_for_inverted_solid(other_y, other.frameRect(), other_solid->area());

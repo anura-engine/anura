@@ -78,6 +78,10 @@
 #include "sound.hpp"
 #include "widget_factory.hpp"
 
+namespace {
+PREF_BOOL(debug_object_solid, false, "When set, this draws solid areas of objects in red.");
+}
+
 class ActivePropertyScope
 {
 	const CustomObject& obj_;
@@ -1554,6 +1558,36 @@ void CustomObject::draw(int xx, int yy) const
 			wnd->render(&blit);
 			pos += std::max(left[n]->height(), right[n]->height());
 		}
+	}
+
+	//debug solid areas.
+	if(solid() && (g_debug_object_solid || preferences::show_debug_hitboxes()))
+	{
+		bool facingRight = isFacingRight();
+		int w = getCurrentFrame().width();
+		int h = getCurrentFrame().height();
+		std::vector<glm::u16vec2> v;
+		for(int x = 0; x < w; x += 1) {
+			int xpos = x;
+			if(facingRight == false) {
+				xpos = w - x - 1;
+			}
+			for(int y = 0; y < h; y += 1) {
+				if(solid()->isSolidAt(x, y)) {
+					v.emplace_back(static_cast<float>(this->x() + xpos), static_cast<float>(this->y() + y));
+				}
+
+			}
+		}
+
+		RectRenderable rr(false);
+		auto shd = rr.getShader();
+		int ps_loc = -1;
+		if(shd && (ps_loc = shd->getUniform("u_point_size")) != KRE::ShaderProgram::INVALID_UNIFORM) {
+			shd->setUniformValue(ps_loc, 2.0f);
+		}
+		rr.update(&v, KRE::Color::colorRed());
+		wnd->render(&rr);
 	}
 
 	if(platform_area_ && (preferences::show_debug_hitboxes() || (!platform_offsets_.empty() && Level::current().in_editor()))) {
