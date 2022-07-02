@@ -3069,12 +3069,12 @@ bool Level::may_be_solid_in_rect(const rect& r) const
 	return false;
 }
 
-void Level::set_solid_area(const rect& r, bool solid)
+void Level::set_solid_area(const rect& r, bool solid, bool platforms)
 {
 	std::string empty_info;
 	for(int y = r.y(); y < r.y2(); ++y) {
 		for(int x = r.x(); x < r.x2(); ++x) {
-			setSolid(solid_, x, y, 100, 100, 0, empty_info, solid);
+			setSolid(platforms ? standable_ : solid_, x, y, 100, 100, 0, empty_info, solid);
 		}
 	}
 }

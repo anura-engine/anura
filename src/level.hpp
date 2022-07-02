@@ -122,7 +122,7 @@ public:
 	bool solid(const rect& r, const SurfaceInfo** info=nullptr) const;
 	bool solid(int xbegin, int ybegin, int w, int h, const SurfaceInfo** info=nullptr) const;
 	bool may_be_solid_in_rect(const rect& r) const;
-	void set_solid_area(const rect& r, bool solid);
+	void set_solid_area(const rect& r, bool solid, bool platforms=false);
 	EntityPtr board(int x, int y) const;
 	const rect& boundaries() const { return boundaries_; }
 	void set_boundaries(const rect& bounds) { boundaries_ = bounds; }

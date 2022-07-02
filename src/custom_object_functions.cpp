@@ -2651,12 +2651,13 @@ RETURN_TYPE("bool")
 	class set_solid_command : public EntityCommandCallable {
 		rect r_;
 		bool is_solid_;
+		bool platforms_;
 	public:
-		set_solid_command(const rect& r, bool is_solid) : r_(r), is_solid_(is_solid)
+		set_solid_command(const rect& r, bool is_solid, bool platforms) : r_(r), is_solid_(is_solid), platforms_(platforms)
 		{}
 
 		virtual void execute(Level& lvl, Entity& ob) const override {
-			lvl.set_solid_area(r_, is_solid_);
+			lvl.set_solid_area(r_, is_solid_, platforms_);
 		}
 	};
 
@@ -2667,7 +2668,7 @@ RETURN_TYPE("bool")
 			EVAL_ARG(1).as_int(),
 			EVAL_ARG(2).as_int(),
 			EVAL_ARG(3).as_int()),
-			NUM_ARGS > 4 ? EVAL_ARG(4).as_bool() : false));
+			NUM_ARGS > 4 ? EVAL_ARG(4).as_bool() : false, false));
 		cmd->setExpression(this);
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
@@ -2678,6 +2679,25 @@ RETURN_TYPE("bool")
 		ARG_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(set_solid)
+
+	FUNCTION_DEF(set_standable, 4, 5, "setStandable(x1, y1, x2, y2, boolean is_standable=false): modifies the standability (platforms) of the Level such that the rectangle given by (x1, y1, x2, y2) will have its standable set to the value of is_standable")
+		set_solid_command* cmd = (new set_solid_command(
+		  rect::from_coordinates(
+			EVAL_ARG(0).as_int(),
+			EVAL_ARG(1).as_int(),
+			EVAL_ARG(2).as_int(),
+			EVAL_ARG(3).as_int()),
+			NUM_ARGS > 4 ? EVAL_ARG(4).as_bool() : false, true));
+		cmd->setExpression(this);
+		return variant(cmd);
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("int")
+		ARG_TYPE("int")
+		ARG_TYPE("int")
+		ARG_TYPE("int")
+		ARG_TYPE("bool")
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(set_standable)
 
 	FUNCTION_DEF(group_size, 2, 2, "group_size(Level, int group_id) -> int: gives the number of objects in the object group given by group_id")
 		Level* lvl = EVAL_ARG(0).convert_to<Level>();
