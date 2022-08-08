@@ -177,6 +177,51 @@ namespace KRE
 			}
 		}
 
+		void RandomiserAffector::handleEmitProcess(float t)
+		{
+			auto& psystem = getParentContainer()->getParticleSystem();
+			internalApply(*psystem->getEmitter(), t);
+
+			if(random_direction_) {
+				for(auto& p : psystem->getActiveParticles()) {
+						// change direction per update
+					p.current.direction += glm::vec3(get_random_float(-max_deviation_.x, max_deviation_.x),
+						get_random_float(-max_deviation_.y, max_deviation_.y),
+						get_random_float(-max_deviation_.z, max_deviation_.z));
+				}
+			} else {
+				for(auto& p : psystem->getActiveParticles()) {
+					// change position per update.
+					p.current.position += getScale()
+						* glm::vec3(get_random_float(-max_deviation_.x, max_deviation_.x),
+							get_random_float(-max_deviation_.y, max_deviation_.y),
+							get_random_float(-max_deviation_.z, max_deviation_.z));
+				}
+			}
+		}
+
+		void AnimationAffector::handleEmitProcess(float t)
+		{
+			auto& psystem = getParentContainer()->getParticleSystem();
+			internalApply(*psystem->getEmitter(), t);
+
+			if(uv_data_.empty()) {
+				return;
+			}
+			if(trf_uv_data_.empty()) {
+				transformCoords();
+			}
+
+			for(auto& p : psystem->getActiveParticles()) {
+				float ttl_percentage = use_mass_instead_of_time_
+					? p.current.mass
+					: 1.0f - p.current.time_to_live / p.initial.time_to_live;
+				auto it1 = find_nearest_coords(ttl_percentage);
+				p.current.area = it1->second;
+			}
+		}
+
+
 		AffectorPtr Affector::factory(std::weak_ptr<ParticleSystemContainer> parent, AffectorType type)
 		{
 			switch (type)

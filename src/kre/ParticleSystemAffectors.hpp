@@ -156,6 +156,8 @@ namespace KRE
 
 			bool useMassInsteadOfTime() const { return use_mass_instead_of_time_; }
 			void setUseMassInsteadOfTime(bool f) { use_mass_instead_of_time_ = f; }
+
+			void handleEmitProcess(float t) override;
 		private:
 			void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
@@ -439,6 +441,7 @@ namespace KRE
 			void setTimeStep(float step) { time_step_ = step; }
 
 			bool showScaleUI() const override { return true; }
+			void handleEmitProcess(float t) override;
 		private:
 			void internalApply(Particle& p, float t) override;
 			void handle_apply(std::vector<Particle>& particles, float t);
