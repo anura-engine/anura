@@ -35,6 +35,7 @@
 #include "WindowManager.hpp"
 #include "variant_utils.hpp"
 #include "profile_timer.hpp"
+#include "../preferences.hpp"
 
 namespace KRE
 {
@@ -615,6 +616,7 @@ namespace KRE
 		void ParticleSystemContainer::process(float delta_time)
 		{
 			//LOG_DEBUG("ParticleSystemContainer::Process: " << delta_time);
+			delta_time = preferences::frame_time_millis() * 0.001f;
 			particle_system_->emitProcess(delta_time);
 		}
 
