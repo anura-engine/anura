@@ -69,4 +69,4 @@ make -j$(nproc)
 Building on Fedora 27
 ---------------------
 
-sudo dnf install boost-devel boost-iostreams boost-filesystem boost-regex boost-system SDL2 SDL2-devel SDL2_image-devel SDL2_mixer-devel SDL2_ttf-devel SDL2_image SDL2_mixer SDL2_ttf libvorbis-devel gcc glew icu
+sudo dnf install boost-devel boost-iostreams boost-filesystem boost-regex boost-system SDL2 SDL2-devel SDL2_image-devel SDL2_mixer-devel SDL2_ttf-devel SDL2_image SDL2_mixer SDL2_ttf libvorbis-devel gcc glew icu glm
