@@ -23,6 +23,7 @@
 #include <map>
 
 #include "Blittable.hpp"
+#include "Canvas.hpp"
 #include "WindowManager.hpp"
 
 #include "filesystem.hpp"
@@ -126,6 +127,8 @@ rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text
 	int x2 = x, y2 = y;
 	int xpos = x, ypos = y, highest = 0;
 
+	auto canvas = KRE::Canvas::getInstance();
+
 	std::vector<KRE::vertex_texcoord> font_vtxarray;
 
 	for(auto codepoint : utils::utf8_to_codepoint(text)) {
@@ -146,6 +149,8 @@ rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text
 			continue;
 		}
 
+		auto canvas = KRE::Canvas::getInstance();
+
 		const rectf& r = it->second.as_type<float>();
 
 		if(draw_text) {
@@ -157,12 +162,10 @@ rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text
 			const float x = static_cast<float>(xpos & preferences::xypos_draw_mask);
 			const float y = static_cast<float>(ypos & preferences::xypos_draw_mask);
 
-			font_vtxarray.emplace_back(glm::vec2(x,y), glm::vec2(uv.x1(),uv.y1()));
-			font_vtxarray.emplace_back(glm::vec2(x + r.w()*size,y), glm::vec2(uv.x2(),uv.y1()));
-			font_vtxarray.emplace_back(glm::vec2(x + r.w()*size,y + r.h()*size), glm::vec2(uv.x2(),uv.y2()));
-			font_vtxarray.emplace_back(glm::vec2(x + r.w()*size,y + r.h()*size), glm::vec2(uv.x2(),uv.y2()));
-			font_vtxarray.emplace_back(glm::vec2(x,y), glm::vec2(uv.x1(),uv.y1()));
-			font_vtxarray.emplace_back(glm::vec2(x,y + r.h()*size), glm::vec2(uv.x1(),uv.y2()));
+			canvas->blitTexture(texture_,
+				rect(it->second.x1(), it->second.y1(), it->second.x2() - it->second.x1(),
+					it->second.y2() - it->second.y1()),
+				0.0f, rect(x, y, r.w() * size, r.h() * size), color);
 		}
 
 		if(ypos + r.h()*size > y2) {
@@ -180,17 +183,6 @@ rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text
 		}
 	}
 
-	if(draw_text && !font_vtxarray.empty()) {
-		KRE::Blittable blit;
-		blit.setTexture(texture_);
-		blit.update(&font_vtxarray);
-		blit.setColor(color);
-		blit.setDrawMode(KRE::DrawMode::TRIANGLES);
-		auto wnd = KRE::WindowManager::getMainWindow();
-		wnd->render(&blit);
-		//auto canvas = KRE::Canvas::getInstance();
-		//canvas->blitTexture(texture_, font_vtxarray, 0, color);
-	}
 	return rect(x, y, x2 - x, y2 - y);
 }
 
