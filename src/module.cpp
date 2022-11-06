@@ -401,7 +401,7 @@ namespace module
 		variant v = json::parse_from_file_or_die(fname);
 		std::string def_font = "FreeSans";
 		std::string def_font_cjk = "unifont";
-		auto speech_dialog_bg_color = std::make_shared<KRE::Color>(85, 53, 53, 255);
+		auto speech_dialog_bg_color = std::make_shared<KRE::Color>(58, 61, 76, 255);
 		variant player_type;
 
 		const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";

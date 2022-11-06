@@ -267,7 +267,7 @@ void SpeechDialog::draw() const
 	if(module::get_speech_dialog_bg_color()) {
 		canvas->drawSolidRect(pane_area_, *module::get_speech_dialog_bg_color());
 	} else {
-		canvas->drawSolidRect(pane_area_, KRE::Color(85, 53, 53, 255));
+		canvas->drawSolidRect(pane_area_, KRE::Color(58, 61, 76, 255));
 	}
 	top_corner->blit(pane_area_.x() - top_corner->width(), pane_area_.y() - top_corner->height());
 	top_corner->blit(pane_area_.x2()-1, pane_area_.y() - top_corner->height(), -top_corner->width(), top_corner->height());
@@ -326,7 +326,7 @@ void SpeechDialog::draw() const
 				continue;
 			}
 
-			KRE::Color draw_color(markup[m].color ? *markup[m].color : KRE::Color(255,187,10,255));
+			KRE::Color draw_color(markup[m].color ? *markup[m].color : KRE::Color(196,216,159,255));
 			const rect r = font->draw(text_left_align[n] + xadj, ypos - 2, std::string(str.begin() + begin_index, str.begin() + end_index), 2, draw_color);
 			xadj += r.w();
 		}
