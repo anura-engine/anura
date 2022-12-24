@@ -23,7 +23,11 @@
 
 #pragma once
 
+#if !defined(_MSC_VER) && !defined(__APPLE__ )
+#include <imgui/imgui.h>
+#else
 #include <imgui.h>
+#endif
 
 namespace ImGui
 {

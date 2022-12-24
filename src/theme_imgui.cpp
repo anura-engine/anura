@@ -23,7 +23,12 @@
 
 #include "theme_imgui.hpp"
 
+#if !defined(_MSC_VER) && !defined(__APPLE__ )
+#include <imgui/imgui.h>
+#else
 #include <imgui.h>
+#endif
+
 #include <string>
 
 #include "asserts.hpp"

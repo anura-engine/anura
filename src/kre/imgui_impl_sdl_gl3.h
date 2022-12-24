@@ -8,7 +8,11 @@
 
 #pragma once
 
+#if !defined(_MSC_VER) && !defined(__APPLE__ )
+#include <imgui/imgui.h>
+#else
 #include <imgui.h>
+#endif
 
 struct SDL_Window;
 typedef union SDL_Event SDL_Event;
