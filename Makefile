@@ -24,7 +24,6 @@
 #
 
 OPTIMIZE?=yes
-USE_BOX2D?=yes
 
 CCACHE?=ccache
 USE_CCACHE?=$(shell which $(CCACHE) > /dev/null 2>&1 && echo yes)
@@ -143,7 +142,7 @@ else
 USE_SVG=no
 endif
 
-MODULES   := kre svg Box2D tiled hex xhtml
+MODULES   := kre svg tiled hex xhtml
 
 SRC_DIR   := $(addprefix src/,$(MODULES)) src
 BUILD_DIR := $(addprefix build/,$(MODULES)) build
@@ -191,7 +190,6 @@ USE_CCACHE          : $(USE_CCACHE)\n\
 SANITIZE_ADDRESS    : $(SANITIZE_ADDRESS)\n\
 SANITIZE_UNDEFINED  : $(SANITIZE_UNDEFINED)\n\
 	USE_DB_CLIENT       : $(USE_DB_CLIENT)\n\
-	USE_BOX2D           : $(USE_BOX2D)\n\
 USE_LIBVPX          : $(USE_LIBVPX)\n\
 	USE_SDL2            : $(USE_SDL2)\n\
 CXX                 : $(CXX)\n\
