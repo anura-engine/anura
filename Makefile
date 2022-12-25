@@ -152,15 +152,9 @@ OBJ       := $(patsubst src/%.cpp,./build/%.o,$(SRC))
 DEPS      := $(patsubst src/%.cpp,./build/%.d,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR))
 
-USE_IMGUI?=yes
-ifeq ($(USE_IMGUI),yes)
-  BASE_CXXFLAGS += -DUSE_IMGUI
-  INC += -Iimgui
-  CPPFLAGS += -DIMGUI_INCLUDE_IMGUI_USER_INL
-  SRC += imgui/imgui.cpp imgui/imgui_draw.cpp imgui/imgui_widgets.cpp
-  OBJ += imgui/imgui.o   imgui/imgui_draw.o   imgui/imgui_widgets.o
-  SRC_DIR += ./imgui
-endif
+CPPFLAGS += -DIMGUI_USER_CONFIG=\"$(abspath src/imgui_additions/imconfig.h)\"
+INC += $(shell pkg-config --cflags imgui)
+LIBS += $(shell pkg-config --libs imgui)
 
 vpath %.cpp $(SRC_DIR)
 
