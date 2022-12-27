@@ -24,7 +24,6 @@
 #
 
 OPTIMIZE?=yes
-USE_LUA?=yes
 USE_BOX2D?=yes
 
 CCACHE?=ccache
@@ -48,18 +47,11 @@ ifeq ($(OPTIMIZE),yes)
 BASE_CXXFLAGS += -O2
 endif
 
-ifneq ($(USE_LUA), yes)
-USE_LUA=no
-endif
-
 BASE_CXXFLAGS += -Wall -Werror
 
 ifneq (,$(findstring clang, `$(CXX)`))
 SANITIZE_UNDEFINED=
 BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register
-ifeq ($(USE_LUA), yes)
-BASE_CXXFLAGS += -Wno-pointer-bool-conversion -Wno-parentheses-equality
-endif
 else ifneq (, $(findstring g++, `$(CXX)`))
 GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
 GCC_GTEQ_510 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 50100)
@@ -85,11 +77,6 @@ endif
 
 BASE_CXXFLAGS += $(shell $(SDL2_CONFIG) --cflags)
 LDFLAGS+ = $(shell $(SDL2_CONFIG) --ldflags)
-
-ifeq ($(USE_LUA), yes)
-BASE_CXXFLAGS += -DUSE_LUA
-#USE_LUA := yes # ?=$(shell pkg-config --exists lua5.2 && echo yes)
-endif
 
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
@@ -157,9 +144,6 @@ USE_SVG=no
 endif
 
 MODULES   := kre svg Box2D tiled hex xhtml
-ifeq ($(USE_LUA),yes)
-MODULES += eris
-endif
 
 SRC_DIR   := $(addprefix src/,$(MODULES)) src
 BUILD_DIR := $(addprefix build/,$(MODULES)) build
@@ -209,7 +193,6 @@ SANITIZE_UNDEFINED  : $(SANITIZE_UNDEFINED)\n\
 	USE_DB_CLIENT       : $(USE_DB_CLIENT)\n\
 	USE_BOX2D           : $(USE_BOX2D)\n\
 USE_LIBVPX          : $(USE_LIBVPX)\n\
-	USE_LUA             : $(USE_LUA)\n\
 	USE_SDL2            : $(USE_SDL2)\n\
 CXX                 : $(CXX)\n\
 	BASE_CXXFLAGS       : $(BASE_CXXFLAGS)\n\
