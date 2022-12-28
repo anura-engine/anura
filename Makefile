@@ -111,7 +111,7 @@ endif
 # Linker library options.
 LIBS := $(shell pkg-config --libs x11 gl ) \
 	$(shell pkg-config --libs $(MANDATORY_LIBS)) \
-	 -logg -lvorbis -lvorbisfile -lrt
+	 -logg -lvorbis -lvorbisfile -lrt -lstdc++
 
 # libvpx check
 USE_LIBVPX?=$(shell pkg-config --exists vpx && echo yes)
