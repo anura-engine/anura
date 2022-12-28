@@ -142,7 +142,7 @@ else
 USE_SVG=no
 endif
 
-MODULES   := kre svg tiled hex xhtml
+MODULES   := kre svg tiled hex xhtml imgui_additions
 
 SRC_DIR   := $(addprefix src/,$(MODULES)) src
 BUILD_DIR := $(addprefix build/,$(MODULES)) build
