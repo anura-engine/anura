@@ -1,0 +1,29 @@
+name: Unit Tests / Required / Static / Windows
+on: push
+
+jobs:
+  build:
+    name: 'Server 2022'
+    runs-on: windows-2022
+    steps:
+
+      - name: Checkout Anura
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        with:
+          submodules: true
+
+      # Also sets up a cache for the deps
+      - name: Install dependencies with vcpkg
+        uses: lukka/run-vcpkg@abed23940f9d7bc267b0e1a21ee7b699a3794baa # v11.1
+        with:
+          vcpkgGitCommitId: f6a5d4e8eb7476b8d7fc12a56dff300c1c986131 # 2023.06.20
+          runVcpkgInstall: true
+
+      - name: Install MSBuild
+        uses: microsoft/setup-msbuild@1ff57057b5cfdc39105cd07a01d78e9b0ea0c14c # v1.3.1
+
+      - name: Build Anura
+        run: msbuild -m windows/anura.sln
+
+      - name: Run Unit Tests
+        run: windows\build\win32-release\anura.exe --tests
