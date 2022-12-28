@@ -1,0 +1,47 @@
+name: Linux
+on: push
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install \
+            -y \
+            -qq \
+            --no-install-recommends \
+            --no-install-suggests \
+              libxmu-dev \
+              libxi-dev \
+              libgl-dev \
+              clang \
+              autoconf-archive \
+              gperf \
+              make
+
+      
+      - name: Checkout Vcpkg
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+        with: 
+          repository: Microsoft/vcpkg
+          path: vcpkg
+
+      - name: Setup Vcpkg
+        run: ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: Checkout Anura
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+
+      - name: Install Vcpkg Dependencies
+        run: vcpkg install
+
+      - name: Build Anura
+        env:
+          CXX: clang
+        # Number of cores * 3
+        run: make -j "$(($(getconf _NPROCESSORS_ONLN) * 3))"
