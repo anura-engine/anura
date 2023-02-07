@@ -142,7 +142,7 @@ Background::Background(variant node, int palette)
 	top_ = KRE::Color(node["top"]);
 	bot_ = KRE::Color(node["bottom"]);
 
-	width_ = node["width"].as_int();
+	//width_ = node["width"].as_int();
 	height_ = node["height"].as_int();
 
 	bool colors_mapped = false;
@@ -249,7 +249,7 @@ variant Background::write() const
 	variant_builder res;
 	res.add("top", top_.write());
 	res.add("bottom", bot_.write());
-	res.add("width", formatter() << width_);
+	//res.add("width", formatter() << width_);
 	res.add("height", formatter() << height_);
 
 	for(auto& bgp : layers_) {
