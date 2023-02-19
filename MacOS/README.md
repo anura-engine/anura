@@ -13,19 +13,19 @@ We will need to install two command-line apps; [vcpkg](https://github.com/micros
 
 The easiest way to install these, at the time of this writing, is to use [homebrew](https://brew.sh/), which is a widely regarded package manager for unix command-line apps on the mac.
 
-
-## 1) Install `vcpkg`
-
-Clone the [vcpkg repo](https://github.com/microsoft/vcpkg) somewhere outside the anura folder. This can honestly go anywhere; you'll execute it by running a shell script from inside of it, via a relative path, and then setting the current working directory to the root `anura` folder.
-
-
-## 2) Install several dependencies the `vcpkg` script needs, via `homebrew`
+## 1) Install several dependencies the `vcpkg` script needs, via `homebrew`
 
 We need a few packages which can be installed as follows:
 
 ```sh
 $ brew install python pkg-config libtool automake autoconf-archive
 ```
+
+
+## 2) Install `vcpkg`
+
+Clone the [vcpkg repo](https://github.com/microsoft/vcpkg) somewhere outside the anura folder. This can honestly go anywhere; you'll execute it by running a shell script from inside of it, via a relative path, and then setting the current working directory to the root `anura` folder.
+
 
 ## 3) Prepare `vcpkg`
 
