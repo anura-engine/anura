@@ -413,6 +413,7 @@
 		CF91F5D92117748C00DE58EA /* simplex_noise_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CF91F5D82117748B00DE58EA /* simplex_noise_tests.cpp */; };
 		CFA55595211759B30005446A /* TextureUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CFA55594211759B30005446A /* TextureUtils.cpp */; };
 		CFD1E1272124516200FA450E /* variant_type_check.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CFD1E1262124516100FA450E /* variant_type_check.cpp */; };
+		F383AA8B29A9CCBD001693D2 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F383AA8A29A9CC84001693D2 /* GameController.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1203,6 +1204,7 @@
 		CF91F5D82117748B00DE58EA /* simplex_noise_tests.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = simplex_noise_tests.cpp; sourceTree = "<group>"; };
 		CFA55594211759B30005446A /* TextureUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextureUtils.cpp; sourceTree = "<group>"; };
 		CFD1E1262124516100FA450E /* variant_type_check.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = variant_type_check.cpp; sourceTree = "<group>"; };
+		F383AA8A29A9CC84001693D2 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1212,6 +1214,7 @@
 			files = (
 				C01182E22828DAD700431768 /* Metal.framework in Frameworks */,
 				C01182DE2828DAAF00431768 /* Carbon.framework in Frameworks */,
+				F383AA8B29A9CCBD001693D2 /* GameController.framework in Frameworks */,
 				C01182DA2828DA6300431768 /* IOKit.framework in Frameworks */,
 				C01182D62828DA1D00431768 /* ForceFeedback.framework in Frameworks */,
 				C01182D22828D95E00431768 /* CoreVideo.framework in Frameworks */,
@@ -1588,6 +1591,7 @@
 			isa = PBXGroup;
 			children = (
 				C01182E12828DACF00431768 /* Metal.framework */,
+				F383AA8A29A9CC84001693D2 /* GameController.framework */,
 				C01182DD2828DAAB00431768 /* Carbon.framework */,
 				C01182D92828DA5800431768 /* IOKit.framework */,
 				C01182D52828DA1600431768 /* ForceFeedback.framework */,
