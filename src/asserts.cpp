@@ -132,7 +132,7 @@ void report_assert_msg(const std::string& m)
 		DebugBreak();
 	}
 #elif defined(__APPLE__)
-    *((volatile int *) NULL) = 0;	/* To continue from here in GDB: "return" then "continue". */
+//    *((volatile int *) NULL) = 0;	/* To continue from here in GDB: "return" then "continue". */
     raise(SIGABRT);			/* In case above statement gets nixed by the optimizer. */
 #else
     raise(SIGABRT);			/* To continue from here in GDB: "signal 0". */
