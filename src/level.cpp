@@ -3948,6 +3948,17 @@ DEFINE_FIELD(window_size, "[int, int]")
 //		value[1].as_int()
 //	);
 
+DEFINE_FIELD(camera_position_without_zoom, "[int, int, int, int]")
+  std::vector<variant> pos;
+  pos.reserve(4);
+  pos.emplace_back(last_draw_position().x/100);
+  pos.emplace_back(last_draw_position().y/100);
+
+  auto& gs = graphics::GameScreen::get();
+  pos.emplace_back(gs.getVirtualWidth());
+  pos.emplace_back(gs.getVirtualHeight());
+  return variant(&pos);
+
 DEFINE_FIELD(camera_position, "[int, int, int, int]")
 	std::vector<variant> pos;
 	pos.reserve(4);
