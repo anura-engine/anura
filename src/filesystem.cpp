@@ -218,7 +218,7 @@ namespace sys
 
 	void copy_file(const std::string& from, const std::string& to)
 	{
-		copy_file(path(from), path(to), copy_option::fail_if_exists);
+		copy_file(path(from), path(to), copy_options::none);
 	}
 
 	void rmdir_recursive(const std::string& fpath)
