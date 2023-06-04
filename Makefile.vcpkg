@@ -96,7 +96,7 @@ LDFLAGS?=-rdynamic
 LDFLAGS += -L./vcpkg_installed/x64-linux/lib
 
 PKG_CONFIG_PATH:=$(shell pwd)/vcpkg_installed/x64-linux/lib/pkgconfig:$(shell pwd)/vcpkg_installed/x64-linux/share/pkgconfig:$(PKG_CONFIG_PATH)
-MANDATORY_LIBS=pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo
+MANDATORY_LIBS=sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo
 
 # Check for sanitize-address option
 ifeq ($(SANITIZE_ADDRESS), yes)
@@ -110,16 +110,17 @@ BASE_CXXFLAGS += -fsanitize=undefined
 endif
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH)  $(MANDATORY_LIBS))
+INC := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags $(MANDATORY_LIBS))
 
 ifdef STEAM_RUNTIME_ROOT
 	INC += -isystem $(STEAM_RUNTIME_ROOT)/include
 endif
 
-# Linker library options.
-LIBS := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs x11 gl ) \
-	$(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs $(MANDATORY_LIBS)) \
-	 -logg -lvorbis -lvorbisfile -lrt -lstdc++ -lm
+# Linker library options. (needs gl?)
+LIBS := -lvorbisfile $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs x11 gl ) -logg -lvorbis \
+	$(shell pkg-config --libs sdl2 SDL2_image SDL2_ttf) \
+	$(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs glew libpng zlib freetype2 cairo) \
+	 -logg -lrt -lstdc++ -lm -lX11 -lboost_system -lboost_locale -lboost_thread
 
 # libvpx check
 USE_LIBVPX?=$(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --exists vpx && echo yes)
