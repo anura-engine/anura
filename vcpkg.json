@@ -4,7 +4,15 @@
     "version": "0.0.1",
     "builtin-baseline": "d953973cfbfeaf8022f5219fbabb0bdf9defb706",
     "dependencies": [
-      "sdl2",
+      {
+          "name": "sdl2",
+          "features": [ "x11" ],
+          "platform": "linux"
+      },
+      {
+          "name": "sdl2",
+          "platform": "!linux"
+      },
       "sdl2-ttf",
       "sdl2-image",
       {
