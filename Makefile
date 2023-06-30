@@ -52,19 +52,7 @@ ifneq (,$(findstring clang, `$(CXX)`))
 SANITIZE_UNDEFINED=
 BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register
 else ifneq (, $(findstring g++, `$(CXX)`))
-GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
-GCC_GTEQ_510 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 50100)
-BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare
-
-ifeq "$(GCC_GTEQ_510)" "1"
-BASE_CXXFLAGS += -Wsuggest-override
-endif
-
-ifeq "$(GCC_GTEQ_490)" "1"
-BASE_CXXFLAGS += -fdiagnostics-color=auto
-else
-SANITIZE_UNDEFINED=
-endif
+BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare -fdiagnostics-color=auto
 endif
 
 SDL2_CONFIG?=sdl2-config
