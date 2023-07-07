@@ -346,7 +346,7 @@ namespace joystick
 					break;
 				}
 				case 3: { // unassigned inventory?
-					state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_Y);
+					state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_X);
 					break;
 				}
 				case 4: { //
