@@ -52,10 +52,23 @@ void show_controls_dialog()
 	using namespace controls;
 	const int vw = graphics::GameScreen::get().getVirtualWidth();
 	const int vh = graphics::GameScreen::get().getVirtualHeight();
+	
+	//HACK: 10 and 4 are the default button padding. Padding should be taken from buttons in KeyButtons list
+	int butt_padx = 10;
+	int butt_pady = 4;
+
+	int butt_width = 70;
+	int butt_height = 60;
+
+	int butt_width_wp = butt_width + butt_padx;
+	int butt_height_wp = butt_height + butt_pady;
+	
+	int sep_y = 50;
+
 	int height = vh- 20;
-	if(vh > 480) {
+	/*if(vh > 480) {
 		height -= 100;
-	}
+	}*/
 	Dialog d(200, (vh > 480) ? 60 : 10, vw - 400, height);
 	d.setBackgroundFrame("empty_window");
 	d.setDrawBackgroundFn(draw_last_scene);
@@ -64,38 +77,58 @@ void show_controls_dialog()
 	for(int n = 0; n < NUM_CONTROLS; ++n) {
 		const CONTROL_ITEM item = static_cast<CONTROL_ITEM>(n);
 		KeyButtons[item] = KeyButtonPtr(new KeyButton(get_keycode(item), BUTTON_SIZE_DOUBLE_RESOLUTION));
-		KeyButtons[item]->setDim(70, 60);
+		KeyButtons[item]->setDim(butt_width, butt_height);
 	}
 
-	WidgetPtr t1(new GraphicalFontLabel(_("Directions"), "door_label", 2));
-	WidgetPtr b1(KeyButtons[CONTROL_UP]);
-	WidgetPtr b2(KeyButtons[CONTROL_DOWN]);
-	WidgetPtr b3(KeyButtons[CONTROL_LEFT]);
-	WidgetPtr b4(KeyButtons[CONTROL_RIGHT]);
-	WidgetPtr t2(new GraphicalFontLabel(_("Jump"), "door_label", 2));
-	WidgetPtr b5(KeyButtons[CONTROL_JUMP]);
-	WidgetPtr t3(new GraphicalFontLabel(_("Tongue"), "door_label", 2));
-	WidgetPtr b6(KeyButtons[CONTROL_TONGUE]);
-	WidgetPtr t4(new GraphicalFontLabel(_("Attack"), "door_label", 2));
-	WidgetPtr b7(KeyButtons[CONTROL_ATTACK]);
-	WidgetPtr b8(new Button(WidgetPtr(new GraphicalFontLabel(_("Back"), "door_label", 2)), std::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
-	b8->setDim(230, 60);
+	WidgetPtr t_dirs(new GraphicalFontLabel(_("Directions"), "door_label", 2));
+	WidgetPtr b_up(KeyButtons[CONTROL_UP]);
+	WidgetPtr b_down(KeyButtons[CONTROL_DOWN]);
+	WidgetPtr b_left(KeyButtons[CONTROL_LEFT]);
+	WidgetPtr b_right(KeyButtons[CONTROL_RIGHT]);
 
-	int start_y = static_cast<int>((d.height() - 4.0*b1->height() - 2.0*t1->height() - 7.0*d.padding())/2.0);
-	d.addWidget(t1, static_cast<int>(d.width()/2.0 - b1->width()*1.5 - d.padding()), start_y);
-	d.addWidget(b1, static_cast<int>(d.width()/2.0 - b1->width()/2.0), start_y + t1->height() + d.padding());
-	d.addWidget(b3, static_cast<int>(d.width()/2.0 - b1->width()*1.5 - d.padding()), static_cast<int>(start_y + t1->height() + b1->height() + 2.0*d.padding()), Dialog::MOVE_DIRECTION::RIGHT);
-	d.addWidget(b2, Dialog::MOVE_DIRECTION::RIGHT);
-	d.addWidget(b4);
+	WidgetPtr t_jump(new GraphicalFontLabel(_("Jump"), "door_label", 2));
+	WidgetPtr b_jump(KeyButtons[CONTROL_JUMP]);
+	WidgetPtr t_tongue(new GraphicalFontLabel(_("Tongue"), "door_label", 2));
+	WidgetPtr b_tongue(KeyButtons[CONTROL_TONGUE]);
+	WidgetPtr t_item(new GraphicalFontLabel(_("Item"), "door_label", 2));
+	WidgetPtr b_item(KeyButtons[CONTROL_ATTACK]);
+	
+	WidgetPtr b_sprint(KeyButtons[CONTROL_SPRINT]);
+	WidgetPtr t_sprint(new GraphicalFontLabel(_("Sprint"), "door_label", 2));
 
-	start_y += t1->height() + 5*d.padding() + 2*b1->height();
-	d.addWidget(t2, static_cast<int>(d.width()/2 - b1->width()*1.5 - d.padding()), start_y);
-	d.addWidget(b5);
-	d.addWidget(t3, d.width()/2 - b1->width()/2, start_y);
-	d.addWidget(b6);
-	d.addWidget(t4, d.width()/2 + b1->width()/2 + d.padding(), start_y);
-	d.addWidget(b7);
-	d.addWidget(b8, d.width()/2 - b8->width()/2, start_y + t2->height() + b5->height() + 3*d.padding());
+	WidgetPtr back_button(new Button(WidgetPtr(new GraphicalFontLabel(_("Back"), "door_label", 2)), std::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
+	back_button->setDim(230, 60);
+
+	
+	int top_label_height = d.padding();
+	int top_label_botm_edge = top_label_height+t_dirs->height();
+
+	int button_grid_width = 3*butt_width_wp;
+	int left_edge = d.width()/2 - button_grid_width/2;
+
+	int reference_y = static_cast<int>(d.padding() + butt_height_wp);
+
+	d.addWidget(t_dirs, static_cast<int>(left_edge), static_cast<int>(reference_y));
+	reference_y += t_dirs->height();
+
+	d.addWidget(b_up, static_cast<int>(left_edge+butt_width_wp), static_cast<int>(reference_y));
+	d.addWidget(b_left, static_cast<int>(left_edge), static_cast<int>(reference_y + butt_height_wp), Dialog::MOVE_DIRECTION::RIGHT);
+	d.addWidget(b_down, Dialog::MOVE_DIRECTION::RIGHT);
+	d.addWidget(b_right);
+	reference_y += butt_height_wp*2 + sep_y;
+
+	d.addWidget(t_jump, left_edge, reference_y);
+	d.addWidget(t_tongue, static_cast<int>(left_edge+butt_width_wp), reference_y);
+	d.addWidget(t_item, static_cast<int>(left_edge+butt_width_wp*2), reference_y);
+	reference_y += t_jump->height();
+
+	d.addWidget(b_jump, left_edge, reference_y, Dialog::MOVE_DIRECTION::RIGHT);
+	d.addWidget(b_tongue, Dialog::MOVE_DIRECTION::RIGHT);
+	d.addWidget(b_item);
+
+	reference_y += butt_height_wp + sep_y;
+
+	d.addWidget(back_button, d.width()/2 - back_button->width()/2, reference_y);
 
 	d.showModal();
 }
