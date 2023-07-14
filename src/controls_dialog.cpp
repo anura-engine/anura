@@ -93,8 +93,8 @@ void show_controls_dialog()
 	WidgetPtr t_item(new GraphicalFontLabel(_("Item"), "door_label", 2));
 	WidgetPtr b_item(KeyButtons[CONTROL_ATTACK]);
 	
-	WidgetPtr b_sprint(KeyButtons[CONTROL_SPRINT]);
-	WidgetPtr t_sprint(new GraphicalFontLabel(_("Sprint"), "door_label", 2));
+	//WidgetPtr b_sprint(KeyButtons[CONTROL_SPRINT]);
+	//WidgetPtr t_sprint(new GraphicalFontLabel(_("Sprint"), "door_label", 2));
 
 	WidgetPtr back_button(new Button(WidgetPtr(new GraphicalFontLabel(_("Back"), "door_label", 2)), std::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
 	back_button->setDim(230, 60);
