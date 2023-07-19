@@ -23,4 +23,6 @@
 	ImQuat(const glm::quat& f) { x = f.x; y = f.y; z = f.z; w = f.w; }	\
 	operator glm::quat() const { return glm::quat(w,x,y,z); }
 
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS     1
+#endif
