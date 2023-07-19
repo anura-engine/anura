@@ -183,19 +183,19 @@ namespace KRE
 				}
 				std::string freq_label = "Frequency##";
 				freq_label += label;
-				if(ImGui::DragFloat(freq_label.c_str(), &op.frequency, 1.0f, 1.0f, 10000.0f)) {
+				if(ImGui::DragFloat(freq_label.c_str(), &op.frequency, 1.0f, 1.0f, ImGuiSliderFlags_Logarithmic)) {
 					param->setOscillation(op);
 					result = true;
 				}
 				std::string phase_label = "Phase##";
 				phase_label += label;
-				if(ImGui::DragFloat(phase_label.c_str(), &op.phase, 1.0f, 0.0f, 360.0f)) {
+				if(ImGui::DragFloat(phase_label.c_str(), &op.phase, 1.0f, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 					param->setOscillation(op);
 					result = true;
 				}
 				std::string base_label = "Base##";
 				base_label += label;
-				if(ImGui::DragFloat(base_label.c_str(), &op.base, 1.0f, 0.0f, 1000.0f)) {
+				if(ImGui::DragFloat(base_label.c_str(), &op.base, 1.0f, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 					param->setOscillation(op);
 					result = true;
 				}
@@ -257,7 +257,7 @@ namespace KRE
 			KRE::Particles::convert_quat_to_axis_angle(*q, &angle, &axis);
 			angle *= static_cast<float>(180.0f / M_PI);		// radians to degrees for display
 			bool changed = false;
-			if(ImGui::DragFloat("Angle", &angle, 1.0f, 0.0f, 360.0f)) {
+			if(ImGui::DragFloat("Angle", &angle, 1.0f, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 				changed |= true;
 			}
 			float vaxis[3]{ axis.x, axis.y, axis.z };
@@ -420,10 +420,10 @@ namespace KRE
 					float near_clip = ps_camera->getNearClip();
 					float far_clip = ps_camera->getFarClip();
 
-					if(ImGui::DragFloat("Near Clip", &near_clip, 0.01f, 0.01f, 1.0f)) {
+					if(ImGui::DragFloat("Near Clip", &near_clip, 0.01f, 0.01f, ImGuiSliderFlags_AlwaysClamp)) {
 						changed |= true;
 					}
-					if(ImGui::DragFloat("Far Clip", &far_clip, 1.0f, 1.0f, 1000.0f, "%.3f", 1.2f)) {
+					if(ImGui::DragFloat("Far Clip", &far_clip, 1.0f, 1.0f, 1000.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp)) {
 						changed |= true;
 					}
 					if(changed) {
@@ -460,10 +460,10 @@ namespace KRE
 						float near_clip = ps_camera->getNearClip();
 						float far_clip = ps_camera->getFarClip();
 
-						if(ImGui::DragFloat("Near Clip", &near_clip, 0.01f, 0.0f, 2.0f)) {
+						if(ImGui::DragFloat("Near Clip", &near_clip, 0.01f, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 							changed |= true;
 						}
-						if(ImGui::DragFloat("Far Clip", &far_clip, 1.0f, 0.0f, 100.0f, "%.3f", 1.2f)) {
+						if(ImGui::DragFloat("Far Clip", &far_clip, 1.0f, 0.0f, 100.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp)) {
 							changed |= true;
 						}
 						if(changed) {
@@ -483,17 +483,17 @@ namespace KRE
 					std::pair<float,float> fast_forward = psystem->getFastForward();
 					float ff_time = fast_forward.first;
 					float ff_interval = fast_forward.second;
-					if(ImGui::DragFloat("Fast Forward Time", &ff_time, 0.0f, 5.0f)) {
+					if(ImGui::DragFloat("Fast Forward Time", &ff_time, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 						psystem->setFastForward(std::pair<float,float>(ff_time, ff_interval));
 						psystem->init();
 					}
 
 					float sv = psystem->getScaleVelocity();
-					if(ImGui::DragFloat("Scale Velocity", &sv, 0.5f, -100.0f, 100.0f)) {
+					if(ImGui::DragFloat("Scale Velocity", &sv, 0.5f, -100.0f, ImGuiSliderFlags_Logarithmic)) {
 						psystem->setScaleVelocity(sv);
 					}
 					float st = psystem->getScaleTime();
-					if(ImGui::DragFloat("Scale Time", &st, 0.5f, 0.1f, 100.0f)) {
+					if(ImGui::DragFloat("Scale Time", &st, 0.5f, 0.1f, ImGuiSliderFlags_Logarithmic)) {
 						psystem->setScaleTime(st);
 					}
 					glm::vec3 scale_dims = psystem->getScaleDimensions();
@@ -548,7 +548,7 @@ namespace KRE
 
 					if(psystem->hasMaxVelocity()) {
 						float maxv = psystem->getMaxVelocity();
-						if(ImGui::DragFloat("Max Velocity", &maxv, 1.0f, 0.0f, 1000.0f)) {
+						if(ImGui::DragFloat("Max Velocity", &maxv, 1.0f, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 							psystem->setMaxVelocity(maxv);
 						}
 					}
@@ -721,17 +721,17 @@ namespace KRE
 					case KRE::Particles::EmitterType::LINE: {
 						auto le = std::dynamic_pointer_cast<Particles::LineEmitter>(e);
 						float mini = le->getMinIncrement();
-						if(ImGui::DragFloat("Min Increment", &mini, 0.1f, 0.0f, 100.0f)) {
+						if(ImGui::DragFloat("Min Increment", &mini, 0.1f, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 							le->setMinIncrement(mini);
 							emitter_modified = true;
 						}
 						float maxi = le->getMaxIncrement();
-						if(ImGui::DragFloat("Max Increment", &maxi, 0.1f, 0.0f, 100.0f)) {
+						if(ImGui::DragFloat("Max Increment", &maxi, 0.1f, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 							le->setMinIncrement(maxi);
 							emitter_modified = true;
 						}
 						float ld = le->getLineDeviation();
-						if(ImGui::DragFloat("Line Deviation", &ld, 0.1f, 0.0f, 100.0f)) {
+						if(ImGui::DragFloat("Line Deviation", &ld, 0.1f, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 							le->setLineDeviation(ld);
 							emitter_modified = true;
 						}
@@ -751,12 +751,12 @@ namespace KRE
 						auto ce = std::dynamic_pointer_cast<Particles::CircleEmitter>(e);
 						emitter_modified = emitter_modified || ParameterGui("Radius", ce->getRadius(), 0.01f, 200.0f);
 						float step = ce->getStep();
-						if(ImGui::DragFloat("Step", &step, 0.1f, 0.0f, 100.0f)) {
+						if(ImGui::DragFloat("Step", &step, 0.1f, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 							ce->setStep(step);
 							emitter_modified = true;
 						}
 						float angle = ce->getAngle();
-						if(ImGui::DragFloat("Angle", &angle, 0.1f, 0.0f, 360.0f)) {
+						if(ImGui::DragFloat("Angle", &angle, 0.1f, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 							ce->setAngle(angle);
 							emitter_modified = true;
 						}
@@ -910,7 +910,7 @@ namespace KRE
 								ImGui::PushID(&tc.second);
 								ImGui::BeginGroup();
 								ImGui::PushItemWidth(ImGui::CalcItemWidth() * 0.5f);
-								if(ImGui::DragFloat("T", &tc.first, 0.01f, 0.0f, 1.0f)) {
+								if(ImGui::DragFloat("T", &tc.first, 0.01f, 0.0f, ImGuiSliderFlags_AlwaysClamp)) {
 									data_changed = true;
 								}
 								ImGui::SameLine();
@@ -991,7 +991,7 @@ namespace KRE
 								ImGui::PushID(&tc.second);
 								ImGui::BeginGroup();
 								ImGui::PushItemWidth(ImGui::CalcItemWidth() * 0.5f);
-								if(ImGui::DragFloat("T", &tc.first, 0.01f, 0.0f, 1.0f)) {
+								if(ImGui::DragFloat("T", &tc.first, 0.01f, 0.0f, ImGuiSliderFlags_AlwaysClamp)) {
 									data_changed = true;
 								}
 								if(pixel_coords) {
@@ -1191,7 +1191,7 @@ namespace KRE
 						case Particles::AffectorType::RANDOMISER: {
 							auto ra = std::dynamic_pointer_cast<Particles::RandomiserAffector>(a);
 							float ts = ra->getTimeStep();
-							if(ImGui::DragFloat("Time Step", &ts, 1.0f, 0.0f, 10.0f)) {
+							if(ImGui::DragFloat("Time Step", &ts, 1.0f, 0.0f, ImGuiSliderFlags_Logarithmic)) {
 								ra->setTimeStep(ts);
 							}
 
