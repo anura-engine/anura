@@ -1,0 +1,74 @@
+name: Static Analysis / Required / Dynamic / Linux
+on: push
+
+jobs:
+  test:
+    name: LLVM scan-build / Ubuntu
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq upgrade -y
+          sudo apt-get -qq install -y --no-install-recommends \
+            ca-certificates \
+            git \
+            clang \
+            clang-tools \
+            html-xml-utils \
+            make \
+            libboost-dev \
+            libboost-filesystem-dev \
+            libboost-locale-dev \
+            libboost-regex-dev \
+            libboost-system-dev \
+            libcairo2-dev \
+            libglew-dev \
+            libglm-dev \
+            libsdl2-dev \
+            libsdl2-image-dev \
+            libsdl2-mixer-dev \
+            libsdl2-ttf-dev \
+            libvorbis-dev
+
+      - name: Checkout Anura
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        with:
+          submodules: true
+
+      - name: Build and Analyze Anura
+        # Number of cores * 3
+        run: |
+          scan-build \
+            -o analysis-results \
+            --use-c++=clang \
+            make -j "$(($(getconf _NPROCESSORS_ONLN) * 3))" || exit 0
+
+            # Extract and parse the error count out of the html report
+            echo "error_count=$(grep 'All Bugs' analysis-results/*/index.html | hxselect -c td.Q)" >> "$GITHUB_ENV"
+
+      - name: Check Error Count
+        # Current error count accepted as the baseline for this build.
+        # We do not want unexpected changes to the scan-build error count.
+        run: |
+          EXPECTED_ERROR_COUNT=144
+
+          if [[ ${{ env.error_count }} != "$EXPECTED_ERROR_COUNT" ]]
+          then
+            echo ""
+            echo "Expected error count: $EXPECTED_ERROR_COUNT"
+            echo "Error count: $ERROR_COUNT"
+            echo ""
+            echo "See attached results file for more details."
+            exit "$ERROR_COUNT"
+          fi
+
+      # Store results on failures
+      - name: Store Analysis Results
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        if: failure()
+        with:
+          name: analysis-results
+          path: analysis-results/
