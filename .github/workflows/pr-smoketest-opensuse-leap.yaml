@@ -33,36 +33,46 @@ jobs:
         run: |
           zypper --non-interactive update
           zypper --non-interactive install \
+            tar \
+            gzip \
             git \
             ${{ env.compiler }} \
+            cmake \
             make \
-            which \
-            libSDL2-devel \
-            glm-devel \
-            glew-devel \
+            ccache \
             boost-devel \
-            libSDL2_image-devel \
             cairo-devel \
-            libSDL2_ttf-devel \
-            libSDL2_mixer-devel \
-            libvorbis-devel \
-            libicu-devel \
-            libboost_system*6*devel \
+            glew-devel \
+            glm-devel \
+            libboost_filesystem*6*devel \
             libboost_locale*6*devel \
             libboost_regex*6*devel \
-            libboost_filesystem*6*devel \
-            libboost_thread*6*devel
+            libboost_system*6*devel \
+            libboost_thread*6*devel \
+            libicu-devel \
+            libSDL2_image-devel \
+            libSDL2_mixer-devel \
+            libSDL2_ttf-devel \
+            libSDL2-devel \
+            libvorbis-devel
 
       - name: Checkout Anura
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
             submodules: true
 
+      - name: Set ccache up
+        uses: hendrikmuhs/ccache-action@ca3acd2731eef11f1572ccb126356c2f9298d35e # v1.2.9
+        with:
+          key: ${{ github.job }}-opensuse-leap-${{ matrix.suse }}-${{ matrix.compiler }}
+
       - name: Build Anura
         env:
           CXX: ${{ matrix.compiler }}
-        # Number of cores * 3
-        run: make -j "$(($(getconf _NPROCESSORS_ONLN) * 3))"
+        # Compile with number of available hyperthreads
+        run: |
+          cmake .
+          make -j "$(getconf _NPROCESSORS_ONLN)"
 
       - name: Run Unit Tests
         run: ./anura --tests
