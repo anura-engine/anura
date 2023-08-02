@@ -182,7 +182,24 @@ way of the land.
 
 #### Windows
 
-Undocumented as of 2023-08.
+The build is known broken as of 2023-08. It has been manually edited on Linux
+and it's spitting errors out when opened with a Visual Studio proper. It mostly
+builds fine with msbuild on the command line.
+
+Known problems 2023-08:
+
+* Visual Studio does not like the current solution and project files
+
+The .sln and .vcxproj are intending for the following set of constraints:
+
+* Wrap vcpkg
+  * Install correct dependencies
+    * Debug
+    * Release
+* Default set of warnings
+  * Don't treat warnings as errors
+* "Press play to run"
+* "Press play to debug"
 
 #### macOS
 
@@ -275,8 +292,10 @@ On every push:
   * NOT IMPLEMENTED [JSON
     Formatter](https://github.com/callumlocke/json-formatter)
 * Unit Tests
-  * NOT IMPLEMENTED Windows / msbuild / Release / static
-  * NOT IMPLEMENTED Windows / msbuild / Debug / static
+  * KNOWN BROKEN [Windows / msbuild / Release /
+    static](https://github.com/anura-engine/anura/blob/trunk/.github/workflows/push-unit-tests-static-windows.yaml)
+  * KNOWN BROKEN [Windows / msbuild / Debug /
+    static](https://github.com/anura-engine/anura/blob/trunk/.github/workflows/push-unit-tests-static-windows.yaml)
   * NOT IMPLEMENTED macOS / xcodebuild / Release / static
   * NOT IMPLEMENTED macOS / xcodebuild / Debug / static
   * Ubuntu 22.04 / clang++ / Release / dynamic

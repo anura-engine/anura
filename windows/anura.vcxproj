@@ -1,17 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="17" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\imgui\imgui.h" />
     <ClInclude Include="..\src\achievements.hpp" />
     <ClInclude Include="..\src\animation_creator.hpp" />
     <ClInclude Include="..\src\animation_preview_widget.hpp" />
@@ -21,13 +20,12 @@
     <ClInclude Include="..\src\array_callable.hpp" />
     <ClInclude Include="..\src\asserts.hpp" />
     <ClInclude Include="..\src\auto_update_window.hpp" />
-    <ClInclude Include="..\src\background.hpp" />
     <ClInclude Include="..\src\background_task_pool.hpp" />
+    <ClInclude Include="..\src\background.hpp" />
     <ClInclude Include="..\src\bar_widget.hpp" />
     <ClInclude Include="..\src\base64.hpp" />
     <ClInclude Include="..\src\blur.hpp" />
     <ClInclude Include="..\src\border_widget.hpp" />
-    <ClInclude Include="..\src\breakpad.hpp" />
     <ClInclude Include="..\src\button.hpp" />
     <ClInclude Include="..\src\cairo.hpp" />
     <ClInclude Include="..\src\character_editor_dialog.hpp" />
@@ -37,18 +35,18 @@
     <ClInclude Include="..\src\code_editor_dialog.hpp" />
     <ClInclude Include="..\src\code_editor_widget.hpp" />
     <ClInclude Include="..\src\collision_utils.hpp" />
-    <ClInclude Include="..\src\ColorTransform.hpp" />
     <ClInclude Include="..\src\color_picker.hpp" />
+    <ClInclude Include="..\src\ColorTransform.hpp" />
     <ClInclude Include="..\src\compress.hpp" />
     <ClInclude Include="..\src\concurrent_cache.hpp" />
-    <ClInclude Include="..\src\controls.hpp" />
     <ClInclude Include="..\src\controls_dialog.hpp" />
+    <ClInclude Include="..\src\controls.hpp" />
     <ClInclude Include="..\src\current_generator.hpp" />
-    <ClInclude Include="..\src\custom_object.hpp" />
     <ClInclude Include="..\src\custom_object_callable.hpp" />
     <ClInclude Include="..\src\custom_object_dialog.hpp" />
     <ClInclude Include="..\src\custom_object_functions.hpp" />
     <ClInclude Include="..\src\custom_object_type.hpp" />
+    <ClInclude Include="..\src\custom_object.hpp" />
     <ClInclude Include="..\src\db_client.hpp" />
     <ClInclude Include="..\src\debug_console.hpp" />
     <ClInclude Include="..\src\decimal.hpp" />
@@ -56,12 +54,11 @@
     <ClInclude Include="..\src\difficulty.hpp" />
     <ClInclude Include="..\src\distortion.hpp" />
     <ClInclude Include="..\src\drag_widget.hpp" />
-    <ClInclude Include="..\src\draw_primitive.hpp" />
     <ClInclude Include="..\src\draw_primitive_fwd.hpp" />
+    <ClInclude Include="..\src\draw_primitive.hpp" />
     <ClInclude Include="..\src\draw_scene.hpp" />
     <ClInclude Include="..\src\draw_tile.hpp" />
     <ClInclude Include="..\src\dropdown_widget.hpp" />
-    <ClInclude Include="..\src\editor.hpp" />
     <ClInclude Include="..\src\editor_dialogs.hpp" />
     <ClInclude Include="..\src\editor_formula_functions.hpp" />
     <ClInclude Include="..\src\editor_layers_dialog.hpp" />
@@ -69,25 +66,25 @@
     <ClInclude Include="..\src\editor_module_properties_dialog.hpp" />
     <ClInclude Include="..\src\editor_stats_dialog.hpp" />
     <ClInclude Include="..\src\editor_variable_info.hpp" />
+    <ClInclude Include="..\src\editor.hpp" />
     <ClInclude Include="..\src\eglport.h" />
-    <ClInclude Include="..\src\entity.hpp" />
     <ClInclude Include="..\src\entity_fwd.hpp" />
+    <ClInclude Include="..\src\entity.hpp" />
     <ClInclude Include="..\src\external_text_editor.hpp" />
-    <ClInclude Include="..\src\ffl_dom.hpp" />
     <ClInclude Include="..\src\ffl_dom_fwd.hpp" />
+    <ClInclude Include="..\src\ffl_dom.hpp" />
     <ClInclude Include="..\src\ffl_weak_ptr.hpp" />
-    <ClInclude Include="..\src\filesystem.hpp" />
     <ClInclude Include="..\src\file_chooser_dialog.hpp" />
+    <ClInclude Include="..\src\filesystem.hpp" />
     <ClInclude Include="..\src\formatter.hpp" />
-    <ClInclude Include="..\src\formula.hpp" />
-    <ClInclude Include="..\src\formula_callable.hpp" />
-    <ClInclude Include="..\src\formula_callable_definition.hpp" />
     <ClInclude Include="..\src\formula_callable_definition_fwd.hpp" />
+    <ClInclude Include="..\src\formula_callable_definition.hpp" />
     <ClInclude Include="..\src\formula_callable_utils.hpp" />
     <ClInclude Include="..\src\formula_callable_visitor.hpp" />
+    <ClInclude Include="..\src\formula_callable.hpp" />
     <ClInclude Include="..\src\formula_constants.hpp" />
-    <ClInclude Include="..\src\formula_function.hpp" />
     <ClInclude Include="..\src\formula_function_registry.hpp" />
+    <ClInclude Include="..\src\formula_function.hpp" />
     <ClInclude Include="..\src\formula_fwd.hpp" />
     <ClInclude Include="..\src\formula_interface.hpp" />
     <ClInclude Include="..\src\formula_object.hpp" />
@@ -97,35 +94,41 @@
     <ClInclude Include="..\src\formula_visualize_widget.hpp" />
     <ClInclude Include="..\src\formula_vm.hpp" />
     <ClInclude Include="..\src\formula_where.hpp" />
+    <ClInclude Include="..\src\formula.hpp" />
     <ClInclude Include="..\src\frame.hpp" />
     <ClInclude Include="..\src\framed_gui_element.hpp" />
     <ClInclude Include="..\src\ft_iface.hpp" />
     <ClInclude Include="..\src\game_registry.hpp" />
     <ClInclude Include="..\src\geometry_callable.hpp" />
     <ClInclude Include="..\src\globals.h" />
-    <ClInclude Include="..\src\graphical_font.hpp" />
     <ClInclude Include="..\src\graphical_font_label.hpp" />
-    <ClInclude Include="..\src\grid_widget.hpp" />
+    <ClInclude Include="..\src\graphical_font.hpp" />
     <ClInclude Include="..\src\grid_widget_fwd.hpp" />
+    <ClInclude Include="..\src\grid_widget.hpp" />
     <ClInclude Include="..\src\group_property_editor_dialog.hpp" />
     <ClInclude Include="..\src\gui_section.hpp" />
     <ClInclude Include="..\src\haptic.hpp" />
-    <ClInclude Include="..\src\hex\hex.hpp" />
     <ClInclude Include="..\src\hex\hex_fwd.hpp" />
     <ClInclude Include="..\src\hex\hex_helper.hpp" />
     <ClInclude Include="..\src\hex\hex_loader.hpp" />
     <ClInclude Include="..\src\hex\hex_map.hpp" />
     <ClInclude Include="..\src\hex\hex_mask.hpp" />
-    <ClInclude Include="..\src\hex\hex_renderable.hpp" />
     <ClInclude Include="..\src\hex\hex_renderable_fwd.hpp" />
+    <ClInclude Include="..\src\hex\hex_renderable.hpp" />
     <ClInclude Include="..\src\hex\hex_tile.hpp" />
+    <ClInclude Include="..\src\hex\hex.hpp" />
     <ClInclude Include="..\src\hex\tile_rules.hpp" />
     <ClInclude Include="..\src\http_client.hpp" />
     <ClInclude Include="..\src\http_server.hpp" />
     <ClInclude Include="..\src\i18n.hpp" />
-    <ClInclude Include="..\src\image_widget.hpp" />
     <ClInclude Include="..\src\image_widget_fwd.hpp" />
+    <ClInclude Include="..\src\image_widget.hpp" />
+    <ClInclude Include="..\src\imgui_additions\imconfig_anura.h" />
     <ClInclude Include="..\src\imgui_additions\imgui_custom.h" />
+    <ClInclude Include="..\src\imgui_additions\spline_simple.h" />
+    <ClInclude Include="..\src\imgui\imconfig.h" />
+    <ClInclude Include="..\src\imgui\imgui_internal.h" />
+    <ClInclude Include="..\src\imgui\imgui.h" />
     <ClInclude Include="..\src\input.hpp" />
     <ClInclude Include="..\src\iphone_device_info.h" />
     <ClInclude Include="..\src\iphone_sound.h" />
@@ -223,28 +226,28 @@
     <ClInclude Include="..\src\language_dialog.hpp" />
     <ClInclude Include="..\src\LayerBlitInfo.hpp" />
     <ClInclude Include="..\src\layout_widget.hpp" />
-    <ClInclude Include="..\src\level.hpp" />
     <ClInclude Include="..\src\level_logic.hpp" />
-    <ClInclude Include="..\src\level_object.hpp" />
     <ClInclude Include="..\src\level_object_fwd.hpp" />
+    <ClInclude Include="..\src\level_object.hpp" />
     <ClInclude Include="..\src\level_runner.hpp" />
     <ClInclude Include="..\src\level_solid_map.hpp" />
+    <ClInclude Include="..\src\level.hpp" />
     <ClInclude Include="..\src\light.hpp" />
-    <ClInclude Include="..\src\loading_screen.hpp" />
     <ClInclude Include="..\src\load_level.hpp" />
+    <ClInclude Include="..\src\loading_screen.hpp" />
     <ClInclude Include="..\src\logger.hpp" />
     <ClInclude Include="..\src\md5.hpp" />
     <ClInclude Include="..\src\message_dialog.hpp" />
-    <ClInclude Include="..\src\module.hpp" />
     <ClInclude Include="..\src\module_web_server.hpp" />
-    <ClInclude Include="..\src\multiplayer.hpp" />
+    <ClInclude Include="..\src\module.hpp" />
     <ClInclude Include="..\src\multi_tile_pattern.hpp" />
+    <ClInclude Include="..\src\multiplayer.hpp" />
     <ClInclude Include="..\src\nocopy.hpp" />
     <ClInclude Include="..\src\object_events.hpp" />
     <ClInclude Include="..\src\octree.hpp" />
-    <ClInclude Include="..\src\ParticleSystemWidget.hpp" />
-    <ClInclude Include="..\src\particle_system.hpp" />
     <ClInclude Include="..\src\particle_system_proxy.hpp" />
+    <ClInclude Include="..\src\particle_system.hpp" />
+    <ClInclude Include="..\src\ParticleSystemWidget.hpp" />
     <ClInclude Include="..\src\pathfinding.hpp" />
     <ClInclude Include="..\src\pause_game_dialog.hpp" />
     <ClInclude Include="..\src\playable_custom_object.hpp" />
@@ -259,8 +262,8 @@
     <ClInclude Include="..\src\progress_bar.hpp" />
     <ClInclude Include="..\src\property_editor_dialog.hpp" />
     <ClInclude Include="..\src\random.hpp" />
-    <ClInclude Include="..\src\rectangle_rotator.hpp" />
     <ClInclude Include="..\src\rect_renderable.hpp" />
+    <ClInclude Include="..\src\rectangle_rotator.hpp" />
     <ClInclude Include="..\src\reference_counted_object.hpp" />
     <ClInclude Include="..\src\regex_utils.hpp" />
     <ClInclude Include="..\src\rich_text_label.hpp" />
@@ -277,17 +280,17 @@
     <ClInclude Include="..\src\simplex_noise.hpp" />
     <ClInclude Include="..\src\skybox.hpp" />
     <ClInclude Include="..\src\slider.hpp" />
-    <ClInclude Include="..\src\solid_map.hpp" />
     <ClInclude Include="..\src\solid_map_fwd.hpp" />
+    <ClInclude Include="..\src\solid_map.hpp" />
     <ClInclude Include="..\src\sound.hpp" />
     <ClInclude Include="..\src\speech_dialog.hpp" />
     <ClInclude Include="..\src\spline.hpp" />
     <ClInclude Include="..\src\spline3d.hpp" />
     <ClInclude Include="..\src\stacktrace.hpp" />
     <ClInclude Include="..\src\StackWalker.h" />
-    <ClInclude Include="..\src\stats.hpp" />
     <ClInclude Include="..\src\stats_server.hpp" />
     <ClInclude Include="..\src\stats_web_server.hpp" />
+    <ClInclude Include="..\src\stats.hpp" />
     <ClInclude Include="..\src\string_utils.hpp" />
     <ClInclude Include="..\src\surface_cache.hpp" />
     <ClInclude Include="..\src\surface_palette.hpp" />
@@ -316,45 +319,45 @@
     <ClInclude Include="..\src\tbs_internal_client.hpp" />
     <ClInclude Include="..\src\tbs_internal_server.hpp" />
     <ClInclude Include="..\src\tbs_ipc_client.hpp" />
-    <ClInclude Include="..\src\tbs_server.hpp" />
     <ClInclude Include="..\src\tbs_server_base.hpp" />
+    <ClInclude Include="..\src\tbs_server.hpp" />
     <ClInclude Include="..\src\tbs_web_server.hpp" />
-    <ClInclude Include="..\src\TextureObject.hpp" />
     <ClInclude Include="..\src\text_editor_widget.hpp" />
+    <ClInclude Include="..\src\TextureObject.hpp" />
     <ClInclude Include="..\src\theme_imgui.hpp" />
     <ClInclude Include="..\src\thread.hpp" />
+    <ClInclude Include="..\src\tile_map.hpp" />
     <ClInclude Include="..\src\tiled\tiled.hpp" />
     <ClInclude Include="..\src\tiled\tmx_reader.hpp" />
     <ClInclude Include="..\src\tileset_editor_dialog.hpp" />
-    <ClInclude Include="..\src\tile_map.hpp" />
     <ClInclude Include="..\src\tooltip.hpp" />
     <ClInclude Include="..\src\translate.hpp" />
     <ClInclude Include="..\src\tree_view_widget.hpp" />
     <ClInclude Include="..\src\unit_test.hpp" />
     <ClInclude Include="..\src\uri.hpp" />
-    <ClInclude Include="..\src\userevents.h" />
     <ClInclude Include="..\src\user_voxel_object.hpp" />
+    <ClInclude Include="..\src\userevents.h" />
     <ClInclude Include="..\src\utf8_to_codepoint.hpp" />
     <ClInclude Include="..\src\utility_query.hpp" />
     <ClInclude Include="..\src\utils.hpp" />
     <ClInclude Include="..\src\uuid.hpp" />
-    <ClInclude Include="..\src\variant.hpp" />
     <ClInclude Include="..\src\variant_callable.hpp" />
     <ClInclude Include="..\src\variant_type.hpp" />
     <ClInclude Include="..\src\variant_utils.hpp" />
+    <ClInclude Include="..\src\variant.hpp" />
     <ClInclude Include="..\src\video_selections.hpp" />
     <ClInclude Include="..\src\VoronoiDiagramGenerator.h" />
     <ClInclude Include="..\src\voxel_model.hpp" />
-    <ClInclude Include="..\src\voxel_object.hpp" />
     <ClInclude Include="..\src\voxel_object_functions.hpp" />
     <ClInclude Include="..\src\voxel_object_type.hpp" />
-    <ClInclude Include="..\src\water.hpp" />
+    <ClInclude Include="..\src\voxel_object.hpp" />
     <ClInclude Include="..\src\water_particle_system.hpp" />
+    <ClInclude Include="..\src\water.hpp" />
     <ClInclude Include="..\src\weather_particle_system.hpp" />
-    <ClInclude Include="..\src\widget.hpp" />
     <ClInclude Include="..\src\widget_factory.hpp" />
     <ClInclude Include="..\src\widget_fwd.hpp" />
     <ClInclude Include="..\src\widget_settings_dialog.hpp" />
+    <ClInclude Include="..\src\widget.hpp" />
     <ClInclude Include="..\src\wml_formula_callable.hpp" />
     <ClInclude Include="..\src\xhtml\css_lexer.hpp" />
     <ClInclude Include="..\src\xhtml\css_parser.hpp" />
@@ -368,14 +371,13 @@
     <ClInclude Include="..\src\xhtml\solid_renderable.hpp" />
     <ClInclude Include="..\src\xhtml\to_roman.hpp" />
     <ClInclude Include="..\src\xhtml\url_handler.hpp" />
-    <ClInclude Include="..\src\xhtml\xhtml.hpp" />
     <ClInclude Include="..\src\xhtml\xhtml_absolute_box.hpp" />
     <ClInclude Include="..\src\xhtml\xhtml_background_info.hpp" />
     <ClInclude Include="..\src\xhtml\xhtml_block_box.hpp" />
     <ClInclude Include="..\src\xhtml\xhtml_border_info.hpp" />
     <ClInclude Include="..\src\xhtml\xhtml_box.hpp" />
-    <ClInclude Include="..\src\xhtml\xhtml_element.hpp" />
     <ClInclude Include="..\src\xhtml\xhtml_element_id.hpp" />
+    <ClInclude Include="..\src\xhtml\xhtml_element.hpp" />
     <ClInclude Include="..\src\xhtml\xhtml_fwd.hpp" />
     <ClInclude Include="..\src\xhtml\xhtml_inline_block_box.hpp" />
     <ClInclude Include="..\src\xhtml\xhtml_inline_element_box.hpp" />
@@ -390,6 +392,7 @@
     <ClInclude Include="..\src\xhtml\xhtml_style_tree.hpp" />
     <ClInclude Include="..\src\xhtml\xhtml_text_box.hpp" />
     <ClInclude Include="..\src\xhtml\xhtml_text_node.hpp" />
+    <ClInclude Include="..\src\xhtml\xhtml.hpp" />
     <ClInclude Include="..\src\xhtml\xslider.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -397,12 +400,6 @@
     <None Include="..\src\kre\geometry.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\imgui\imgui.cpp">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">IMGUI_INCLUDE_IMGUI_USER_INL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IMGUI_INCLUDE_IMGUI_USER_INL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\src\achievements.cpp" />
     <ClCompile Include="..\src\animation_creator.cpp" />
     <ClCompile Include="..\src\animation_preview_widget.cpp" />
@@ -410,13 +407,12 @@
     <ClCompile Include="..\src\anura_shader.cpp" />
     <ClCompile Include="..\src\asserts.cpp" />
     <ClCompile Include="..\src\auto_update_window.cpp" />
-    <ClCompile Include="..\src\background.cpp" />
     <ClCompile Include="..\src\background_task_pool.cpp" />
+    <ClCompile Include="..\src\background.cpp" />
     <ClCompile Include="..\src\bar_widget.cpp" />
     <ClCompile Include="..\src\base64.cpp" />
     <ClCompile Include="..\src\blur.cpp" />
     <ClCompile Include="..\src\border_widget.cpp" />
-    <ClCompile Include="..\src\breakpad.cpp" />
     <ClCompile Include="..\src\button.cpp" />
     <ClCompile Include="..\src\cairo.cpp" />
     <ClCompile Include="..\src\character_editor_dialog.cpp" />
@@ -426,17 +422,17 @@
     <ClCompile Include="..\src\code_editor_dialog.cpp" />
     <ClCompile Include="..\src\code_editor_widget.cpp" />
     <ClCompile Include="..\src\collision_utils.cpp" />
-    <ClCompile Include="..\src\ColorTransform.cpp" />
     <ClCompile Include="..\src\color_picker.cpp" />
+    <ClCompile Include="..\src\ColorTransform.cpp" />
     <ClCompile Include="..\src\compress.cpp" />
-    <ClCompile Include="..\src\controls.cpp" />
     <ClCompile Include="..\src\controls_dialog.cpp" />
+    <ClCompile Include="..\src\controls.cpp" />
     <ClCompile Include="..\src\current_generator.cpp" />
-    <ClCompile Include="..\src\custom_object.cpp" />
     <ClCompile Include="..\src\custom_object_callable.cpp" />
     <ClCompile Include="..\src\custom_object_dialog.cpp" />
     <ClCompile Include="..\src\custom_object_functions.cpp" />
     <ClCompile Include="..\src\custom_object_type.cpp" />
+    <ClCompile Include="..\src\custom_object.cpp" />
     <ClCompile Include="..\src\db_client.cpp" />
     <ClCompile Include="..\src\debug_console.cpp" />
     <ClCompile Include="..\src\decimal.cpp" />
@@ -448,7 +444,6 @@
     <ClCompile Include="..\src\draw_scene.cpp" />
     <ClCompile Include="..\src\draw_tile.cpp" />
     <ClCompile Include="..\src\dropdown_widget.cpp" />
-    <ClCompile Include="..\src\editor.cpp" />
     <ClCompile Include="..\src\editor_dialogs.cpp" />
     <ClCompile Include="..\src\editor_formula_functions.cpp" />
     <ClCompile Include="..\src\editor_layers_dialog.cpp" />
@@ -456,21 +451,21 @@
     <ClCompile Include="..\src\editor_module_properties_dialog.cpp" />
     <ClCompile Include="..\src\editor_stats_dialog.cpp" />
     <ClCompile Include="..\src\editor_variable_info.cpp" />
+    <ClCompile Include="..\src\editor.cpp" />
     <ClCompile Include="..\src\entity.cpp" />
     <ClCompile Include="..\src\external_text_editor.cpp" />
     <ClCompile Include="..\src\ffl_dom.cpp" />
     <ClCompile Include="..\src\ffl_lib.cpp" />
     <ClCompile Include="..\src\ffl_weak_ptr.cpp" />
+    <ClCompile Include="..\src\file_chooser_dialog.cpp" />
     <ClCompile Include="..\src\filesystem-android.cpp" />
     <ClCompile Include="..\src\filesystem.cpp" />
-    <ClCompile Include="..\src\file_chooser_dialog.cpp" />
-    <ClCompile Include="..\src\formula.cpp" />
-    <ClCompile Include="..\src\formula_callable.cpp" />
     <ClCompile Include="..\src\formula_callable_definition.cpp" />
     <ClCompile Include="..\src\formula_callable_visitor.cpp" />
+    <ClCompile Include="..\src\formula_callable.cpp" />
     <ClCompile Include="..\src\formula_constants.cpp" />
-    <ClCompile Include="..\src\formula_function.cpp" />
     <ClCompile Include="..\src\formula_function_registry.cpp" />
+    <ClCompile Include="..\src\formula_function.cpp" />
     <ClCompile Include="..\src\formula_garbage_collector.cpp" />
     <ClCompile Include="..\src\formula_interface.cpp" />
     <ClCompile Include="..\src\formula_internal.cpp" />
@@ -481,14 +476,15 @@
     <ClCompile Include="..\src\formula_variable_storage.cpp" />
     <ClCompile Include="..\src\formula_visualize_widget.cpp" />
     <ClCompile Include="..\src\formula_vm.cpp" />
+    <ClCompile Include="..\src\formula.cpp" />
     <ClCompile Include="..\src\frame.cpp" />
     <ClCompile Include="..\src\framed_gui_element.cpp" />
     <ClCompile Include="..\src\ft_iface.cpp" />
     <ClCompile Include="..\src\game_registry.cpp" />
     <ClCompile Include="..\src\geometry_callable.cpp" />
     <ClCompile Include="..\src\globals.cpp" />
-    <ClCompile Include="..\src\graphical_font.cpp" />
     <ClCompile Include="..\src\graphical_font_label.cpp" />
+    <ClCompile Include="..\src\graphical_font.cpp" />
     <ClCompile Include="..\src\grid_widget.cpp" />
     <ClCompile Include="..\src\group_property_editor_dialog.cpp" />
     <ClCompile Include="..\src\gui_section.cpp" />
@@ -503,6 +499,11 @@
     <ClCompile Include="..\src\http_server.cpp" />
     <ClCompile Include="..\src\i18n.cpp" />
     <ClCompile Include="..\src\image_widget.cpp" />
+    <ClCompile Include="..\src\imgui_additions\imgui_custom.cpp" />
+    <ClCompile Include="..\src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\src\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\src\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\src\imgui\imgui.cpp" />
     <ClCompile Include="..\src\input.cpp" />
     <ClCompile Include="..\src\isochunk.cpp" />
     <ClCompile Include="..\src\isoworld.cpp" />
@@ -581,29 +582,29 @@
     <ClCompile Include="..\src\language_dialog.cpp" />
     <ClCompile Include="..\src\LayerBlitInfo.cpp" />
     <ClCompile Include="..\src\layout_widget.cpp" />
-    <ClCompile Include="..\src\level.cpp" />
     <ClCompile Include="..\src\level_logic.cpp" />
     <ClCompile Include="..\src\level_object.cpp" />
     <ClCompile Include="..\src\level_runner.cpp" />
     <ClCompile Include="..\src\level_solid_map.cpp" />
+    <ClCompile Include="..\src\level.cpp" />
     <ClCompile Include="..\src\light.cpp" />
-    <ClCompile Include="..\src\loading_screen.cpp" />
-    <ClCompile Include="..\src\load_level.cpp" />
     <ClCompile Include="..\src\load_level_nothread.cpp" />
+    <ClCompile Include="..\src\load_level.cpp" />
+    <ClCompile Include="..\src\loading_screen.cpp" />
     <ClCompile Include="..\src\logger.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\md5.cpp" />
     <ClCompile Include="..\src\message_dialog.cpp" />
-    <ClCompile Include="..\src\module.cpp" />
     <ClCompile Include="..\src\module_web_server.cpp" />
-    <ClCompile Include="..\src\multiplayer.cpp" />
-    <ClCompile Include="..\src\multiplayer_server.cpp" />
+    <ClCompile Include="..\src\module.cpp" />
     <ClCompile Include="..\src\multi_tile_pattern.cpp" />
+    <ClCompile Include="..\src\multiplayer_server.cpp" />
+    <ClCompile Include="..\src\multiplayer.cpp" />
     <ClCompile Include="..\src\normal_map.cpp" />
     <ClCompile Include="..\src\object_events.cpp" />
-    <ClCompile Include="..\src\ParticleSystemWidget.cpp" />
-    <ClCompile Include="..\src\particle_system.cpp" />
     <ClCompile Include="..\src\particle_system_proxy.cpp" />
+    <ClCompile Include="..\src\particle_system.cpp" />
+    <ClCompile Include="..\src\ParticleSystemWidget.cpp" />
     <ClCompile Include="..\src\pathfinding.cpp" />
     <ClCompile Include="..\src\pause_game_dialog.cpp" />
     <ClCompile Include="..\src\playable_custom_object.cpp" />
@@ -616,8 +617,8 @@
     <ClCompile Include="..\src\progress_bar.cpp" />
     <ClCompile Include="..\src\property_editor_dialog.cpp" />
     <ClCompile Include="..\src\random.cpp" />
-    <ClCompile Include="..\src\rectangle_rotator.cpp" />
     <ClCompile Include="..\src\rect_renderable.cpp" />
+    <ClCompile Include="..\src\rectangle_rotator.cpp" />
     <ClCompile Include="..\src\rich_text_label.cpp" />
     <ClCompile Include="..\src\SceneNodeCallable.cpp" />
     <ClCompile Include="..\src\SceneObjectCallable.cpp" />
@@ -634,10 +635,10 @@
     <ClCompile Include="..\src\sound.cpp" />
     <ClCompile Include="..\src\speech_dialog.cpp" />
     <ClCompile Include="..\src\StackWalker.cpp" />
-    <ClCompile Include="..\src\stats.cpp" />
-    <ClCompile Include="..\src\stats_server.cpp" />
     <ClCompile Include="..\src\stats_server_main.cpp" />
+    <ClCompile Include="..\src\stats_server.cpp" />
     <ClCompile Include="..\src\stats_web_server.cpp" />
+    <ClCompile Include="..\src\stats.cpp" />
     <ClCompile Include="..\src\string_utils.cpp" />
     <ClCompile Include="..\src\surface_cache.cpp" />
     <ClCompile Include="..\src\surface_palette.cpp" />
@@ -664,17 +665,17 @@
     <ClCompile Include="..\src\tbs_internal_server.cpp" />
     <ClCompile Include="..\src\tbs_ipc_client.cpp" />
     <ClCompile Include="..\src\tbs_matchmaking_server.cpp" />
-    <ClCompile Include="..\src\tbs_server.cpp" />
     <ClCompile Include="..\src\tbs_server_base.cpp" />
+    <ClCompile Include="..\src\tbs_server.cpp" />
     <ClCompile Include="..\src\tbs_web_server.cpp" />
-    <ClCompile Include="..\src\TextureObject.cpp" />
     <ClCompile Include="..\src\text_editor_widget.cpp" />
+    <ClCompile Include="..\src\TextureObject.cpp" />
     <ClCompile Include="..\src\theme_imgui.cpp" />
     <ClCompile Include="..\src\thread.cpp" />
+    <ClCompile Include="..\src\tile_map.cpp" />
     <ClCompile Include="..\src\tiled\tiled.cpp" />
     <ClCompile Include="..\src\tiled\tmx_reader.cpp" />
     <ClCompile Include="..\src\tileset_editor_dialog.cpp" />
-    <ClCompile Include="..\src\tile_map.cpp" />
     <ClCompile Include="..\src\tooltip.cpp" />
     <ClCompile Include="..\src\translate.cpp" />
     <ClCompile Include="..\src\tree_view_widget.cpp" />
@@ -685,26 +686,26 @@
     <ClCompile Include="..\src\utility_render_level.cpp" />
     <ClCompile Include="..\src\utils.cpp" />
     <ClCompile Include="..\src\uuid.cpp" />
-    <ClCompile Include="..\src\variant.cpp" />
     <ClCompile Include="..\src\variant_callable.cpp" />
-    <ClCompile Include="..\src\variant_type.cpp" />
     <ClCompile Include="..\src\variant_type_check.cpp" />
+    <ClCompile Include="..\src\variant_type.cpp" />
     <ClCompile Include="..\src\variant_utils.cpp" />
+    <ClCompile Include="..\src\variant.cpp" />
     <ClCompile Include="..\src\video_selections.cpp" />
     <ClCompile Include="..\src\VoronoiDiagramGenerator.cpp" />
     <ClCompile Include="..\src\voxel_animation.cpp" />
     <ClCompile Include="..\src\voxel_editor.cpp" />
     <ClCompile Include="..\src\voxel_model.cpp" />
-    <ClCompile Include="..\src\voxel_object.cpp" />
     <ClCompile Include="..\src\voxel_object_functions.cpp" />
     <ClCompile Include="..\src\voxel_object_type.cpp" />
-    <ClCompile Include="..\src\water.cpp" />
+    <ClCompile Include="..\src\voxel_object.cpp" />
     <ClCompile Include="..\src\water_particle_system.cpp" />
+    <ClCompile Include="..\src\water.cpp" />
     <ClCompile Include="..\src\weather_particle_system.cpp" />
-    <ClCompile Include="..\src\widget.cpp" />
     <ClCompile Include="..\src\widget_editor.cpp" />
     <ClCompile Include="..\src\widget_factory.cpp" />
     <ClCompile Include="..\src\widget_settings_dialog.cpp" />
+    <ClCompile Include="..\src\widget.cpp" />
     <ClCompile Include="..\src\wml_formula_callable.cpp" />
     <ClCompile Include="..\src\xhtml\css_lexer.cpp" />
     <ClCompile Include="..\src\xhtml\css_parser.cpp" />
@@ -748,118 +749,78 @@
     <RootNamespace>anura</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+  <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Platform)-$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Platform)-$(Configuration)\</IntDir>
-    <CustomBuildAfterTargets>Link</CustomBuildAfterTargets>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
-    <ExternalIncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)$(Platform)-$(Configuration)\</OutDir>
-    <CustomBuildAfterTargets>Link</CustomBuildAfterTargets>
-    <IntDir>$(SolutionDir)build\$(Platform)-$(Configuration)\</IntDir>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgManifestInstall>true</VcpkgManifestInstall>
+    <VcpkgTriplet>x64-windows-static</VcpkgTriplet>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(MSBuildThisFileDirectory)..\vcpkg\scripts\buildsystems\msbuild\vcpkg.props" />
+  <ItemDefinitionGroup>
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;NOMINMAX;USE_SVG;USE_IMGUI;_WIN32_WINNT=_WIN32_WINNT_WIN10;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_LIB;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\hex;..\src\kre;..\src\svg;..\src\tiled;..\src\xhtml;..\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>IMGUI_USER_CONFIG="..\src\imgui_additions\imconfig_anura.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>IMGUI_DEFINE_MATH_OPERATORS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\hex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\kre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\svg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\tiled;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\xhtml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src\imgui_additions;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <WholeProgramOptimization>true</WholeProgramOptimization>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Msimg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Link Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
-      <AdditionalDependencies>psapi.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>SDL2Main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <CustomBuildStep>
-      <Command>build_copy_files.bat $(OutputPath) $(SolutionDir) $(Platform)</Command>
-      <Inputs>$(OutputPath)$(TargetFileName)</Inputs>
-      <Outputs>$(OutputPath)</Outputs>
-      <TreatOutputAsContent>true</TreatOutputAsContent>
-      <Message>Copy data to build directory</Message>
-    </CustomBuildStep>
-    <ProjectReference />
-    <ProjectReference />
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;NOMINMAX;USE_SVG;USE_IMGUI;_WIN32_WINNT=_WIN32_WINNT_WIN10;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_LIB;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\hex;..\src\kre;..\src\svg;..\src\tiled;..\src\xhtml;..\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
+    <Link Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <OptimizeReferences>false</OptimizeReferences>
+      <AdditionalDependencies>SDL2Maind.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <CustomBuildStep>
-      <Command>build_copy_files.bat $(OutputPath) $(SolutionDir) $(Platform)</Command>
-      <Inputs>$(OutputPath)$(TargetFileName)</Inputs>
-      <Outputs>$(OutputPath)</Outputs>
-      <TreatOutputAsContent>true</TreatOutputAsContent>
-      <Message>Copy data to build directory</Message>
-    </CustomBuildStep>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <Import Project="$(MSBuildThisFileDirectory)..\vcpkg\scripts\buildsystems\msbuild\vcpkg.targets" />
 </Project>
