@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "anura-dependencies",
   "version": "0.0.1",
-  "builtin-baseline": "d953973cfbfeaf8022f5219fbabb0bdf9defb706",
+  "builtin-baseline": "6ca56aeb457f033d344a7106cb3f9f1abf8f4e98",
   "dependencies": [
     {
       "name": "sdl2",
