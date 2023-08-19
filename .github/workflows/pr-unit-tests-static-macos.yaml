@@ -1,0 +1,48 @@
+name: Unit Tests / Required / Static / macOS
+
+on:
+  pull_request:
+  merge_group:
+
+env:
+  VCPKG_DISABLE_METRICS: 1
+
+jobs:
+  build:
+    name: 'macOS Ventura'
+    runs-on: macos-13
+    strategy:
+      fail-fast: false
+      matrix:
+        build-type:
+          - Release
+          - Debug
+    steps:
+      - name: Checkout Anura
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          # We need the full history for the vcpkg integration to work
+          fetch-depth: 0
+          submodules: true
+
+      # Sets a cache up for vcpkg
+      - name: Install vcpkg
+        uses: lukka/run-vcpkg@abed23940f9d7bc267b0e1a21ee7b699a3794baa # v11.1
+
+      - name: Install XCode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '14.3.1'
+
+      - name: Install Build Time Dependencies
+        run: |
+          brew install \
+            automake \
+            autoconf \
+            autoconf-archive
+
+      - name: Build Anura
+        run: xcodebuild -configuration "${{ matrix.build-type }}" -target Frogatto -project MacOS/Frogatto.xcodeproj
+
+      - name: Run Unit Tests
+        run: ./MacOS/build/"${{ matrix.build-type }}"/Frogatto.app/Contents/MacOS/Frogatto --tests

@@ -203,7 +203,17 @@ The .sln and .vcxproj are intending for the following set of constraints:
 
 #### macOS
 
-Undocumented, known broken as of 2023-08.
+The build is known broken as of 2023-08. The libraries it compiles are only
+expected to work on the same version of macOS as they got built on.
+
+The .xcodeproj is intending for the following set of constraints:
+
+* Wrap vcpkg
+  * Install correct dependencies
+* Default set of warnings
+  * Don't treat warnings as errors
+* "Press play to run"
+* "Press play to debug"
 
 #### macOS Legacy
 
@@ -296,8 +306,10 @@ On every push:
     static](https://github.com/anura-engine/anura/blob/trunk/.github/workflows/push-unit-tests-static-windows.yaml)
   * KNOWN BROKEN [Windows / msbuild / Debug /
     static](https://github.com/anura-engine/anura/blob/trunk/.github/workflows/push-unit-tests-static-windows.yaml)
-  * NOT IMPLEMENTED macOS / xcodebuild / Release / static
-  * NOT IMPLEMENTED macOS / xcodebuild / Debug / static
+  * KNOWN BROKEN [macOS / xcodebuild / Release /
+    static](https://github.com/anura-engine/anura/blob/trunk/.github/workflows/push-unit-tests-static-macos.yaml)
+  * KNOWN BROKEN [macOS / xcodebuild / Debug /
+    static](https://github.com/anura-engine/anura/blob/trunk/.github/workflows/push-unit-tests-static-macos.yaml)
   * Ubuntu 22.04 / clang++ / Release / dynamic
   * NOT IMPLEMENTED Ubuntu 22.04 / clang++ / Debug / dynamic
   * NOT IMPLEMENTED Ubuntu 22.04 / clang++ / Release / static
