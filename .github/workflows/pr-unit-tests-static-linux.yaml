@@ -1,0 +1,108 @@
+name: Unit Tests / Required / Static / Linux
+on:
+  pull_request:
+  merge_group:
+
+jobs:
+  build:
+    name: Build and Test in Steam SDK
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # XXX - This matrix needs to stay in sync with the test job below!
+        compiler:
+          # Only g++ builds actually work currently
+          - g++
+        build-type:
+          - Release
+          - Debug
+        steam-runtime:
+          # - scout v1 - Debian Stretch  / 9 - has a glibc too old for Github Actions / Node 20
+          # - soldier v2 - Debian Buster / 10 - has a weird compiler and a weird ld, no idea what is up there
+          - sniper # v3 - Debian Bullseye / 11
+          # - medic v4 - Debian Bookworm / 12 - not in the container registry yet
+          # - ??? v5 - Debian Trixie / 13 - not in the container registry yet
+    container: registry.gitlab.steamos.cloud/steamrt/${{ matrix.steam-runtime }}/sdk
+    steps:
+      - name: Install Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq upgrade -y
+          sudo apt-get -qq install -y --no-install-recommends \
+            autoconf-archive
+
+      - name: Checkout Anura
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Ignore Filesystem Permissions for Git
+        run: git config --global --add safe.directory '*'
+
+      # Sets a cache up for vcpkg
+      - name: Install vcpkg
+        uses: lukka/run-vcpkg@abed23940f9d7bc267b0e1a21ee7b699a3794baa # v11.1
+
+      - name: Set ccache up
+        uses: hendrikmuhs/ccache-action@ca3acd2731eef11f1572ccb126356c2f9298d35e # v1.2.9
+        with:
+          key: unit-tests-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
+
+      - name: Build Prep Anura
+        run: |
+          cmake . \
+            -D CMAKE_CXX_COMPILER="${{ matrix.compiler }}" \
+            -D CMAKE_BUILD_TYPE="${{ matrix.build-type }}" \
+            -D CMAKE_LINK_TYPE=Static
+
+      - name: Build Anura
+        run: |
+          # Compile with number of available hyperthreads
+          make -j "$(getconf _NPROCESSORS_ONLN)"
+
+      - name: Run Unit Tests
+        run: ./anura --tests
+
+      - uses: actions/upload-artifact@1eb3cb2b3e0f29609092a73eb033bb759a334595 # v4.1.0
+        with:
+          name: anura-static-binary-${{ matrix.build-type }}-${{ matrix.steam-runtime }}-${{ matrix.compiler }}-${{ github.sha }}
+          path: anura
+          if-no-files-found: error
+
+  test:
+    name: Test on Steam Platform
+    needs: build
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # XXX - This matrix needs to stay in sync with the build job above!
+        compiler:
+          # Only g++ builds actually work currently
+          - g++
+        build-type:
+          - Release
+          - Debug
+        steam-runtime:
+          # - scout v1 - Debian Stretch  / 9 - has a glibc too old for Github Actions / Node 20
+          # - soldier v2 - Debian Buster / 10 - has a weird compiler and a weird ld, no idea what is up there
+          - sniper # v3 - Debian Bullseye / 11
+          # - medic v4 - Debian Bookworm / 12 - not in the container registry yet
+          # - ??? v5 - Debian Trixie / 13 - not in the container registry yet
+    container: registry.gitlab.steamos.cloud/steamrt/${{ matrix.steam-runtime }}/platform
+    steps:
+      - name: Checkout Anura
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        with:
+          name: anura-static-binary-${{ matrix.build-type }}-${{ matrix.steam-runtime }}-${{ matrix.compiler }}-${{ github.sha }}
+
+      - name: Run Unit Tests
+        run: |
+          chmod +x anura
+          ./anura --tests

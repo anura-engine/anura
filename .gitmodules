@@ -1,5 +1,5 @@
 [submodule "imgui"]
-	path = imgui
+	path = src/imgui
 	url = https://github.com/ocornut/imgui
 	shallow = true
 [submodule "vcpkg"]

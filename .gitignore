@@ -112,6 +112,19 @@ DerivedData/
 # Anura XCode build
 /MacOS/vcpkg
 
+# CMake
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
 # Don't commit master-config.cfg by default.
 # It should be copied or symlinked from a module.
 master-config.cfg
