@@ -1,7 +1,6 @@
 name: Smoketest / Informative / Ubuntu
 on:
   pull_request:
-  merge_group:
 
 jobs:
   test:
@@ -10,11 +9,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Versions between LTS are not available for long - we only do LTS
         ubuntu:
-          - "22.04" # LTS only for sanity
+          - "20.04"
+          - "22.04"
+          - "24.04"
+          # 26.04 LTS is expected in 2026-04
+          # 28.04 LTS is expected in 2028-04
         compiler:
           - g++
-          - clang
+          - clang++
+        build-type:
+          - Release
+          - Debug
     container: ubuntu:${{ matrix.ubuntu }}
     steps:
       - name: Install Dependencies
@@ -24,9 +31,14 @@ jobs:
           apt-get -qq update
           apt-get -qq upgrade -y
           apt-get -qq install -y --no-install-recommends \
+            apt-file
+          apt-file update
+          apt-get -qq install -y --no-install-recommends \
             ca-certificates \
             git \
-            ${{ matrix.compiler }} \
+            g++ \
+            clang \
+            llvm-dev \
             cmake \
             make \
             ccache \
@@ -52,14 +64,17 @@ jobs:
       - name: Set ccache up
         uses: hendrikmuhs/ccache-action@ca3acd2731eef11f1572ccb126356c2f9298d35e # v1.2.9
         with:
-          key: ${{ github.job }}-ubuntu-${{ matrix.ubuntu }}-${{ matrix.compiler }}
+          key: ${{ github.job }}-ubuntu-${{ matrix.ubuntu }}-${{ matrix.compiler }}-${{ matrix.build-type }}
+
+      - name: Build Prep Anura
+        run: |
+          cmake . \
+          -D CMAKE_CXX_COMPILER="${{ matrix.compiler }}" \
+          -D CMAKE_BUILD_TYPE="${{ matrix.build-type }}"
 
       - name: Build Anura
-        env:
-          CXX: ${{ matrix.compiler }}
-        # Compile with number of available hyperthreads
         run: |
-          cmake .
+          # Compile with number of available hyperthreads
           make -j "$(getconf _NPROCESSORS_ONLN)"
 
       - name: Run Unit Tests

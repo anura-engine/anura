@@ -1,7 +1,6 @@
 name: Smoketest / Informative / openSUSE Leap
 on:
   pull_request:
-  merge_group:
 
 jobs:
   test:
@@ -11,50 +10,48 @@ jobs:
       fail-fast: false
       matrix:
         suse:
-          # 15.3 is the oldest openSUSE Leap with a new enough glm
-          - "15.3"
+          # 15.4 is the oldest openSUSE Leap with a new enough clang
           - "15.4"
           - "15.5"
+          - "15.6"
+          # 15.7 is expected in 2025-06
+          # 15.8 is expected in 2026-06
         compiler:
           - g++
-          - clang
+          - clang++
+        build-type:
+          - Release
+          - Debug
     container: opensuse/leap:${{ matrix.suse }}
     steps:
-      - name: Resolve Compiler Package Name
-        run: |
-          if [[ ${{ matrix.compiler }} == g++ ]]
-          then
-            echo compiler=gcc-c++ >> "$GITHUB_ENV"
-          else
-            echo compiler=clang >> "$GITHUB_ENV"
-          fi
-
       - name: Install Dependencies
         run: |
-          zypper --non-interactive update
-          zypper --non-interactive install \
+          zypper -q --non-interactive update
+          zypper -q --non-interactive install \
             tar \
             gzip \
             git \
-            ${{ env.compiler }} \
+            gcc-c++ \
+            clang \
+            llvm-gold-provider \
             cmake \
             make \
             ccache \
-            boost-devel \
+            libboost_filesystem-devel \
+            libboost_locale-devel \
+            libboost_regex-devel \
+            libboost_system-devel \
             cairo-devel \
             glew-devel \
             glm-devel \
-            libboost_filesystem*6*devel \
-            libboost_locale*6*devel \
-            libboost_regex*6*devel \
-            libboost_system*6*devel \
-            libboost_thread*6*devel \
+            boost-devel \
             libicu-devel \
             libSDL2_image-devel \
             libSDL2_mixer-devel \
             libSDL2_ttf-devel \
             libSDL2-devel \
-            libvorbis-devel
+            libvorbis-devel \
+            libjack
 
       - name: Checkout Anura
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -64,14 +61,17 @@ jobs:
       - name: Set ccache up
         uses: hendrikmuhs/ccache-action@ca3acd2731eef11f1572ccb126356c2f9298d35e # v1.2.9
         with:
-          key: ${{ github.job }}-opensuse-leap-${{ matrix.suse }}-${{ matrix.compiler }}
+          key: ${{ github.job }}-opensuse-leap-${{ matrix.suse }}-${{ matrix.compiler }}-${{ matrix.build-type }}
+
+      - name: Build Prep Anura
+        run: |
+          cmake . \
+          -D CMAKE_CXX_COMPILER="${{ matrix.compiler }}" \
+          -D CMAKE_BUILD_TYPE="${{ matrix.build-type }}"
 
       - name: Build Anura
-        env:
-          CXX: ${{ matrix.compiler }}
-        # Compile with number of available hyperthreads
         run: |
-          cmake .
+          # Compile with number of available hyperthreads
           make -j "$(getconf _NPROCESSORS_ONLN)"
 
       - name: Run Unit Tests

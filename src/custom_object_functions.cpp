@@ -27,9 +27,7 @@
 #include <string>
 #include <time.h>
 
-#ifdef USE_SVG
 #include "cairo.hpp"
-#endif
 
 #include "code_editor_dialog.hpp"
 #include "ColorTransform.hpp"

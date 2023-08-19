@@ -52,9 +52,7 @@
 
 #include "geometry.hpp"
 
-#ifdef USE_SVG
 #include "cairo.hpp"
-#endif
 
 #include "array_callable.hpp"
 #include "asserts.hpp"
@@ -628,7 +626,6 @@ namespace game_logic
 		RETURN_TYPE("builtin geometry")
 		END_FUNCTION_DEF(geometry_api)
 
-#ifdef USE_SVG
 	FUNCTION_DEF(canvas, 0, 0, "canvas() -> canvas object")
 		static variant result(new graphics::cairo_callable());
 		return result;
@@ -636,7 +633,6 @@ namespace game_logic
 		RETURN_TYPE("builtin cairo_callable")
 
 	END_FUNCTION_DEF(canvas)
-#endif
 
 		class DateTime : public game_logic::FormulaCallable {
 		public:
