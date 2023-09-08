@@ -70,6 +70,7 @@ modules/*
 !modules/gui
 !modules/tbs
 .vscode/
+/external/*
 
 #Ignore this, don't know why it's being created for me.
 imgui.ini
