@@ -137,6 +137,7 @@ void show_video_selection_dialog()
 
 		// Video mode list.
 		DropdownWidget* mode_list = new DropdownWidget(display_strings, 260, 20);
+		mode_list->setDropdownHeight(420);
 		mode_list->setSelection(current_mode_index);
 		mode_list->setZOrder(10);
 		mode_list->setOnSelectHandler([&selected_mode](int selection,const std::string& s){
@@ -147,22 +148,24 @@ void show_video_selection_dialog()
 		d.addWidget(make_font_label(_("Unable to enumerate video modes")));
 	}
 
-	// Fullscreen selection
+	
 	preferences::ScreenMode fs_mode = preferences::get_screen_mode();
-	std::vector<std::string> fs_options;
-	fs_options.emplace_back(_("Windowed mode"));
-	fs_options.emplace_back(_("Fullscreen Windowed"));
-	//fs_options.push_back("Fullscreen");
-	DropdownWidget* fs_list = new DropdownWidget(fs_options, 260, 20);
-	fs_list->setSelection(static_cast<int>(preferences::get_screen_mode()));
-	fs_list->setZOrder(9);
-	fs_list->setOnSelectHandler([&fs_mode](int selection,const std::string& s){
-		switch(selection) {
-			case 0:	fs_mode = preferences::ScreenMode::WINDOWED; break;
-			case 1:	fs_mode = preferences::ScreenMode::FULLSCREEN_WINDOWED; break;
-		}
-	});
-	d.addWidget(WidgetPtr(fs_list));
+	if(!preferences::no_fullscreen_ever()) {
+		// Fullscreen selection
+		std::vector<std::string> fs_options;
+		fs_options.emplace_back(_("Windowed Mode"));
+		fs_options.emplace_back(_("Fullscreen Mode")); //Windowed-type fullscreen.
+		DropdownWidget* fs_list = new DropdownWidget(fs_options, 260, 20);
+		fs_list->setSelection(static_cast<int>(preferences::get_screen_mode()));
+		fs_list->setZOrder(9);
+		fs_list->setOnSelectHandler([&fs_mode](int selection,const std::string& s){
+			switch(selection) {
+				case 0:	fs_mode = preferences::ScreenMode::WINDOWED; break;
+				case 1:	fs_mode = preferences::ScreenMode::FULLSCREEN_WINDOWED; break;
+			}
+		});
+		d.addWidget(WidgetPtr(fs_list));
+	}
 
 	// Vertical sync options
 	std::vector<std::string> vsync_options;
@@ -198,6 +201,6 @@ void show_video_selection_dialog()
 		if(selected_mode >= 0 && static_cast<unsigned>(selected_mode) < display_modes.size()) {
 			KRE::WindowManager::getMainWindow()->setWindowSize(display_modes[selected_mode].width, display_modes[selected_mode].height);
 		}
-		//preferences::set_screen_mode(fs_mode);
+		preferences::set_screen_mode(fs_mode);
 	}
 }
