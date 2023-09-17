@@ -940,10 +940,12 @@ int main(int argcount, char* argvec[])
     KRE::WindowPtr main_wnd = wm.allocateWindow(built_hints);
 	main_wnd->setWindowTitle(module::get_module_pretty_name());
 
-	if(!g_desktop_fullscreen && //What the heck is this, where is it defined?
-	   preferences::auto_size_window()
+	if(
+		!g_desktop_fullscreen && //Comes from a PREF_BOOL() somewhere.
+		preferences::auto_size_window()
 		&& preferences::requested_window_width() == 0
-		&& preferences::requested_window_height() == 0) {
+		&& preferences::requested_window_height() == 0
+	) {
 		int width = 0;
 		int height = 0;
 

@@ -37,6 +37,7 @@
 #include "level.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
+#include "screen_handling.hpp"
 #include "video_selections.hpp"
 
 using namespace gui;
@@ -194,7 +195,7 @@ void show_video_selection_dialog()
 			KRE::WindowManager::getMainWindow()->setWindowSize(display_modes[selected_mode].width, display_modes[selected_mode].height);
 		}
 		
-		KRE::WindowManager::getMainWindow()->setFullscreenMode(fullscreenCheckbox->checked()
+		graphics::GameScreen::get().setFullscreen(fullscreenCheckbox->checked()
 			? KRE::FullScreenMode::FULLSCREEN_WINDOWED
 			: KRE::FullScreenMode::WINDOWED);
 		preferences::set_screen_mode(
