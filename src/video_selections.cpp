@@ -151,9 +151,11 @@ void show_video_selection_dialog()
 	}
 	
 	// Fullscreen selection
+	bool isWindowInitiallyFullscreen = 
+		KRE::WindowManager::getMainWindow()->fullscreenMode() != KRE::FullScreenMode::WINDOWED;
 	Checkbox* fullscreenCheckbox = new Checkbox(
 		_("Fullscreen"),
-		KRE::WindowManager::getMainWindow()->fullscreenMode() != KRE::FullScreenMode::WINDOWED,
+		isWindowInitiallyFullscreen,
 		[](bool checked) { /* Do nothing here, only apply on dialog OK. */ }
 	);
 	if(!preferences::no_fullscreen_ever()) {
@@ -190,20 +192,36 @@ void show_video_selection_dialog()
 
 	d.showModal();
 	if(d.cancelled() == false) {
+		auto wnd = KRE::WindowManager::getMainWindow();
+		
 		// Set window size.
 		if(selected_mode >= 0 && static_cast<unsigned>(selected_mode) < display_modes.size()) {
-			preferences::set_auto_size_window(false); //Don't autosize the window if we chose an explicit display size.
-			KRE::WindowManager::getMainWindow()->setWindowSize(display_modes[selected_mode].width, display_modes[selected_mode].height);
+			preferences::adjust_virtual_width_to_match_physical(display_modes[selected_mode].width, display_modes[selected_mode].height);
+			
+			int vw = preferences::requested_virtual_window_width() > 0
+				? preferences::requested_virtual_window_width()
+				: wnd->width();
+			int vh = preferences::requested_virtual_window_height() > 0
+				? preferences::requested_virtual_window_height()
+				: wnd->height();
+			
+			//Don't set window size if going fullscreen, because size must be monitor size then.
+			if (!fullscreenCheckbox->checked()) {
+				wnd->setWindowSize(display_modes[selected_mode].width, display_modes[selected_mode].height);
+				graphics::GameScreen::get().setVirtualDimensions(vw, vh);
+			}
 		}
 
 		// Set fullscreen.
-		graphics::GameScreen::get().setFullscreen(
-			fullscreenCheckbox->checked()
-				? KRE::FullScreenMode::FULLSCREEN_WINDOWED
-				: KRE::FullScreenMode::WINDOWED);
-		preferences::set_screen_mode(
-			KRE::WindowManager::getMainWindow()->fullscreenMode() == KRE::FullScreenMode::WINDOWED
-				? preferences::ScreenMode::WINDOWED
-				: preferences::ScreenMode::FULLSCREEN_WINDOWED);
+		if(isWindowInitiallyFullscreen != fullscreenCheckbox->checked()) {
+			graphics::GameScreen::get().setFullscreen(
+				fullscreenCheckbox->checked()
+					? KRE::FullScreenMode::FULLSCREEN_WINDOWED
+					: KRE::FullScreenMode::WINDOWED);
+			preferences::set_screen_mode(
+				fullscreenCheckbox->checked()
+					? preferences::ScreenMode::FULLSCREEN_WINDOWED
+					: preferences::ScreenMode::WINDOWED);
+		}
 	}
 }
