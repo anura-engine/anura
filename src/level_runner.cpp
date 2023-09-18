@@ -1575,7 +1575,7 @@ bool LevelRunner::play_cycle()
 						pause_next = true;
 					}
 
-				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
+				} else if(((key == SDLK_f && mod & KMOD_CTRL) || key == SDLK_F11)  && !preferences::no_fullscreen_ever()) {
 
 					static int last_pushed = -1;
 
