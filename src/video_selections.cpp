@@ -190,14 +190,17 @@ void show_video_selection_dialog()
 
 	d.showModal();
 	if(d.cancelled() == false) {
-		// set selected video mode here
+		// Set window size.
 		if(selected_mode >= 0 && static_cast<unsigned>(selected_mode) < display_modes.size()) {
+			preferences::set_auto_size_window(false); //Don't autosize the window if we chose an explicit display size.
 			KRE::WindowManager::getMainWindow()->setWindowSize(display_modes[selected_mode].width, display_modes[selected_mode].height);
 		}
-		
-		graphics::GameScreen::get().setFullscreen(fullscreenCheckbox->checked()
-			? KRE::FullScreenMode::FULLSCREEN_WINDOWED
-			: KRE::FullScreenMode::WINDOWED);
+
+		// Set fullscreen.
+		graphics::GameScreen::get().setFullscreen(
+			fullscreenCheckbox->checked()
+				? KRE::FullScreenMode::FULLSCREEN_WINDOWED
+				: KRE::FullScreenMode::WINDOWED);
 		preferences::set_screen_mode(
 			KRE::WindowManager::getMainWindow()->fullscreenMode() == KRE::FullScreenMode::WINDOWED
 				? preferences::ScreenMode::WINDOWED
