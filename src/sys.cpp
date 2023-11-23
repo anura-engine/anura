@@ -99,6 +99,7 @@ namespace sys
 	}
 	}
 
+#ifdef __GLIBC__
 	bool get_memory_consumption(MemoryConsumptionInfo* info)
 	{
 		std::string s = read_file("/proc/self/status");
@@ -125,6 +126,16 @@ namespace sys
 	int get_heap_object_usable_size(void* ptr) {
 		return malloc_usable_size(ptr);
 	}
+#else
+	bool get_memory_consumption(MemoryConsumptionInfo* info)
+	{
+		return false;
+	}
+
+	int get_heap_object_usable_size(void* ptr) {
+		return 0;
+	}
+#endif
 
 #elif defined(__APPLE__)
 

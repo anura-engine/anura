@@ -196,7 +196,7 @@ namespace tbs
 	void server::connect_relay_session(const std::string& host, const std::string& port, int session_id)
 	{
 		if(web_server_) {
-			LOG_INFO("Connnect relay session: " << host << ":" << port << " session = " << session_id);
+			LOG_INFO("Connect relay session: " << host << ":" << port << " session = " << session_id);
 			web_server_->connect_proxy(static_cast<uint32_t>(session_id), host, port);
 		}
 	}

@@ -1,0 +1,58 @@
+name: Smoketest / Informative / Fedora
+on:
+  pull_request:
+  merge_group:
+
+jobs:
+  test:
+    name: Compilers
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora:
+          # 32 is the oldest Fedora with a new enough glm
+          - "32"
+          - "33"
+          - "34"
+          - "35"
+          - "36"
+          - "37"
+          - "38"
+          - "39"
+        compiler:
+          - g++
+          - clang
+    container: fedora:${{ matrix.fedora }}
+    steps:
+      - name: Install Dependencies
+        run: |
+            dnf -y update
+            dnf -y install \
+                git \
+                ${{ matrix.compiler }} \
+                make \
+                which \
+                SDL2-devel \
+                boost-devel \
+                glm-devel \
+                glew-devel \
+                cairo-devel \
+                SDL2_ttf-devel \
+                SDL2_image-devel \
+                SDL2_mixer-devel \
+                libvorbis-devel
+
+      - name: Checkout Anura
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+            submodules: true
+
+      - name: Build Anura
+        env:
+          CXX: ${{ matrix.compiler }}
+        # Number of cores * 3
+        run: make -j "$(($(getconf _NPROCESSORS_ONLN) * 3))"
+
+      - name: Run Unit Tests
+        run: ./anura --tests

@@ -2093,7 +2093,7 @@ namespace
 
 	END_FUNCTION_DEF(object)
 
-	FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the Level. object_playable only creates the playble object and returns it. It may be stored for later use.")
+	FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the Level. object_playable only creates the playable object and returns it. It may be stored for later use.")
 		Formula::failIfStaticContext();
 		const std::string type = EVAL_ARG(0).as_string();
 		ffl::IntrusivePtr<CustomObject> obj;
@@ -3446,7 +3446,7 @@ RETURN_TYPE("bool")
 			cmd->setExpression(this);
 			return variant(cmd);
 		} else if(NUM_ARGS == 2) {
-			LOG_ERROR("TWO ARGMENTS ISN'T A SUPPORTED OPTION FOR resolve_solid() CONTINUING AS IF ONE ARGUMENT SUPPLIED");
+			LOG_ERROR("TWO ARGUMENTS ISN'T A SUPPORTED OPTION FOR resolve_solid() CONTINUING AS IF ONE ARGUMENT SUPPLIED");
 			resolve_solid_command* cmd = (new resolve_solid_command(e, 0, 0, 0));
 			cmd->setExpression(this);
 			return variant(cmd);

@@ -1,0 +1,57 @@
+name: Smoketest / Informative / Ubuntu
+on:
+  pull_request:
+  merge_group:
+
+jobs:
+  test:
+    name: Compilers
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu:
+          - "22.04" # LTS only for sanity
+        compiler:
+          - g++
+          - clang
+    container: ubuntu:${{ matrix.ubuntu }}
+    steps:
+      - name: Install Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get -qq update
+          apt-get -qq upgrade -y
+          apt-get -qq install -y --no-install-recommends \
+            ca-certificates \
+            git \
+            ${{ matrix.compiler }} \
+            libboost-dev \
+            libboost-filesystem-dev \
+            libboost-locale-dev \
+            libboost-regex-dev \
+            libboost-system-dev \
+            libcairo2-dev \
+            libglew-dev \
+            libglm-dev \
+            libsdl2-dev \
+            libsdl2-image-dev \
+            libsdl2-mixer-dev \
+            libsdl2-ttf-dev \
+            libvorbis-dev \
+            make
+
+      - name: Checkout Anura
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          submodules: true
+
+      - name: Build Anura
+        env:
+          CXX: ${{ matrix.compiler }}
+        # Number of cores * 3
+        run: make -j "$(($(getconf _NPROCESSORS_ONLN) * 3))"
+
+      - name: Run Unit Tests
+        run: ./anura --tests

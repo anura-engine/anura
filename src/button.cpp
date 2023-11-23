@@ -123,7 +123,7 @@ variant Button::getColorScheme()
 		hpadding_ = v["hpad"].as_int(default_hpadding);
 		vpadding_ = v["vpad"].as_int(default_vpadding);
 		if(v.has_key("padding")) {
-			ASSERT_LOG(v["padding"].num_elements() == 2, "Incorrect number of padding elements specifed." << v["padding"].num_elements());
+			ASSERT_LOG(v["padding"].num_elements() == 2, "Incorrect number of padding elements specified." << v["padding"].num_elements());
 			hpadding_ = v["padding"][0].as_int();
 			vpadding_ = v["padding"][1].as_int();
 		}

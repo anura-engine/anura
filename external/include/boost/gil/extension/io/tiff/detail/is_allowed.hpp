@@ -130,7 +130,7 @@ struct Format_Type
 //        return SAMPLEFORMAT_IEEEFP;
 //    }
 //
-//    io_error( "Unkown channel format." );
+//    io_error( "Unknown channel format." );
 //}
 
 // The following two functions look the same but are different since one is using

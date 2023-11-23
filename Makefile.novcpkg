@@ -52,7 +52,19 @@ ifneq (,$(findstring clang, `$(CXX)`))
 SANITIZE_UNDEFINED=
 BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register
 else ifneq (, $(findstring g++, `$(CXX)`))
-BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare -fdiagnostics-color=auto
+GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
+GCC_GTEQ_510 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 50100)
+BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare
+
+ifeq "$(GCC_GTEQ_510)" "1"
+BASE_CXXFLAGS += -Wsuggest-override
+endif
+
+ifeq "$(GCC_GTEQ_490)" "1"
+BASE_CXXFLAGS += -fdiagnostics-color=auto
+else
+SANITIZE_UNDEFINED=
+endif
 endif
 
 SDL2_CONFIG?=sdl2-config
@@ -68,23 +80,15 @@ LDFLAGS+ = $(shell $(SDL2_CONFIG) --ldflags)
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
 # Initial compiler options, used before CXXFLAGS and CPPFLAGS. -rdynamic -Wno-literal-suffix
-# Notes:
-#   - DBOOST_BIND_GLOBAL_PLACEHOLDERS needed for our liberal use of _1, _2, etc.
-#   - Wno-deprecated-declarations because boost uses std::auto_ptr in a few places.
-#   - I for vcpgk to find stuff.
 BASE_CXXFLAGS += -std=c++0x -g -fno-inline-functions \
 	-fthreadsafe-statics \
 	-Wno-narrowing -Wno-reorder -Wno-unused \
 	-Wno-unknown-pragmas -Wno-overloaded-virtual \
-	-DBOOST_BIND_GLOBAL_PLACEHOLDERS \
-	-Wno-deprecated-declarations \
-	-I./vcpkg_installed/x64-linux/include
+	-DBOOST_BIND_GLOBAL_PLACEHOLDERS
 
 LDFLAGS?=-rdynamic
-LDFLAGS += -L./vcpkg_installed/x64-linux/lib
 
-PKG_CONFIG_PATH:=$(shell pwd)/vcpkg_installed/x64-linux/lib/pkgconfig:$(shell pwd)/vcpkg_installed/x64-linux/share/pkgconfig:$(PKG_CONFIG_PATH)
-MANDATORY_LIBS=sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo
+MANDATORY_LIBS=pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo
 
 # Check for sanitize-address option
 ifeq ($(SANITIZE_ADDRESS), yes)
@@ -98,26 +102,23 @@ BASE_CXXFLAGS += -fsanitize=undefined
 endif
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags $(MANDATORY_LIBS))
+INC := $(shell $(MANDATORY_LIBS))
 
 ifdef STEAM_RUNTIME_ROOT
 	INC += -isystem $(STEAM_RUNTIME_ROOT)/include
 endif
 
-# Linker library options. (needs gl?)
-LIBS := -lvorbisfile \
-	$(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs x11 gl ) \
-	-logg -lvorbis \
-	$(shell PKG_CONFIG_PATH= pkg-config --libs sdl2 SDL2_image SDL2_ttf) \
-	$(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs glew libpng zlib freetype2 cairo) \
-	 -logg -lrt -lstdc++ -lm -lX11 -lboost_system -lboost_locale -lboost_thread -lXext -lX11 -lSDL2
+# Linker library options.
+LIBS := $(shell pkg-config --libs x11 gl ) \
+	$(shell pkg-config --libs $(MANDATORY_LIBS)) \
+	 -logg -lvorbis -lvorbisfile -lrt -lstdc++ -lm
 
 # libvpx check
-USE_LIBVPX?=$(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --exists vpx && echo yes)
+USE_LIBVPX?=$(shell pkg-config --exists vpx && echo yes)
 ifeq ($(USE_LIBVPX),yes)
 	BASE_CXXFLAGS += -DUSE_LIBVPX
-	INC += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags vpx)
-	LIBS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs vpx)
+	INC += $(shell pkg-config --cflags vpx)
+	LIBS += $(shell pkg-config --libs vpx)
 else
 USE_LIBVPX=no
 endif
@@ -132,11 +133,11 @@ USE_DB_CLIENT=no
 endif
 
 # cairo check
-USE_SVG?=$(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --exists cairo && echo yes)
+USE_SVG?=$(shell pkg-config --exists cairo && echo yes)
 ifeq ($(USE_SVG),yes)
 	BASE_CXXFLAGS += -DUSE_SVG
-	INC += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --cflags cairo)
-	LIBS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs cairo)
+	INC += $(shell pkg-config --cflags cairo)
+	LIBS += $(shell pkg-config --libs cairo)
 else
 USE_SVG=no
 endif
@@ -196,8 +197,7 @@ CXX                 : $(CXX)\n\
 	CXXFLAGS            : $(CXXFLAGS)\n\
 LDFLAGS             : $(LDFLAGS)\n\
 INC                 : $(INC)\n\
-LIBS                : $(LIBS)\n\
-PKG_CONFIG_PATH     : $(PKG_CONFIG_PATH)\n"
+LIBS                : $(LIBS)\n"
 
 
 $(BUILD_DIR):

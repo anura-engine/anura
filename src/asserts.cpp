@@ -27,9 +27,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "StackWalker.h"
-#else
+#elif defined(__GLIBC__)
 #include <csignal>
 #include "stacktrace.hpp"
+#else
+#include <csignal>
 #endif
 
 #ifndef NO_EDITOR
@@ -205,7 +207,7 @@ void output_backtrace()
 #ifdef _MSC_VER
 	StderrStackWalker sw;
 	sw.ShowCallstack();
-#else
+#elif defined(__GLIBC__)
 // disable C++ stack traces for now.
 //	const int nframes = 256;
 //	void* trace_buffer[nframes];

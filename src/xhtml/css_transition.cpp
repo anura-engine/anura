@@ -90,7 +90,7 @@ namespace css
 
 		float evaluate_step(float t, int nintervals, bool start)
 		{
-			ASSERT_LOG(t >= 0.0f && t <= 1.0f, "Time specfied not in interval [0,1]: " << t);
+			ASSERT_LOG(t >= 0.0f && t <= 1.0f, "Time specified not in interval [0,1]: " << t);
 			if(nintervals == 1) {
 				// slight optimisation for a common case.
 				return start ? 1.0f : t < 1.0f ? 0.0f : 1.0f;
