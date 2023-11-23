@@ -79,7 +79,7 @@ namespace gui
 	{
 		hpadding_ = v["hpad"].as_int(12);
 		if(v.has_key("padding")) {
-			ASSERT_LOG(v["padding"].num_elements() == 2, "Incorrect number of padding elements specifed." << v["padding"].num_elements());
+			ASSERT_LOG(v["padding"].num_elements() == 2, "Incorrect number of padding elements specified." << v["padding"].num_elements());
 			hpadding_ = v["padding"][0].as_int();
 		}
 		checked_ = v["checked"].as_bool(false);
