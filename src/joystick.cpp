@@ -52,6 +52,7 @@ namespace haptic
 }
 
 PREF_BOOL(start_rumble, true, "Controls whether we do a haptic device rumble effect on initialisation.");
+PREF_FLOAT_PERSISTENT(rumble_scale, 0.7, "Multiplier for strength of rumble on haptic devices");
 
 namespace joystick
 {
@@ -412,12 +413,12 @@ namespace haptic
 			if(it != get_effects().end()) {
 				auto idit = it->second.find(id);
 				if(idit == it->second.end()) {
-					SDL_HapticRumblePlay(hd.second.get(), 1.0, 750);
+					SDL_HapticRumblePlay(hd.second.get(), 1.0*g_rumble_scale, 300);
 				} else {
 					SDL_HapticRunEffect(hd.second.get(), idit->second, iters);
 				}
 			} else {
-				SDL_HapticRumblePlay(hd.second.get(), 1.0, 750);
+				SDL_HapticRumblePlay(hd.second.get(), 1.0*g_rumble_scale, 300);
 			}
 		}
 	}
