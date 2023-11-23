@@ -73,7 +73,7 @@ protected:
         friend class detail::interface_oarchive<Archive>;
     #endif
 #endif
-    // any datatype not specifed below will be handled by base class
+    // any datatype not specified below will be handled by base class
     typedef detail::common_oarchive<Archive> detail_common_oarchive;
     template<class T>
     void save_override(const T & t){

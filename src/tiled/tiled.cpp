@@ -225,7 +225,7 @@ namespace tiled
 		}
 		// is raw data.
 		SDL_Surface* image = IMG_Load_RW(SDL_RWFromConstMem(&data_[0], static_cast<int>(data_.size())), 1);
-		ASSERT_LOG(image != nullptr, "Unable to create a surface from suplied data: " << SDL_GetError());
+		ASSERT_LOG(image != nullptr, "Unable to create a surface from supplied data: " << SDL_GetError());
 		ASSERT_LOG(image->format != nullptr, "No format attached to the surface.");
 		int bpp = image->format->BytesPerPixel;
 		Uint32 rmask = image->format->Rmask;

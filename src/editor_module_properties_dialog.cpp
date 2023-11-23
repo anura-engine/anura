@@ -105,7 +105,7 @@ namespace editor_dialogs
 				empty_lvl.add_attr(variant("character"), variant(&playable_m));
 				sys::write_file(mod_path + "data/level/titlescreen.cfg", empty_lvl.write_json());
 
-				// Module specifed as standalone, write out a few extra useful files.
+				// Module specified as standalone, write out a few extra useful files.
 				if(mod.included_modules_.empty()) {
 					// data/fonts.cfg			-- {font:["@flatten","@include data/dialog_font.cfg","@include data/label_font.cfg"]}
 					// data/gui.cfg				-- {section:["@flatten","@include data/editor-tools.cfg","@include data/gui-elements.cfg"],FramedGuiElement: ["@flatten","@include data/framed-gui-elements.cfg"]}
