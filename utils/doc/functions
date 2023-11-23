@@ -161,7 +161,7 @@ matched line 1900 of file '../../src//custom_object_functions.cpp':
 		FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_y, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the Level. object only creates the object and returns it. It may be stored for later use.")
 
 matched line 2096 of file '../../src//custom_object_functions.cpp':
-		FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the Level. object_playable only creates the playble object and returns it. It may be stored for later use.")
+		FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the Level. object_playable only creates the playable object and returns it. It may be stored for later use.")
 
 matched line 2199 of file '../../src//custom_object_functions.cpp':
 		FUNCTION_DEF(animation, 1, 1, "animation(string id): changes the current object's animation to the given animation. time_in_animation is reset to 0.")

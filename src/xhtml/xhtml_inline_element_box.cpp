@@ -37,7 +37,7 @@ namespace xhtml
 	void InlineElementBox::handleLayout(LayoutEngine& eng, const Dimensions& containing)
 	{
 		auto node = getNode();
-		ASSERT_LOG(node != nullptr && node->isReplaced(), "InlineElementBox was generated for an empty node, or node which isn't replacable.");
+		ASSERT_LOG(node != nullptr && node->isReplaced(), "InlineElementBox was generated for an empty node, or node which isn't replaceable.");
 
 		// set dimensions from the replaced element information.
 		setContentWidth(node->getDimensions().w() * LayoutEngine::getFixedPointScale());
