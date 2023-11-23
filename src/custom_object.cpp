@@ -1702,8 +1702,28 @@ void CustomObject::process(Level& lvl)
 	}
 
 	CollisionInfo debug_collide_info;
-	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS, WITH ITS SOLID RECT BEING [x,y,x2,y2]: " << solidRect());
+	//ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS, WITH ITS SOLID RECT BEING [x,y,x2,y2]: " << solidRect());
 
+    if( !(type_->isStaticObject() || lvl.in_editor() || !entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &debug_collide_info) ) ){
+        
+        if( debug_collide_info.collide_with ){
+            //if we're overlapping another object, then we should try to invoke our FFL for handling that gracefully.
+            
+            game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
+            
+            callable->add("collide_with", variant());
+            game_logic::FormulaCallablePtr callable_ptr(callable);
+
+            handleEvent(OBJECT_EVENT_CHANGE_SOLID_DIMENSIONS_FAIL, callable);
+        } else {
+            //if we're actually overlapping level solidity, then we screwed up big time, and this needs to be a proper and serious assert:
+            
+            ASSERT_LOG(false, "ENTITY " << getDebugDescription() << " COLLIDES WITH THE LEVEL AT START OF PROCESS, WITH ITS SOLID RECT BEING [x,y,x2,y2]: " << solidRect());
+        }
+    }
+    
+    
+    
 	if(parent_.get() != nullptr) {
 		const point pos = parent_position();
 		const bool parent_facing = parent_->isFacingRight();

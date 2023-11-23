@@ -632,7 +632,7 @@ namespace KRE
 				case EmitterType::SPHERE_SURFACE:
 					return std::make_shared<SphereSurfaceEmitter>(parent);
 				default:
-					ASSERT_LOG(false, "Unkown emitter type given: " << static_cast<int>(type));
+					ASSERT_LOG(false, "Unknown emitter type given: " << static_cast<int>(type));
 					break;
 			}
 			return nullptr;
