@@ -122,16 +122,9 @@ namespace
 	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
 
 	PREF_BOOL(resizeable, false, "Window is dynamically resizeable.");
-	PREF_INT(min_window_width, 934, "Minimum window width when auto-determining window size");
-	PREF_INT(min_window_height, 700, "Minimum window height when auto-determining window size");
-
-	PREF_INT(max_window_width, 10240, "Minimum window width when auto-determining window size");
-	PREF_INT(max_window_height, 7680, "Minimum window height when auto-determining window size");
 
 	PREF_BOOL(disable_global_alpha_filter, false, "Disables using alpha-colors.png to denote some special colors as 'alpha colors'");
 
-	PREF_INT(auto_size_ideal_width, 0, "");
-	PREF_INT(auto_size_ideal_height, 0, "");
 	PREF_BOOL(desktop_fullscreen_force, false, "(Windows) forces desktop fullscreen to actually use fullscreen rather than a borderless window the size of the desktop");
 	PREF_BOOL(msaa, false, "Use msaa");
 
@@ -354,84 +347,6 @@ namespace
 // would use this, and the default value is taylored to the pre existing
 // behavior of the module. The `frogatto` module does not use this.
 PREF_BOOL(remember_me, true, "Remember me (my gamer account) when connecting to the server");
-
-// Seemingly, this is to select the "next common resolution down" for windowed mode.
-// Takes a window, two out params for the best common w/h which will fit in the screen at 2x (?), and "reduce" (?).
-void auto_select_resolution(const KRE::WindowPtr& wm, int& width, int& height, bool reduce, bool isFullscreen)
-{
-	auto mode = wm->getDisplaySize();
-	auto best_mode = mode;
-	bool found = false;
-
-	if(isFullscreen) {
-		LOG_INFO("RESOLUTION SET TO FULLSCREEN RESOLUTION " << mode.width << "x" << mode.height);
-
-		width = mode.width;
-		height = mode.height;
-
-		return;
-	}
-
-	LOG_INFO("TARGET RESOLUTION IS " << mode.width << "x" << mode.height);
-
-	const float MinReduction = reduce ? 0.9f : 2.0f;
-	for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
-		if(g_auto_size_ideal_width && g_auto_size_ideal_height) {
-			if(found && candidate_mode.width < best_mode.width) {
-				continue;
-			}
-
-			if(candidate_mode.width > mode.width * MinReduction) {
-				LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height
-					<< "; (width " << candidate_mode.width << " > " << mode.width * MinReduction << ")");
-				continue;
-			}
-
-			int h = (candidate_mode.width * g_auto_size_ideal_height) / g_auto_size_ideal_width;
-			if(h > mode.height * MinReduction) {
-				continue;
-			}
-
-			best_mode = candidate_mode;
-			best_mode.height = h;
-			found = true;
-
-			LOG_INFO("BETTER MODE IS " << best_mode.width << "x" << best_mode.height);
-
-		} else
-		if(    candidate_mode.width < mode.width * MinReduction
-			&& candidate_mode.height < mode.height * MinReduction
-			&& ((candidate_mode.width >= best_mode.width
-			&& candidate_mode.height >= best_mode.height) || !found)
-		) {
-			found = true;
-			LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height << " vs " << best_mode.width << "x" << best_mode.height);
-			best_mode = candidate_mode;
-		} else {
-			LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
-		}
-	}
-
-	if (best_mode.width < g_min_window_width ||
-			best_mode.height < g_min_window_height) {
-
-		best_mode.width = g_min_window_width;
-		best_mode.height = g_min_window_height;
-	}
-
-	if (best_mode.width > g_max_window_width) {
-		best_mode.width = g_max_window_width;
-	}
-
-	if (best_mode.height > g_max_window_height) {
-		best_mode.height = g_max_window_height;
-	}
-
-	LOG_INFO("CHOSEN MODE IS " << best_mode.width << "x" << best_mode.height);
-
-	width = best_mode.width;
-	height = best_mode.height;
-}
 
 extern int g_tile_scale;
 extern int g_tile_size;
@@ -1033,7 +948,7 @@ int main(int argcount, char* argvec[])
 		int height = 0;
 
 		bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
-		auto_select_resolution(main_wnd, width, height, true, isFullscreen);
+		graphics::GameScreen::autoSelectResolution(main_wnd, width, height, true, isFullscreen);
 
 		preferences::adjust_virtual_width_to_match_physical(width, height);
 

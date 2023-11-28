@@ -50,12 +50,6 @@ void write_autosave()
 	sys::write_file(std::string(preferences::auto_save_file_path()) + ".stat", "1");
 }
 
-void toggle_fullscreen()
-{
-	auto wnd = KRE::WindowManager::getMainWindow();
-	wnd->setFullscreenMode(wnd->fullscreenMode() == KRE::FullScreenMode::WINDOWED ? KRE::FullScreenMode::FULLSCREEN_WINDOWED : KRE::FullScreenMode::WINDOWED);
-}
-
 std::string get_http_datetime()
 {
 	time_t rawtime;

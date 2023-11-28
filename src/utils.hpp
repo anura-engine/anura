@@ -32,7 +32,6 @@
 std::string get_http_datetime();
 int truncate_to_char(int value);
 void write_autosave();
-void toggle_fullscreen();
 
 #if defined(_MSC_VER)
 int gettimeofday(struct timeval *tv, struct timezone2 *tz);

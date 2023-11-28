@@ -27,6 +27,12 @@
 
 namespace KRE
 {
+	enum class FullScreenMode {
+		WINDOWED,
+		FULLSCREEN_WINDOWED,
+		FULLSCREEN_EXCLUSIVE,
+	};
+
 	class Surface;
 	typedef std::shared_ptr<Surface> SurfacePtr;
 

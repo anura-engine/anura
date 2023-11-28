@@ -51,6 +51,8 @@ namespace graphics
 		void setLocation(int x, int y);
 		void setDimensions(int width, int height);
 		void setVirtualDimensions(int vwidth, int vheight);
+		void setFullscreen(KRE::FullScreenMode mode);
+		static void autoSelectResolution(KRE::WindowPtr wm, int& width, int& height, bool reduce, bool isFullscreen);
 
 		KRE::CameraPtr getCurrentCamera() const { return cam_; }
 
