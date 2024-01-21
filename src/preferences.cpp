@@ -724,6 +724,11 @@ namespace preferences
 		return g_auto_size_window;
 	}
 
+	void set_auto_size_window(bool enabled)
+	{
+		g_auto_size_window = enabled;
+	}
+
 	int requested_window_width()
 	{
 		return requested_window_width_;

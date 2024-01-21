@@ -3854,6 +3854,9 @@ DEFINE_SET_FIELD
 		}
 	}
 
+DEFINE_FIELD(speech_dialog_is_active, "bool")
+	return variant::from_bool(obj.current_speech_dialog() != nullptr);
+
 DEFINE_FIELD(id, "string")
 	return variant(obj.id_);
 

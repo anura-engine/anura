@@ -545,7 +545,11 @@ namespace KRE
 	void Window::enableResizeableWindow(bool en) {
 		is_resizeable_ = en;
 	}
-
+	
+	//Use `graphics::GameScreen::get().setFullscreen(fullscreenCheckbox->checked()`,
+	//instead of this function, like `KRE::WindowManager::getMainWindow()->setFullscreenMode(fullscreenCheckbox->checked()`.
+	//This function is a lower-level function called from setFullscreen - this one
+	//*only* changes the window size, and doesn't recalculate the internal scaling.
 	void Window::setFullscreenMode(FullScreenMode mode)
 	{
 		bool modes_differ = fullscreen_mode_ != mode;

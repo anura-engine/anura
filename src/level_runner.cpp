@@ -84,7 +84,6 @@ extern std::map<std::string, variant> g_user_info_registry;
 
 PREF_STRING(editor_object, "", "Object to use for the editor");
 
-extern bool g_desktop_fullscreen;
 extern bool g_particle_editor;
 extern int g_vsync;
 
@@ -1576,7 +1575,7 @@ bool LevelRunner::play_cycle()
 						pause_next = true;
 					}
 
-				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
+				} else if(((key == SDLK_f && mod & KMOD_CTRL) || key == SDLK_F11)  && !preferences::no_fullscreen_ever()) {
 
 					static int last_pushed = -1;
 
@@ -1592,45 +1591,12 @@ bool LevelRunner::play_cycle()
 					const int virtual_height = gs.getVirtualHeight();
 
 					last_pushed = nevent_frame;
-					LOG_DEBUG("ctrl-f pushed");
-					// XXX this changes if editor is active.
-					if(wnd->fullscreenMode() == KRE::FullScreenMode::WINDOWED) {
-
-						LOG_DEBUG("Enter full-screen mode");
-						wnd->setFullscreenMode(KRE::FullScreenMode::FULLSCREEN_WINDOWED);
-
-						if(preferences::auto_size_window() || g_desktop_fullscreen) {
-							SDL_DisplayMode dm;
-							if(SDL_GetDesktopDisplayMode(0, &dm) == 0) {
-								preferences::adjust_virtual_width_to_match_physical(dm.w, dm.h);
-								wnd->setWindowSize(dm.w, dm.h);
-								gs.setDimensions(dm.w, dm.h);
-								gs.setVirtualDimensions(preferences::requested_virtual_window_width(), preferences::requested_virtual_window_height());
-							}
-
-						}
-
-					} else {
-						LOG_DEBUG("Enter windowed mode");
-						wnd->setFullscreenMode(KRE::FullScreenMode::WINDOWED);
-
-						if(preferences::auto_size_window() || g_desktop_fullscreen) {
-							int width = 0, height = 0;
-
-							if(preferences::requested_window_width() > 0 && preferences::requested_window_height() > 0) {
-								width = preferences::requested_window_width();
-								height = preferences::requested_window_height();
-							} else {
-								auto_select_resolution(wnd, width, height, true, false);
-							}
-
-							preferences::adjust_virtual_width_to_match_physical(width, height);
-
-							wnd->setWindowSize(width, height);
-							gs.setDimensions(width, height);
-							gs.setVirtualDimensions(preferences::requested_virtual_window_width(), preferences::requested_virtual_window_height());
-						}
-					}
+					// This changes if editor is active.
+					gs.setFullscreen(
+						wnd->fullscreenMode() == KRE::FullScreenMode::WINDOWED
+						? KRE::FullScreenMode::FULLSCREEN_WINDOWED
+						: KRE::FullScreenMode::WINDOWED
+					);
 				} else if(key == SDLK_F7) {
 					if(formula_profiler::Manager::get()) {
 						if(formula_profiler::Manager::get()->is_profiling()) {

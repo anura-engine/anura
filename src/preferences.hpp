@@ -161,6 +161,7 @@ namespace preferences
 	extern bool compiling_tiles;
 
 	bool auto_size_window();
+	void set_auto_size_window(bool);
 	int requested_window_width();
 	int requested_window_height();
 	int requested_virtual_window_width();

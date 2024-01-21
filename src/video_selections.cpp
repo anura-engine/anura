@@ -37,6 +37,7 @@
 #include "level.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
+#include "screen_handling.hpp"
 #include "video_selections.hpp"
 
 using namespace gui;
@@ -114,18 +115,19 @@ void show_video_selection_dialog()
 
 	int selected_mode = -1;
 
-	std::function<WidgetPtr(const std::string&)> make_font_label;
+	std::function<WidgetPtr(const int, const std::string&)> make_font_label;
 	if(module::get_default_font() == "bitmap") {
-		make_font_label = [](const std::string& label){
-			return WidgetPtr(new GraphicalFontLabel(label, "door_label", 2));
+		make_font_label = [](const int size, const std::string& label){
+			return WidgetPtr(new GraphicalFontLabel(label, "door_label", size));
 		};
 	} else {
-		make_font_label = [](const std::string& label){
-			return WidgetPtr(new Label(label, 16, module::get_default_font()));
+		make_font_label = [](const int size, const std::string& label){
+			static constexpr int sizes[] {12, 16, 18};
+			return WidgetPtr(new Label(label, sizes[size], module::get_default_font()));
 		};
 	}
 
-	d.addWidget(make_font_label(_("Select video options:")), padding, padding);
+	d.addWidget(make_font_label(2, _("Select video options:")), padding, padding);
 	WindowModeList display_modes;
 	int current_mode_index = enumerate_video_modes(&display_modes);
 	if(!display_modes.empty()) {
@@ -137,6 +139,7 @@ void show_video_selection_dialog()
 
 		// Video mode list.
 		DropdownWidget* mode_list = new DropdownWidget(display_strings, 260, 20);
+		mode_list->setDropdownHeight(420);
 		mode_list->setSelection(current_mode_index);
 		mode_list->setZOrder(10);
 		mode_list->setOnSelectHandler([&selected_mode](int selection,const std::string& s){
@@ -144,25 +147,20 @@ void show_video_selection_dialog()
 		});
 		d.addWidget(WidgetPtr(mode_list));
 	} else {
-		d.addWidget(make_font_label(_("Unable to enumerate video modes")));
+		d.addWidget(make_font_label(2, _("Unable to enumerate video modes")));
 	}
-
+	
 	// Fullscreen selection
-	preferences::ScreenMode fs_mode = preferences::get_screen_mode();
-	std::vector<std::string> fs_options;
-	fs_options.emplace_back(_("Windowed mode"));
-	fs_options.emplace_back(_("Fullscreen Windowed"));
-	//fs_options.push_back("Fullscreen");
-	DropdownWidget* fs_list = new DropdownWidget(fs_options, 260, 20);
-	fs_list->setSelection(static_cast<int>(preferences::get_screen_mode()));
-	fs_list->setZOrder(9);
-	fs_list->setOnSelectHandler([&fs_mode](int selection,const std::string& s){
-		switch(selection) {
-			case 0:	fs_mode = preferences::ScreenMode::WINDOWED; break;
-			case 1:	fs_mode = preferences::ScreenMode::FULLSCREEN_WINDOWED; break;
-		}
-	});
-	d.addWidget(WidgetPtr(fs_list));
+	bool isWindowInitiallyFullscreen = 
+		KRE::WindowManager::getMainWindow()->fullscreenMode() != KRE::FullScreenMode::WINDOWED;
+	Checkbox* fullscreenCheckbox = new Checkbox(
+		_("Fullscreen"),
+		isWindowInitiallyFullscreen,
+		[](bool checked) { /* Do nothing here, only apply on dialog OK. */ }
+	);
+	if(!preferences::no_fullscreen_ever()) {
+		d.addWidget(WidgetPtr(fullscreenCheckbox));
+	}
 
 	// Vertical sync options
 	std::vector<std::string> vsync_options;
@@ -181,10 +179,10 @@ void show_video_selection_dialog()
 	});
 	d.addWidget(WidgetPtr(synch_list));
 
-	WidgetPtr b_okay = new Button(make_font_label(_("OK")), [&d](){
+	WidgetPtr b_okay = new Button(make_font_label(2, _("OK")), [&d](){
 		d.close();
 	});
-	WidgetPtr b_cancel = new Button(make_font_label(_("Cancel")), [&d](){
+	WidgetPtr b_cancel = new Button(make_font_label(2, _("Cancel")), [&d](){
 		d.cancel();
 	});
 	b_okay->setDim(button_width, button_height);
@@ -194,10 +192,36 @@ void show_video_selection_dialog()
 
 	d.showModal();
 	if(d.cancelled() == false) {
-		// set selected video mode here
+		auto wnd = KRE::WindowManager::getMainWindow();
+		
+		// Set window size.
 		if(selected_mode >= 0 && static_cast<unsigned>(selected_mode) < display_modes.size()) {
-			KRE::WindowManager::getMainWindow()->setWindowSize(display_modes[selected_mode].width, display_modes[selected_mode].height);
+			preferences::adjust_virtual_width_to_match_physical(display_modes[selected_mode].width, display_modes[selected_mode].height);
+			
+			int vw = preferences::requested_virtual_window_width() > 0
+				? preferences::requested_virtual_window_width()
+				: wnd->width();
+			int vh = preferences::requested_virtual_window_height() > 0
+				? preferences::requested_virtual_window_height()
+				: wnd->height();
+			
+			//Don't set window size if going fullscreen, because size must be monitor size then.
+			if (!fullscreenCheckbox->checked()) {
+				wnd->setWindowSize(display_modes[selected_mode].width, display_modes[selected_mode].height);
+				graphics::GameScreen::get().setVirtualDimensions(vw, vh);
+			}
 		}
-		//preferences::set_screen_mode(fs_mode);
+
+		// Set fullscreen.
+		if(isWindowInitiallyFullscreen != fullscreenCheckbox->checked()) {
+			graphics::GameScreen::get().setFullscreen(
+				fullscreenCheckbox->checked()
+					? KRE::FullScreenMode::FULLSCREEN_WINDOWED
+					: KRE::FullScreenMode::WINDOWED);
+			preferences::set_screen_mode(
+				fullscreenCheckbox->checked()
+					? preferences::ScreenMode::FULLSCREEN_WINDOWED
+					: preferences::ScreenMode::WINDOWED);
+		}
 	}
 }
