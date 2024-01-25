@@ -184,7 +184,7 @@ void PlayableCustomObject::process(Level& lvl)
 		readControls(lvl.cycle());
 
 		// XX Need to abstract this to read controls and mappings from global game file.
-		static const std::string keys[] = { "up", "down", "left", "right", "attack", "jump", "tongue" };
+		static const std::string keys[] = { "up", "down", "left", "right", "attack", "jump", "tongue", "sprint" };
 		for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
 			if(controls[n] != controlStatus(static_cast<controls::CONTROL_ITEM>(n))) {
 				if(controls[n]) {
@@ -202,7 +202,7 @@ void PlayableCustomObject::process(Level& lvl)
 
 namespace
 {
-	static const char* ctrl[] = { "ctrl_up", "ctrl_down", "ctrl_left", "ctrl_right", "ctrl_attack", "ctrl_jump", "ctrl_tongue" };
+	static const char* ctrl[] = { "ctrl_up", "ctrl_down", "ctrl_left", "ctrl_right", "ctrl_attack", "ctrl_jump", "ctrl_tongue", "ctrl_sprint"};
 }
 
 variant PlayableCustomObject::getValue(const std::string& key) const

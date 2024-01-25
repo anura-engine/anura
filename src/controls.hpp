@@ -41,6 +41,7 @@ namespace controls
 		CONTROL_ATTACK,
 		CONTROL_JUMP,
 		CONTROL_TONGUE,
+		CONTROL_SPRINT,
 		NUM_CONTROLS,
 	};
 
