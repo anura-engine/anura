@@ -1,10 +1,13 @@
 # Building on Windows
 
-In order build Anura, you will need Visual Studio 2022 and [vcpkg](https://github.com/microsoft/vcpkg) installed.
+In order build Anura, you will need [Visual
+Studio](https://visualstudio.microsoft.com/downloads/) 2022.
 
-If you do not have vcpkg set up:
-- Clone the [vcpkg repo](https://github.com/microsoft/vcpkg) somewhere outside the anura folder.
-- Inside the vcpkg folder, run `bootstrap-vcpkg.bat`, then `vcpkg integrate install`.
+The solution and project wrap vcpkg for you and you should be simply able to
+"press play".
 
-Once vcpkg is integrated with Visual Studio:
-- Open `anura.sln` and build. The executable will be in `./$(Target)-$(Configuration)/` (`./x64-Release`, for example).
+An alternate route is to only grab the [build
+tools](https://visualstudio.microsoft.com/downloads/?q=build+tools#build-tools-for-visual-studio-2022)
+and to build on the command line with `msbuild`. See the
+[CI](https://github.com/anura-engine/anura/blob/trunk/.github/workflows/push-unit-tests-static-windows.yaml)
+definition for the current details.

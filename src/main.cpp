@@ -42,7 +42,6 @@
 #include "asserts.hpp"
 #include "auto_update_window.hpp"
 #include "background_task_pool.hpp"
-#include "breakpad.hpp"
 #include "checksum.hpp"
 #include "controls.hpp"
 #include "custom_object.hpp"
@@ -358,10 +357,6 @@ int main(int argcount, char* argvec[])
 	g_anura_exe_name = argvec[0];
 
 	SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
-
-#ifdef USE_BREAKPAD
-	breakpad::install();
-#endif
 
 	variant::registerThread();
 

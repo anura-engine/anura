@@ -1,3 +1,7 @@
 [submodule "imgui"]
-	path = imgui
-	url = https://github.com/anura-engine/imgui
+	path = src/imgui
+	url = https://github.com/ocornut/imgui
+	shallow = true
+[submodule "vcpkg"]
+	path = vcpkg
+	url = https://github.com/microsoft/vcpkg.git
