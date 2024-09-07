@@ -1,0 +1,66 @@
+name: Unit Tests / Required / Dynamic / Linux
+on:
+  pull_request:
+  merge_group:
+
+jobs:
+  test:
+    name: Ubuntu
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        build-type:
+          - Release
+          - Debug
+    steps:
+      - name: Install Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq upgrade -y
+          sudo apt-get -qq install -y --no-install-recommends \
+            ca-certificates \
+            git \
+            clang \
+            cmake \
+            make \
+            ccache \
+            libboost-dev \
+            libboost-filesystem-dev \
+            libboost-locale-dev \
+            libboost-regex-dev \
+            libboost-system-dev \
+            libcairo2-dev \
+            libglew-dev \
+            libglm-dev \
+            libsdl2-dev \
+            libsdl2-image-dev \
+            libsdl2-mixer-dev \
+            libsdl2-ttf-dev \
+            libvorbis-dev
+
+      - name: Checkout Anura
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          submodules: true
+
+      - name: Set ccache up
+        uses: hendrikmuhs/ccache-action@ca3acd2731eef11f1572ccb126356c2f9298d35e # v1.2.9
+        with:
+          key: unit-tests-linux-${{ matrix.build-type }}
+
+      - name: Build Prep Anura
+        run: |
+          cmake . \
+            -D CMAKE_CXX_COMPILER='clang++' \
+            -D CMAKE_BUILD_TYPE="${{ matrix.build-type }}"
+
+      - name: Build Anura
+        run: |
+          # Compile with number of available hyperthreads
+          make -j "$(getconf _NPROCESSORS_ONLN)"
+
+      - name: Run Unit Tests
+        run: ./anura --tests

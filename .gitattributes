@@ -1,5 +1,5 @@
-#   Exclude `external/` and `MacOS/` from GitHub language stats
-# (github.com/github/linguist). `external/` should be implicitly
-# marked vendored, but not `MacOS/`.
-external/ linguist-vendored=true
+# Github language stats configuration
 MacOS/ linguist-vendored=true
+MacOS_legacy/ linguist-vendored=true
+windows/ linguist-vendored=true
+src/imgui linguist-vendored=true

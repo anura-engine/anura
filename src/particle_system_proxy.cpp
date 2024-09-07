@@ -97,7 +97,7 @@ namespace graphics
 		if(running_) {
 			scene_->renderScene(rmanager_);
 			rmanager_->render(wnd);
-#ifdef USE_IMGUI
+
 			static std::vector<std::string> ifiles;
 			// XX should update this if the directory contents changes.
 			if(g_particle_editor) {
@@ -133,8 +133,6 @@ namespace graphics
 				}
 				KRE::Particles::ParticleUI(particle_system_container_, &enable_mouselook_, &invert_mouselook_, ifiles);
 			}
-#endif
-
 		}
 	}
 
