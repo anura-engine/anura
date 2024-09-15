@@ -48,7 +48,7 @@ namespace controls
 {
 	const char** control_names()
 	{
-		static const char* names[] = { "up", "down", "left", "right", "attack", "jump", "tongue", nullptr };
+		static const char* names[] = { "up", "down", "left", "right", "attack", "jump", "tongue", "sprint", nullptr };
 		return names;
 	}
 
@@ -101,7 +101,8 @@ namespace controls
 		SDLK_RIGHT,
 		SDLK_d,
 		SDLK_a,
-		SDLK_s
+		SDLK_s,
+		SDLK_LSHIFT,
 	};
 
 	CONTROL_ITEM g_mouse_controls[3] = {
@@ -333,15 +334,23 @@ namespace controls
 			if(joystick::right()) {
 				state.keys |= 0x08;
 			}
+			// jump
 			if(joystick::button(0)) {
 				state.keys |= 0x10;
 			}
+			// tongue
 			if(joystick::button(1)) {
 				state.keys |= 0x20;
 			}
+			// attack
 			if(joystick::button(2)) {
 				state.keys |= 0x40;
 			}
+			// sprint
+			if(joystick::button(3)) {
+				state.keys |= 0x80;
+			}
+			
 
 			if(g_user_ctrl_output.is_null() == false) {
 				state.user = g_user_ctrl_output.write_json();

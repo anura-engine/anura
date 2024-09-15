@@ -624,17 +624,11 @@ Level::Level(const std::string& level_cfg, variant node)
 	}
 
 	if(node.has_key("next_level")) {
-		right_portal_.level_dest = node["next_level"].as_string();
-		right_portal_.dest_str = "left";
-		right_portal_.dest_starting_pos = false;
-		right_portal_.automatic = true;
+		set_next_level(node["next_level"].as_string());
 	}
 
 	if(node.has_key("previous_level")) {
-		left_portal_.level_dest = node["previous_level"].as_string();
-		left_portal_.dest_str = "right";
-		left_portal_.dest_starting_pos = false;
-		left_portal_.automatic = true;
+		set_previous_level(node["previous_level"].as_string());
 	}
 
 	variant bg = node["background"];
@@ -3859,6 +3853,9 @@ DEFINE_SET_FIELD
 			LOG_DEBUG("entity '" << e->label() << "' added as focus override");
 		}
 	}
+
+DEFINE_FIELD(speech_dialog_is_active, "bool")
+	return variant::from_bool(obj.current_speech_dialog() != nullptr);
 
 DEFINE_FIELD(id, "string")
 	return variant(obj.id_);

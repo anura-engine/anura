@@ -37,6 +37,7 @@
 #include "level.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
+#include "screen_handling.hpp"
 #include "video_selections.hpp"
 
 using namespace gui;
@@ -150,9 +151,11 @@ void show_video_selection_dialog()
 	}
 	
 	// Fullscreen selection
+	bool isWindowInitiallyFullscreen = 
+		KRE::WindowManager::getMainWindow()->fullscreenMode() != KRE::FullScreenMode::WINDOWED;
 	Checkbox* fullscreenCheckbox = new Checkbox(
 		_("Fullscreen"),
-		KRE::WindowManager::getMainWindow()->fullscreenMode() != KRE::FullScreenMode::WINDOWED,
+		isWindowInitiallyFullscreen,
 		[](bool checked) { /* Do nothing here, only apply on dialog OK. */ }
 	);
 	if(!preferences::no_fullscreen_ever()) {
@@ -189,11 +192,27 @@ void show_video_selection_dialog()
 
 	d.showModal();
 	if(d.cancelled() == false) {
-		// set selected video mode here
-		if(selected_mode >= 0 && static_cast<unsigned>(selected_mode) < display_modes.size()) {
-			KRE::WindowManager::getMainWindow()->setWindowSize(display_modes[selected_mode].width, display_modes[selected_mode].height);
-		}
+		auto wnd = KRE::WindowManager::getMainWindow();
 		
+		// Set window size.
+		if(selected_mode >= 0 && static_cast<unsigned>(selected_mode) < display_modes.size()) {
+			preferences::adjust_virtual_width_to_match_physical(display_modes[selected_mode].width, display_modes[selected_mode].height);
+			
+			int vw = preferences::requested_virtual_window_width() > 0
+				? preferences::requested_virtual_window_width()
+				: wnd->width();
+			int vh = preferences::requested_virtual_window_height() > 0
+				? preferences::requested_virtual_window_height()
+				: wnd->height();
+			
+			//Don't set window size if going fullscreen, because size must be monitor size then.
+			if (!fullscreenCheckbox->checked()) {
+				wnd->setWindowSize(display_modes[selected_mode].width, display_modes[selected_mode].height);
+				graphics::GameScreen::get().setVirtualDimensions(vw, vh);
+			}
+		}
+
+		// Actually set fullscreen.
 		KRE::WindowManager::getMainWindow()->setFullscreenMode(fullscreenCheckbox->checked()
 			? KRE::FullScreenMode::FULLSCREEN_WINDOWED
 			: KRE::FullScreenMode::WINDOWED);

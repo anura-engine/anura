@@ -1,6 +1,7 @@
 Prerequisites:
 
-You need a recent compiler, because of the use of C++11 features in the engine. The minimum
+You need a  relatively recent compiler, because of the use of C++11
+features in the engine. The minimum
 required version of GCC is 4.8. Versions of clang post 3.1 should work as well. There are build
 files for MSVC (requires 2019 desktop edition) for windows and Xcode (requires 4.6 or later).
 
@@ -9,12 +10,12 @@ Please see https://github.com/anura-engine/anura/wiki/Building-On-Windows for Wi
 You'll need to have these libraries with equivalent development versions to
 build the Anura engine:
 
- 1.50.0 <= boost_iostreams     <= 1.73.0
- 1.50.0 <= boost_filesystem    <= 1.73.0
- 1.50.0 <= boost_regex         <= 1.73.0
- 1.50.0 <= boost_asio          <= 1.73.0
- 1.50.0 <= boost_system        <= 1.73.0
- 1.50.0 <= libboost-locale-dev <= 1.73.0
+ 1.50.0 <= boost_iostreams     <= 1.74.0
+ 1.50.0 <= boost_filesystem    <= 1.74.0
+ 1.50.0 <= boost_regex         <= 1.74.0
+ 1.50.0 <= boost_asio          <= 1.74.0
+ 1.50.0 <= boost_system        <= 1.74.0
+ 1.50.0 <= libboost-locale-dev <= 1.74.0
  libsdl >= 2.0.0
  libsdl-image >= 2.0.0 (with png support)
  libsdl-mixer >= 2.0.0 (with Vorbis support)
@@ -39,24 +40,27 @@ To access the level editor, press CTRL-E during the game.
 Have fun!
 
 
-Building on Ubuntu 19.10
-------------------------
+Building on Ubuntu 19.10 or recent Debian
+-----------------------------------------
 
-The following are some specific instructions for setting up the prequisites for anura on Ubuntu.
+The following are some specific instructions for setting up the
+prequisites for anura on Ubuntu and Debian.
 
 First, install the dependancies.
-sudo apt install build-essential ccache git libboost-dev libboost-filesystem-dev libboost-iostreams-dev libboost-regex-dev libboost-locale-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libglew-dev libpng-dev libcairo2-dev libfreetype6-dev libvorbis-dev libglm-dev
+
+ sudo apt install build-essential ccache git libboost-dev \
+      libboost-filesystem-dev libboost-iostreams-dev \
+      libboost-regex-dev libboost-locale-dev libsdl2-image-dev\
+      libsdl2-mixer-dev libsdl2-ttf-dev libglew-dev libpng-dev\
+      libcairo2-dev libfreetype6-dev libvorbis-dev libglm-dev
 
 Then, build the project.
-cd anura #(or wherever you downloaded Anura to)
-git submodule init #(first time only)
-git submodule update
-make -j$(nproc)
 
-Building on a 2016 Debian sid
------------------------------
+  cd anura #(or wherever you downloaded Anura to)
+  git submodule init #(first time only)
+  git submodule update
+  make -j$(nproc)
 
-sudo apt-get install libboost-dev libboost-filesystem-dev libboost-iostream-dev libboost-regex-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libglew-dev libpng-dev libcairo-dev libfreetype6-dev libvorbis-dev libglm-dev
 
 Building on Arch
 ----------------
@@ -70,3 +74,10 @@ Building on Fedora 27
 ---------------------
 
 sudo dnf install boost-devel boost-iostreams boost-filesystem boost-regex boost-system SDL2 SDL2-devel SDL2_image-devel SDL2_mixer-devel SDL2_ttf-devel SDL2_image SDL2_mixer SDL2_ttf libvorbis-devel gcc glew icu glm
+
+
+Running 'Frogatto'
+==================
+To run 'Frogatto' check out the frogatto repository into
+modules/frogatto4 then run anura
+

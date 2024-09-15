@@ -1,7 +1,6 @@
 name: Smoketest / Informative / Fedora
 on:
   pull_request:
-  merge_group:
 
 jobs:
   test:
@@ -20,39 +19,58 @@ jobs:
           - "37"
           - "38"
           - "39"
+          - "40"
+          # 40 is expected in 2024-04
+          # 41 is expected in 2024-11
+          # 42 is expected in 2025-04
         compiler:
           - g++
-          - clang
+          - clang++
+        build-type:
+          - Release
+          - Debug
     container: fedora:${{ matrix.fedora }}
     steps:
       - name: Install Dependencies
         run: |
-            dnf -y update
-            dnf -y install \
+            dnf -qy update
+            dnf -qy install \
                 git \
-                ${{ matrix.compiler }} \
+                g++ \
+                clang \
+                cmake \
                 make \
-                which \
-                SDL2-devel \
+                ccache \
                 boost-devel \
-                glm-devel \
-                glew-devel \
                 cairo-devel \
-                SDL2_ttf-devel \
+                glew-devel \
+                glm-devel \
+                libvorbis-devel \
                 SDL2_image-devel \
                 SDL2_mixer-devel \
-                libvorbis-devel
+                SDL2_ttf-devel \
+                SDL2-devel
 
       - name: Checkout Anura
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
             submodules: true
 
+      - name: Set ccache up
+        uses: hendrikmuhs/ccache-action@ca3acd2731eef11f1572ccb126356c2f9298d35e # v1.2.9
+        with:
+          key: ${{ github.job }}-fedora-${{ matrix.fedora }}-${{ matrix.compiler }}-${{ matrix.build-type }}
+
+      - name: Build Prep Anura
+        run: |
+          cmake . \
+          -D CMAKE_CXX_COMPILER="${{ matrix.compiler }}" \
+          -D CMAKE_BUILD_TYPE="${{ matrix.build-type }}"
+
       - name: Build Anura
-        env:
-          CXX: ${{ matrix.compiler }}
-        # Number of cores * 3
-        run: make -j "$(($(getconf _NPROCESSORS_ONLN) * 3))"
+        run: |
+          # Compile with number of available hyperthreads
+          make -j "$(getconf _NPROCESSORS_ONLN)"
 
       - name: Run Unit Tests
         run: ./anura --tests
