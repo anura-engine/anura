@@ -212,16 +212,13 @@ void show_video_selection_dialog()
 			}
 		}
 
-		// Set fullscreen.
-		if(isWindowInitiallyFullscreen != fullscreenCheckbox->checked()) {
-			graphics::GameScreen::get().setFullscreen(
-				fullscreenCheckbox->checked()
-					? KRE::FullScreenMode::FULLSCREEN_WINDOWED
-					: KRE::FullScreenMode::WINDOWED);
-			preferences::set_screen_mode(
-				fullscreenCheckbox->checked()
-					? preferences::ScreenMode::FULLSCREEN_WINDOWED
-					: preferences::ScreenMode::WINDOWED);
-		}
+		// Actually set fullscreen.
+		KRE::WindowManager::getMainWindow()->setFullscreenMode(fullscreenCheckbox->checked()
+			? KRE::FullScreenMode::FULLSCREEN_WINDOWED
+			: KRE::FullScreenMode::WINDOWED);
+		preferences::set_screen_mode(
+			KRE::WindowManager::getMainWindow()->fullscreenMode() == KRE::FullScreenMode::WINDOWED
+				? preferences::ScreenMode::WINDOWED
+				: preferences::ScreenMode::FULLSCREEN_WINDOWED);
 	}
 }
