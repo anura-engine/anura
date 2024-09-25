@@ -9,7 +9,7 @@ if(DEFINED ENV{CXX})
   message("")
   message(
     FATAL_ERROR
-    "Please use the the flag '-D CMAKE_CXX_COMPILER='."
+    "CXX is set on the ENV. Please only use the the flag '-D CMAKE_CXX_COMPILER='."
   )
 endif()
 
