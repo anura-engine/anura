@@ -45,7 +45,7 @@ jobs:
 
       # Sets a cache up for vcpkg
       - name: Install vcpkg
-        uses: lukka/run-vcpkg@abed23940f9d7bc267b0e1a21ee7b699a3794baa # v11.1
+        uses: lukka/run-vcpkg@5e0cab206a5ea620130caf672fce3e4a6b5666a1 # v11.5
 
       - name: Set ccache up
         uses: hendrikmuhs/ccache-action@ed74d11c0b343532753ecead8a951bb09bb34bc9 # v1.2.14
