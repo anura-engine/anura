@@ -1,0 +1,17 @@
+name: Dependabot Auto Approve
+
+on: pull_request
+
+permissions:
+  pull-requests: write
+
+jobs:
+  dependabot-auto-approve:
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    steps:
+      - name: Auto Approve Dependabot PRs
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        run: gh pr review --approve "$PR_URL"
