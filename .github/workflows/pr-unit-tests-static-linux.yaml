@@ -48,7 +48,7 @@ jobs:
         uses: lukka/run-vcpkg@abed23940f9d7bc267b0e1a21ee7b699a3794baa # v11.1
 
       - name: Set ccache up
-        uses: hendrikmuhs/ccache-action@ca3acd2731eef11f1572ccb126356c2f9298d35e # v1.2.9
+        uses: hendrikmuhs/ccache-action@ed74d11c0b343532753ecead8a951bb09bb34bc9 # v1.2.14
         with:
           key: unit-tests-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
 

@@ -59,7 +59,7 @@ jobs:
             submodules: true
 
       - name: Set ccache up
-        uses: hendrikmuhs/ccache-action@ca3acd2731eef11f1572ccb126356c2f9298d35e # v1.2.9
+        uses: hendrikmuhs/ccache-action@ed74d11c0b343532753ecead8a951bb09bb34bc9 # v1.2.14
         with:
           key: ${{ github.job }}-opensuse-leap-${{ matrix.suse }}-${{ matrix.compiler }}-${{ matrix.build-type }}
 
