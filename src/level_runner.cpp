@@ -740,7 +740,8 @@ extern bool g_enable_graphical_fonts;
 void LevelRunner::show_pause_title()
 {
 	if(!editor_ && g_enable_graphical_fonts) {
-		set_scene_title("Paused\n\n\n(ctrl-p)", paused ? std::numeric_limits<int>::max() : 25);
+		// The height of a line break is less than that of a line with text. Hence the extra '\n's
+		set_scene_title(lvl_->title() + "\n\n\n\nPaused\n\n\n(ctrl-p)", paused ? std::numeric_limits<int>::max() : 25);
 	}
 }
 
