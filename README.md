@@ -106,7 +106,6 @@ Reference material:
 * [C++ Asserts](https://en.cppreference.com/w/cpp/error/assert)
 * [C++ Standard Library](https://en.cppreference.com/w/cpp/standard_library)
 
-
 #### Debug
 
 As a rule of thumb the Debug builds add the appropriate per platform flags to
@@ -146,7 +145,7 @@ Linux operating systems.
 Sample build flow:
 
 ```bash
-cmake . -D CMAKE_CXX_COMPILER='clang++' -D CMAKE_BUILD_TYPE=Release
+cmake buildsystem/linux-dynamic -D CMAKE_CXX_COMPILER='clang++' -D CMAKE_BUILD_TYPE=Release
 make -j "$(getconf _NPROCESSORS_ONLN)"
 ```
 
@@ -170,65 +169,65 @@ The sets of warnings and diagnostics we currently silence:
 
 * Default (`-Werror`)
   * GCC
-    * [`-Wno-narrowing`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/01-default/gcc/01-narrowing/CMakeLists.txt)
-    * [`-Wno-unused-result`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/01-default/gcc/02-unused-result/CMakeLists.txt)
-    * [`-Wno-aggressive-loop-optimizations`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/01-default/gcc/03-aggressive-loop-optimizations/CMakeLists.txt)
-    * [`-Wno-deprecated-declarations`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/01-default/gcc/04-deprecated-declarations/CMakeLists.txt)
+    * [`-Wno-narrowing`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/gcc/01-narrowing/CMakeLists.txt)
+    * [`-Wno-unused-result`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/gcc/02-unused-result/CMakeLists.txt)
+    * [`-Wno-aggressive-loop-optimizations`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/gcc/03-aggressive-loop-optimizations/CMakeLists.txt)
+    * [`-Wno-deprecated-declarations`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/gcc/04-deprecated-declarations/CMakeLists.txt)
   * Clang
-    * [`-Wno-c++11-narrowing`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/01-default/clang/01-cxx-11-narrowing/CMakeLists.txt)
-    * [`-Wno-unused-result`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/01-default/clang/02-unused-result/CMakeLists.txt)
-    * [`-Wno-deprecated-declarations`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/01-default/clang/03-deprecated-declarations/CMakeLists.txt)
+    * [`-Wno-c++11-narrowing`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/01-cxx-11-narrowing/CMakeLists.txt)
+    * [`-Wno-unused-result`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/02-unused-result/CMakeLists.txt)
+    * [`-Wno-deprecated-declarations`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/03-deprecated-declarations/CMakeLists.txt)
 * LTO (`-flto`)
   * GCC - these need to get set globally or the linker does not get them passed in!
-    * [`-Wno-odr`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/02-lto/gcc/01-odr/CMakeLists.txt)
-    * [`-Wno-aggressive-loop-optimizations`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/02-lto/gcc/02-aggressive-loop-optimizations/CMakeLists.txt)
-    * [`-Wno-lto-type-mismatch`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/02-lto/gcc/03-lto-type-mismatch/CMakeLists.txt)
+    * [`-Wno-odr`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/01-odr/CMakeLists.txt)
+    * [`-Wno-aggressive-loop-optimizations`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/02-aggressive-loop-optimizations/CMakeLists.txt)
+    * [`-Wno-lto-type-mismatch`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/03-lto-type-mismatch/CMakeLists.txt)
   * Clang is currently (2023-09) LTO warning free
 * `-Wall`
   * GCC
-    * [`-Wno-sign-compare`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/gcc/01-sign-compare/CMakeLists.txt)
-    * [`-Wno-reorder`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/gcc/02-reorder/CMakeLists.txt)
-    * [`-Wno-unused-function`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/gcc/03-unused-function/CMakeLists.txt)
-    * [`-Wno-unused-variable`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/gcc/04-unused-variable/CMakeLists.txt)
-    * [`-Wno-overloaded-virtual`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/gcc/05-overloaded-virtual/CMakeLists.txt)
-    * [`-Wno-unused-but-set-variable`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/gcc/06-unused-but-set-variable/CMakeLists.txt)
-    * [`-Wno-unused-local-typedefs`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/gcc/07-unused-local-typedefs/CMakeLists.txt)
-    * [`-Wno-use-after-free`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/gcc/08-use-after-free/CMakeLists.txt)
-    * [`-Wno-maybe-uninitialized`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/gcc/09-maybe-uninitialized/CMakeLists.txt)
+    * [`-Wno-sign-compare`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/gcc/01-sign-compare/CMakeLists.txt)
+    * [`-Wno-reorder`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/gcc/02-reorder/CMakeLists.txt)
+    * [`-Wno-unused-function`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/gcc/03-unused-function/CMakeLists.txt)
+    * [`-Wno-unused-variable`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/gcc/04-unused-variable/CMakeLists.txt)
+    * [`-Wno-overloaded-virtual`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/gcc/05-overloaded-virtual/CMakeLists.txt)
+    * [`-Wno-unused-but-set-variable`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/gcc/06-unused-but-set-variable/CMakeLists.txt)
+    * [`-Wno-unused-local-typedefs`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/gcc/07-unused-local-typedefs/CMakeLists.txt)
+    * [`-Wno-use-after-free`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/gcc/08-use-after-free/CMakeLists.txt)
+    * [`-Wno-maybe-uninitialized`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/gcc/09-maybe-uninitialized/CMakeLists.txt)
   * Clang
-    * [`-Wno-unneeded-internal-declaration`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/clang/01-unneeded-internal-declaration/CMakeLists.txt)
-    * [`-Wno-reorder-ctor`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/clang/02-reorder-ctor/CMakeLists.txt)
-    * [`-Wno-unused-private-field`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/clang/03-unused-private-field/CMakeLists.txt)
-    * [`-Wno-unused-function`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/clang/04-unused-function/CMakeLists.txt)
-    * [`-Wno-unused-variable`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/clang/05-unused-variable/CMakeLists.txt)
-    * [`-Wno-overloaded-virtual`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/clang/06-overloaded-virtual/CMakeLists.txt)
-    * [`-Wno-unused-but-set-variable`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/clang/07-unused-but-set-variable/CMakeLists.txt)
-    * [`-Wno-unused-local-typedef`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/clang/08-unused-local-typedef/CMakeLists.txt)
-    * [`-Wno-unused-const-variable`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/clang/09-unused-const-variable/CMakeLists.txt)
-    * [`-Wno-unused-lambda-capture`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/03-all/clang/10-unused-lambda-capture/CMakeLists.txt)
+    * [`-Wno-unneeded-internal-declaration`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/01-unneeded-internal-declaration/CMakeLists.txt)
+    * [`-Wno-reorder-ctor`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/02-reorder-ctor/CMakeLists.txt)
+    * [`-Wno-unused-private-field`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/03-unused-private-field/CMakeLists.txt)
+    * [`-Wno-unused-function`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/04-unused-function/CMakeLists.txt)
+    * [`-Wno-unused-variable`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/05-unused-variable/CMakeLists.txt)
+    * [`-Wno-overloaded-virtual`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/06-overloaded-virtual/CMakeLists.txt)
+    * [`-Wno-unused-but-set-variable`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/07-unused-but-set-variable/CMakeLists.txt)
+    * [`-Wno-unused-local-typedef`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/08-unused-local-typedef/CMakeLists.txt)
+    * [`-Wno-unused-const-variable`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/09-unused-const-variable/CMakeLists.txt)
+    * [`-Wno-unused-lambda-capture`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/10-unused-lambda-capture/CMakeLists.txt)
 * `-Wextra`
   * GCC
-    * [`-Wno-unused-parameter`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/04-extra/gcc/01-unused-parameter/CMakeLists.txt)
-    * [`-Wno-implicit-fallthrough`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/04-extra/gcc/02-implicit-fallthrough/CMakeLists.txt)
-    * [`-Wno-extra`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/04-extra/gcc/03-extra/CMakeLists.txt)
-    * [`-Wno-dangling-reference`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/04-extra/gcc/04-dangling-reference/CMakeLists.txt)
-    * [`-Wno-deprecated-copy`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/04-extra/gcc/05-deprecated-copy/CMakeLists.txt)
-    * [`-Wno-missing-field-initializers`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/04-extra/gcc/06-missing-field-initializers/CMakeLists.txt)
+    * [`-Wno-unused-parameter`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/01-unused-parameter/CMakeLists.txt)
+    * [`-Wno-implicit-fallthrough`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/02-implicit-fallthrough/CMakeLists.txt)
+    * [`-Wno-extra`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/03-extra/CMakeLists.txt)
+    * [`-Wno-dangling-reference`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/04-dangling-reference/CMakeLists.txt)
+    * [`-Wno-deprecated-copy`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/05-deprecated-copy/CMakeLists.txt)
+    * [`-Wno-missing-field-initializers`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/06-missing-field-initializers/CMakeLists.txt)
   * Clang
-    * [`-Wno-unused-parameter`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/04-extra/clang/01-unused-parameter/CMakeLists.txt)
-    * [`-Wno-sign-compare`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/04-extra/clang/02-sign-compare/CMakeLists.txt)
-    * [`-Wno-deprecated-copy-with-user-provided-copy`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/04-extra/clang/03-deprecated-copy-with-user-provided-copy/CMakeLists.txt)
-    * [`-Wno-deprecated-copy`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/04-extra/clang/04-deprecated-copy/CMakeLists.txt)
-    * [`-Wno-missing-field-initializers`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/04-extra/clang/05-missing-field-initializers/CMakeLists.txt)
+    * [`-Wno-unused-parameter`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/clang/01-unused-parameter/CMakeLists.txt)
+    * [`-Wno-sign-compare`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/clang/02-sign-compare/CMakeLists.txt)
+    * [`-Wno-deprecated-copy-with-user-provided-copy`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/clang/03-deprecated-copy-with-user-provided-copy/CMakeLists.txt)
+    * [`-Wno-deprecated-copy`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/clang/04-deprecated-copy/CMakeLists.txt)
+    * [`-Wno-missing-field-initializers`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/clang/05-missing-field-initializers/CMakeLists.txt)
 * `-pedantic`
   * GCC
-    * [`-Wno-pedantic`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/05-pedantic/gcc/01-pedantic/CMakeLists.txt)
+    * [`-Wno-pedantic`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/05-pedantic/gcc/01-pedantic/CMakeLists.txt)
   * Clang
-    * [`-Wno-gnu-anonymous-struct`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/05-pedantic/clang/01-gnu-anonymous-struct/CMakeLists.txt)
-    * [`-Wno-nested-anon-types`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/05-pedantic/clang/02-nested-anon-types/CMakeLists.txt)
-    * [`-Wno-extra-semi`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/05-pedantic/clang/03-extra-semi/CMakeLists.txt)
-    * [`-Wno-format-pedantic`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/05-pedantic/clang/04-format-pedantic/CMakeLists.txt)
-    * [`-Wno-vla-extension`](https://github.com/anura-engine/anura/blob/trunk/cmake-includes/silence-warnings/05-pedantic/clang/05-vla-extension/CMakeLists.txt)
+    * [`-Wno-gnu-anonymous-struct`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/05-pedantic/clang/01-gnu-anonymous-struct/CMakeLists.txt)
+    * [`-Wno-nested-anon-types`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/05-pedantic/clang/02-nested-anon-types/CMakeLists.txt)
+    * [`-Wno-extra-semi`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/05-pedantic/clang/03-extra-semi/CMakeLists.txt)
+    * [`-Wno-format-pedantic`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/05-pedantic/clang/04-format-pedantic/CMakeLists.txt)
+    * [`-Wno-vla-extension`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/05-pedantic/clang/05-vla-extension/CMakeLists.txt)
 
 The above peeling is done in order to eventually also aim for a clean static
 analysis result on the CI.
@@ -360,6 +359,7 @@ Hard Quality Gates are our non-negotiable baseline of quality expectations on
 incoming changes. Not green -> not getting merged.
 
 On Pull Requests:
+
 * NOT IMPLEMENTED Linters
   * NOT IMPLEMENTED [markdownlint](https://github.com/DavidAnson/markdownlint)
   * NOT IMPLEMENTED [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html)
