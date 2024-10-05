@@ -18,17 +18,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-# Default to dynamic linking
-if(NOT CMAKE_LINK_TYPE)
-    set(CMAKE_LINK_TYPE Dynamic)
-endif()
-
-# Use vcpkg for static builds
-if (CMAKE_LINK_TYPE MATCHES Static)
-    set(VCPKG_MANIFEST_DIR "${CMAKE_BINARY_DIR}")
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_BINARY_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
-endif()
-
 # Default to using LTO for Release builds
 if (CMAKE_BUILD_TYPE MATCHES Release)
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
@@ -108,45 +97,21 @@ find_package(Vorbis REQUIRED)
 # https://github.com/WebKit/WebKit/blob/acece69bd261c37f0a66d82d4abc80bed8b09bd7/Source/cmake/FindCairo.cmake
 find_package(Cairo REQUIRED)
 
-if (CMAKE_LINK_TYPE MATCHES Static)
-    find_package(harfbuzz CONFIG REQUIRED)
-    find_package(WebP CONFIG REQUIRED)
-    find_package(unofficial-lerc CONFIG REQUIRED)
-    find_package(zstd CONFIG REQUIRED)
-endif()
-
 # Add the headers
-if (CMAKE_LINK_TYPE MATCHES Static)
-    set(VCPKG_CRT_LINKAGE static)
-    set(VCPKG_LIBRARY_LINKAGE static)
-    include_directories(
-        "${CMAKE_BINARY_DIR}/src"
-        "${CMAKE_BINARY_DIR}/src/hex"
-        "${CMAKE_BINARY_DIR}/src/imgui"
-        "${CMAKE_BINARY_DIR}/src/imgui_additions"
-        "${CMAKE_BINARY_DIR}/src/kre"
-        "${CMAKE_BINARY_DIR}/src/svg"
-        "${CMAKE_BINARY_DIR}/src/tiled"
-        "${CMAKE_BINARY_DIR}/src/treetree"
-        "${CMAKE_BINARY_DIR}/src/xhtml"
-        "${CMAKE_BINARY_DIR}/vcpkg_installed/x64-linux/include"
-    )
-else()
-    # XXX - Unknown as of 2023-08 why only Freetype ft2build and SLD2 are needed
-    include_directories(
-        "${CMAKE_BINARY_DIR}/src"
-        "${CMAKE_BINARY_DIR}/src/hex"
-        "${CMAKE_BINARY_DIR}/src/imgui"
-        "${CMAKE_BINARY_DIR}/src/imgui_additions"
-        "${CMAKE_BINARY_DIR}/src/kre"
-        "${CMAKE_BINARY_DIR}/src/svg"
-        "${CMAKE_BINARY_DIR}/src/tiled"
-        "${CMAKE_BINARY_DIR}/src/treetree"
-        "${CMAKE_BINARY_DIR}/src/xhtml"
-        "${FREETYPE_INCLUDE_DIR_ft2build}"
-        "${SDL2_INCLUDE_DIR}"
-    )
-endif()
+# XXX - Unknown as of 2023-08 why only Freetype ft2build and SLD2 are needed
+include_directories(
+    "${CMAKE_BINARY_DIR}/src"
+    "${CMAKE_BINARY_DIR}/src/hex"
+    "${CMAKE_BINARY_DIR}/src/imgui"
+    "${CMAKE_BINARY_DIR}/src/imgui_additions"
+    "${CMAKE_BINARY_DIR}/src/kre"
+    "${CMAKE_BINARY_DIR}/src/svg"
+    "${CMAKE_BINARY_DIR}/src/tiled"
+    "${CMAKE_BINARY_DIR}/src/treetree"
+    "${CMAKE_BINARY_DIR}/src/xhtml"
+    "${FREETYPE_INCLUDE_DIR_ft2build}"
+    "${SDL2_INCLUDE_DIR}"
+)
 
 # END Project config
 
@@ -164,17 +129,11 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
     # Debug builds need to be debuggable
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og")
-    set(VCPKG_TARGET_TRIPLET x64-linux-dbg)
-    set(VCPKG_BUILD_TYPE debug)
-    link_directories("${CMAKE_BINARY_DIR}/vcpkg_installed/x64-linux/debug/lib")
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
     # Optimize release builds
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-    set(VCPKG_TARGET_TRIPLET x64-linux-rel)
-    set(VCPKG_BUILD_TYPE release)
-    link_directories("${CMAKE_BINARY_DIR}/vcpkg_installed/x64-linux/release/lib")
 endif()
 
 # Warnings as errors
@@ -219,118 +178,22 @@ include("${CMAKE_BINARY_DIR}/buildsystem/cmake-includes/silence-warnings/CMakeLi
 add_executable(anura "${anura_SRC}")
 
 # Link libraries
-# XXX - The order of the static linking matters!
-# XXX - The grouping of the static linking matters!
-# XXX - DO NOT BUMP VCPKG BASELINE - ANURA CODE CHANGES REQUIRED FIRST!
-# XXX - Some stuff is simply not staticly linkable:
-# - Audio stuff (samplerate, ALSA, Pulseaudio)
-# - Graphics stuff (OpenGL, EGL, DRM, GBM)
-# - X11
-# - Wayland
-# - libc (with: realtme, dlopen)
-#
-# We must YOLO and trust the platform has these things
-if (CMAKE_LINK_TYPE MATCHES Static)
-    target_link_libraries(
-        anura
-        PRIVATE
-        -Wl,-Bstatic
-
-        -Wl,--start-group
-        SDL2
-        -Wl,--end-group
-
-        -Wl,--start-group
-        Boost::filesystem
-        -Wl,--end-group
-
-        -Wl,--start-group
-        cairo
-        pixman-1
-        freetype
-        ZLIB::ZLIB
-        fontconfig
-        png
-        expat
-        brotlidec
-        brotlicommon
-        uuid
-        # XXX - For whatever reason on Debian Bookworm you have to add the below
-        # jbig
-        -Wl,--end-group
-
-        -Wl,--start-group
-        GLEW::GLEW
-        -Wl,--end-group
-
-        -Wl,--start-group
-        vorbisfile
-        vorbis
-        ogg
-        -Wl,--end-group
-
-        -Wl,--start-group
-        SDL2_ttf
-        harfbuzz::harfbuzz
-        -Wl,--end-group
-
-        -Wl,--start-group
-        Boost::locale
-        -Wl,--end-group
-
-        -Wl,--start-group
-        SDL2_image
-        WebP::webp
-        WebP::webpdemux
-        WebP::webpdecoder
-        tiff
-        lzma
-        deflate
-        WebP::webp
-        jpeg
-        unofficial::Lerc::Lerc
-        zstd::libzstd_static
-        -Wl,--end-group
-
-        -Wl,-Bdynamic
-        -lrt
-        -ldl
-        -ldrm
-        -lgbm
-        -lX11
-        -lXcursor
-        -lXext
-        -lXfixes
-        -lXi
-        -lXrandr
-        -lXss
-        -lxkbcommon
-        -ldecor-0
-        -lwayland-client
-        -lwayland-cursor
-        -lwayland-egl
-        -lsamplerate
-        -lasound
-        -lpulse
-    )
-else()
-    target_link_libraries(
-        anura
-        PRIVATE
-        "${RT_LIBRARIES}"
-        "${CMAKE_THREAD_LIBS_INIT}"
-        "${Boost_LIBRARIES}"
-        "${ZLIB_LIBRARIES}"
-        "${OPENGL_LIBRARIES}"
-        "${GLEW_LIBRARIES}"
-        "${FREETYPE_LIBRARIES}"
-        "${SDL2_LIBRARY}"
-        "${SDL2_IMAGE_LIBRARIES}"
-        "${SDL2_MIXER_LIBRARIES}"
-        "${SDL2_TTF_LIBRARIES}"
-        "${Vorbis_File_LIBRARY}"
-        "${Cairo_LIBRARIES}"
-    )
-endif()
+target_link_libraries(
+    anura
+    PRIVATE
+    "${RT_LIBRARIES}"
+    "${CMAKE_THREAD_LIBS_INIT}"
+    "${Boost_LIBRARIES}"
+    "${ZLIB_LIBRARIES}"
+    "${OPENGL_LIBRARIES}"
+    "${GLEW_LIBRARIES}"
+    "${FREETYPE_LIBRARIES}"
+    "${SDL2_LIBRARY}"
+    "${SDL2_IMAGE_LIBRARIES}"
+    "${SDL2_MIXER_LIBRARIES}"
+    "${SDL2_TTF_LIBRARIES}"
+    "${Vorbis_File_LIBRARY}"
+    "${Cairo_LIBRARIES}"
+)
 
 # END Linker config
