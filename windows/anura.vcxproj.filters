@@ -1176,7 +1176,7 @@
     <ClInclude Include="..\src\kre\imgui_impl_sdl_gl3.h">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
-    <ClInclude Include="..\imgui\imgui.h">
+    <ClInclude Include="..\src\imgui\imgui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\theme_imgui.hpp">
@@ -2191,10 +2191,10 @@
     <ClCompile Include="..\src\kre\ParticleSystemUI.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
-    <ClCompile Include="..\imgui\imgui.cpp">
+    <ClCompile Include="..\src\imgui\imgui.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
-    <ClCompile Include="..\imgui\imgui_draw.cpp">
+    <ClCompile Include="..\src\imgui\imgui_draw.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
     <ClCompile Include="..\src\kre\imgui_impl_sdl_gl3.cpp">
@@ -2206,7 +2206,7 @@
     <ClCompile Include="..\src\variant_type_check.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\imgui\imgui_widgets.cpp">
+    <ClCompile Include="..\src\imgui\imgui_widgets.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>
