@@ -53,7 +53,7 @@ jobs:
 
       - name: Build Prep Anura
         run: |
-          cmake . \
+          cmake buildsystem/linux-dynamic \
             -D CMAKE_CXX_COMPILER='clang++' \
             -D CMAKE_BUILD_TYPE="${{ matrix.build-type }}"
 

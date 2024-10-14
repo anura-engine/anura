@@ -54,10 +54,9 @@ jobs:
 
       - name: Build Prep Anura
         run: |
-          cmake . \
+          cmake buildsystem/linux-steam \
             -D CMAKE_CXX_COMPILER="${{ matrix.compiler }}" \
-            -D CMAKE_BUILD_TYPE="${{ matrix.build-type }}" \
-            -D CMAKE_LINK_TYPE=Static
+            -D CMAKE_BUILD_TYPE="${{ matrix.build-type }}"
 
       - name: Build Anura
         run: |
