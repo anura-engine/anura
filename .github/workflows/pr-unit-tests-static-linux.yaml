@@ -29,6 +29,8 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
+          sudo ln -fs /usr/share/zoneinfo/UTC /etc/localtime
+          sudo dpkg-reconfigure --frontend=noninteractive tzdata
           sudo apt-get -qq update
           sudo apt-get -qq upgrade -y
           sudo apt-get -qq install -y --no-install-recommends \
