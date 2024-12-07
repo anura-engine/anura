@@ -26,9 +26,8 @@ jobs:
     container: registry.gitlab.steamos.cloud/steamrt/${{ matrix.steam-runtime }}/sdk
     steps:
       - name: Install Dependencies
-        env:
-          DEBIAN_FRONTEND: noninteractive
         run: |
+          sudo dpkg-reconfigure debconf --frontend=noninteractive
           sudo apt-get -qq update
           sudo apt-get -qq upgrade -y
           sudo apt-get -qq install -y --no-install-recommends \
