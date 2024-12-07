@@ -28,6 +28,7 @@ jobs:
       - name: Install Dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
+          TZ: UTC
         run: |
           sudo apt-get -qq update
           sudo apt-get -qq upgrade -y
