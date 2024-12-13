@@ -242,7 +242,7 @@ On any rolling release distributions we assume you know what you are doing and
 you are on your own.
 
 There is a loose plan to have an Anura package available again in Debian in time
-for the Debian Trixie release expected in early Summer 2025.
+for the Debian Forky release expected in Summer 2027.
 
 ##### Debian
 
@@ -341,6 +341,7 @@ On Pull Requests:
   * Debian
     * 11 / Bullseye
     * 12 / Bookworm
+    * 13 / Trixie
   * Ubuntu
     * 22.04 / Jammy Jellyfish
     * 24.04 / Noble Numbat
