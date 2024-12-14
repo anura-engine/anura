@@ -1,4 +1,0 @@
-.git\
-\modules\tbs
-\modules\citadel
-\modules\frogatto4
