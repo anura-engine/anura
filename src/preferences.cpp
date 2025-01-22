@@ -54,6 +54,8 @@
 #include "sys.hpp"
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
+#include "screen_handling.hpp"
+#include "preference_data.hpp"
 
 #include <time.h>
 
@@ -869,7 +871,7 @@ namespace preferences
 		return &GameRegistry::getInstance();
 	}
 
-	void load_preferences()
+	PreferenceData load_preferences()
 	{
 		std::string path;
 		if(preferences_path_.empty()) {
@@ -894,7 +896,7 @@ namespace preferences
 				sys::write_file(path + "preferences.cfg", module::get_default_preferences().write_json());
 				node = module::get_default_preferences();
 			} else {
-				return;
+				return PreferenceData{1600,800,true,"Default preferences.cfg does not exist"};
 			}
 		}
 
@@ -902,7 +904,7 @@ namespace preferences
 			try {
 				node = json::parse_from_file(path + "preferences.cfg");
 			} catch(const json::ParseError&) {
-				return;
+				return PreferenceData{1600,800,true,"Could not parse preferences.cfg"};
 			}
 		}
 
@@ -963,6 +965,8 @@ namespace preferences
 		}
 
         preferences::set_32bpp_textures_if_kb_memory_at_least(512000);
+
+		return PreferenceData{node["resolution_width"].as_int(), node["resolution_height"].as_int()};
 	}
 
 	void save_preferences()
@@ -1009,6 +1013,11 @@ namespace preferences
 				node.add(i->first, i->second.write());
 			}
 		}
+
+		node.add("resolution_width", variant(graphics::GameScreen::get().getWidth()));
+		node.add("resolution_height", variant(graphics::GameScreen::get().getHeight()));
+
+		std::cout << "save_preferences() :" << graphics::GameScreen::get().getWidth() << ", " << graphics::GameScreen::get().getHeight() << std::endl;
 
 		LOG_INFO("WRITE PREFS: " << (preferences_path_ + "preferences.cfg"));
 		sys::write_file(preferences_path_ + "preferences.cfg", node.build().write_json());

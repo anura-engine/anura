@@ -28,6 +28,7 @@
 
 #include "uri.hpp"
 #include "variant.hpp"
+#include "preference_data.hpp"
 
 namespace game_logic
 {
@@ -204,7 +205,7 @@ namespace preferences
 
 	game_logic::FormulaCallable* registry();
 
-	void load_preferences();
+	PreferenceData load_preferences();
 	void save_preferences();
 
 	uri::uri get_tbs_uri();
