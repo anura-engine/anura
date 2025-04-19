@@ -78,7 +78,7 @@ find_package(GLEW REQUIRED)
 # https://cmake.org/cmake/help/v3.12/module/FindFreetype.html
 find_package(Freetype REQUIRED)
 
-# https://github.com/assimp/assimp/blob/60989a598e2eec923612597b1516604b816d404a/cmake-modules/FindRT.cmake
+# https://github.com/shadow/shadow/blob/aa0445f42d4b5413b27b27d267d0a7f3ec29bed1/cmake/FindRT.cmake
 find_package(RT REQUIRED)
 # https://chromium.googlesource.com/external/github.com/g-truc/glm/+/refs/heads/0.9.6/util/FindGLM.cmake
 find_package(GLM REQUIRED)
