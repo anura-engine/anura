@@ -265,6 +265,12 @@ Check the
 [CI](https://github.com/anura-engine/anura/blob/trunk/.github/workflows/pr-smoketest-rocky.yaml)
 out and repeat after it what it is doing.
 
+#### Alma Linux
+
+Check the
+[CI](https://github.com/anura-engine/anura/blob/trunk/.github/workflows/pr-smoketest-alma.yaml)
+out and repeat after it what it is doing.
+
 #### openSUSE Leap
 
 Check the
@@ -347,6 +353,9 @@ On Pull Requests:
     * 39
     * 40
   * Rocky Linux
+    * 8
+    * 9
+  * Alma Linux
     * 8
     * 9
   * openSUSE Leap
