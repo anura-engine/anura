@@ -1,20 +1,55 @@
-# Try to find real time libraries
-# Once done, this will define
+# - Check for the presence of RT
 #
-# RT_FOUND - system has rt library
-# RT_LIBRARIES - rt libraries directory
-#
-# Source: https://gitlab.cern.ch/dss/eos/commit/44070e575faaa46bd998708ef03eedb381506ff0
-#
+# The following variables are set when RT is found:
+#  HAVE_RT       = Set to true, if all components of RT
+#                          have been found.
+#  RT_INCLUDES   = Include path for the header files of RT
+#  RT_LIBRARIES  = Link these to use RT
 
-if(RT_LIBRARIES)
-    set(RT_FIND_QUIETLY TRUE)
-endif(RT_LIBRARIES)
+## -----------------------------------------------------------------------------
+## Check for the header files
 
-find_library(RT_LIBRARY rt)
-set(RT_LIBRARIES ${RT_LIBRARY})
-# handle the QUIETLY and REQUIRED arguments and set
-# RT_FOUND to TRUE if all listed variables are TRUE
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(RT DEFAULT_MSG RT_LIBRARY)
-mark_as_advanced(RT_LIBRARY)
+find_path (RT_INCLUDES time.h
+  PATHS /usr/local/include /usr/include
+  )
+
+## -----------------------------------------------------------------------------
+## Check for the library
+
+find_library (RT_LIBRARIES rt
+  PATHS /usr/local/lib /usr/lib /lib
+  )
+
+## -----------------------------------------------------------------------------
+## Actions taken when all components have been found
+
+if (RT_INCLUDES AND RT_LIBRARIES)
+  set (HAVE_RT TRUE)
+else (RT_INCLUDES AND RT_LIBRARIES)
+  if (NOT RT_FIND_QUIETLY)
+    if (NOT RT_INCLUDES)
+      message (STATUS "Unable to find RT header files!")
+    endif (NOT RT_INCLUDES)
+    if (NOT RT_LIBRARIES)
+      message (STATUS "Unable to find RT library files!")
+    endif (NOT RT_LIBRARIES)
+  endif (NOT RT_FIND_QUIETLY)
+endif (RT_INCLUDES AND RT_LIBRARIES)
+
+if (HAVE_RT)
+  if (NOT RT_FIND_QUIETLY)
+    message (STATUS "Found components for RT")
+    message (STATUS "RT_INCLUDES = ${RT_INCLUDES}")
+    message (STATUS "RT_LIBRARIES = ${RT_LIBRARIES}")
+  endif (NOT RT_FIND_QUIETLY)
+else (HAVE_RT)
+  if (RT_FIND_REQUIRED)
+    message (FATAL_ERROR "Could not find RT!")
+  endif (RT_FIND_REQUIRED)
+endif (HAVE_RT)
+
+mark_as_advanced (
+  HAVE_RT
+  RT_LIBRARIES
+  RT_INCLUDES
+  )
