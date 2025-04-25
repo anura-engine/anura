@@ -23,6 +23,7 @@
 
 #include <deque>
 
+#include <boost/filesystem/exception.hpp>
 #include <boost/filesystem/operations.hpp>
 
 #include "asserts.hpp"

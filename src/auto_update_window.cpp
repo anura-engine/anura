@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <sstream>
 
+#include <boost/filesystem/exception.hpp>
 #include <boost/filesystem/operations.hpp>
 
 #include <GL/glew.h>
