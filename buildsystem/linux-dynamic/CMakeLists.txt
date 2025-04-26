@@ -162,6 +162,10 @@ endif()
 # XXX - imgui_custom.cpp relies on these
 add_compile_definitions(IMGUI_DEFINE_MATH_OPERATORS)
 
+# Quaternions have become experimental in GLM???
+# XXX - Newer versions of GLM need this for some reason
+add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # Older compilers should not trip up when we selectively silence warnings
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option")
