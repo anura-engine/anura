@@ -11,6 +11,8 @@ jobs:
       matrix:
         # Versions between LTS are not available for long - we only do LTS
         ubuntu:
+          # 20.04 is the oldest LTS with a new enough glibc for the node 20
+          # runtime backing the upstream default checkout action
           - "20.04"
           - "22.04"
           - "24.04"
