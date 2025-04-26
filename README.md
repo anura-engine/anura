@@ -178,6 +178,7 @@ The sets of warnings and diagnostics we currently silence:
     * [`-Wno-unused-result`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/02-unused-result/CMakeLists.txt)
     * [`-Wno-deprecated-declarations`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/03-deprecated-declarations/CMakeLists.txt)
     * [`-Wno-enum-constexpr-conversion`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/04-enum-constexpr-conversion/CMakeLists.txt)
+    * [`-Wno-nontrivial-memcall`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/05-nontrivial-memcall/CMakeLists.txt)
 * LTO (`-flto`)
   * GCC - these need to get set globally or the linker does not get them passed in!
     * [`-Wno-odr`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/01-odr/CMakeLists.txt)
@@ -357,6 +358,7 @@ On Pull Requests:
     * 39
     * 40
     * 41
+    * 42
   * Rocky Linux
     * 8
     * 9
