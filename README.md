@@ -337,6 +337,7 @@ On Pull Requests:
     * 22.04 / Jammy Jellyfish
     * 24.04 / Noble Numbat
   * Fedora
+    * 31
     * 32
     * 33
     * 34

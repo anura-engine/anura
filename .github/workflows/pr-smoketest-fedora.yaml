@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         fedora:
-          # 32 is the oldest Fedora with a new enough glm
+          - "31"
           - "32"
           - "33"
           - "34"
