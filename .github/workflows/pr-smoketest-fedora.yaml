@@ -10,6 +10,8 @@ jobs:
       fail-fast: false
       matrix:
         fedora:
+          # Fedora 30 is the oldest Fedora shipping with dnf out of the box
+          - "30"
           - "31"
           - "32"
           - "33"
