@@ -10,7 +10,8 @@ jobs:
       fail-fast: false
       matrix:
         debian:
-          # Bullseye is the oldest Debian with a new enough glm
+          # Buster is the oldest Debian with repositories still alive upstream
+          - "buster" # 10
           - "bullseye" # 11
           - "bookworm" # 12
           # 13 Trixie is expected in 2025-06

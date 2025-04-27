@@ -10,7 +10,9 @@ jobs:
       fail-fast: false
       matrix:
         fedora:
-          # 32 is the oldest Fedora with a new enough glm
+          # Fedora 30 is the oldest Fedora shipping with dnf out of the box
+          - "30"
+          - "31"
           - "32"
           - "33"
           - "34"
@@ -20,9 +22,10 @@ jobs:
           - "38"
           - "39"
           - "40"
-          # 40 is expected in 2024-04
-          # 41 is expected in 2024-11
+          - "41"
           # 42 is expected in 2025-04
+          # 43 is expected in 2025-11
+          # 44 is expected in 2026-04
         compiler:
           - g++
           - clang++

@@ -330,6 +330,7 @@ On Pull Requests:
 
 * Smoketest dynamic builds on Linux (both g++ and clang++)
   * Debian
+    * 10 / Buster
     * 11 / Bullseye
     * 12 / Bookworm
   * Ubuntu
@@ -337,6 +338,8 @@ On Pull Requests:
     * 22.04 / Jammy Jellyfish
     * 24.04 / Noble Numbat
   * Fedora
+    * 30
+    * 31
     * 32
     * 33
     * 34
@@ -346,6 +349,7 @@ On Pull Requests:
     * 38
     * 39
     * 40
+    * 41
   * Rocky Linux
     * 8
     * 9
