@@ -35,7 +35,18 @@ jobs:
           - rocky: "9"
             compiler: g++
             build-type: Release
-          # 10 is expected in 2025-05
+          - rocky: "10"
+            compiler: g++
+            build-type: Debug
+          - rocky: "10"
+            compiler: g++
+            build-type: Release
+          - rocky: "10"
+            compiler: clang++
+            build-type: Debug
+          - rocky: "8"
+            compiler: clang++
+            build-type: Release
           # 11 is expected in 2028-05
           # 12 is expected in 2031-05
     container: rockylinux:${{ matrix.rocky }}

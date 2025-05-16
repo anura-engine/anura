@@ -362,6 +362,7 @@ On Pull Requests:
   * Rocky Linux
     * 8
     * 9
+    * 10
   * Alma Linux
     * 8
     * 9
