@@ -367,6 +367,7 @@ On Pull Requests:
     * 15.4
     * 15.5
     * 15.6
+    * 16.0
 
 This set should cover most popular use cases and also derivative distributions
 of these root distributions. There are no plans to test on rolling release
