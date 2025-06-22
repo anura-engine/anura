@@ -20,6 +20,12 @@ set_property(
 )
 
 set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/blur.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
     SOURCE "${CMAKE_BINARY_DIR}/src/character_editor_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
@@ -27,6 +33,12 @@ set_property(
 
 set_property(
     SOURCE "${CMAKE_BINARY_DIR}/src/code_editor_dialog.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/code_editor_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
 )
@@ -134,6 +146,12 @@ set_property(
 )
 
 set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/formula_object.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
     SOURCE "${CMAKE_BINARY_DIR}/src/formula_profiler.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
@@ -152,6 +170,12 @@ set_property(
 )
 
 set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/json_parser.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
     SOURCE "${CMAKE_BINARY_DIR}/src/level.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
@@ -165,6 +189,12 @@ set_property(
 
 set_property(
     SOURCE "${CMAKE_BINARY_DIR}/src/level_runner.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/light.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
 )
@@ -194,6 +224,12 @@ set_property(
 )
 
 set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/pause_game_dialog.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
     SOURCE "${CMAKE_BINARY_DIR}/src/playable_custom_object.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
@@ -212,13 +248,91 @@ set_property(
 )
 
 set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/scrollbar_widget.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
     SOURCE "${CMAKE_BINARY_DIR}/src/segment_editor_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
 )
 
 set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/sound.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
     SOURCE "${CMAKE_BINARY_DIR}/src/stats.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_ai_player.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_client.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_game.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_internal_client.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_internal_server.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_matchmaking_server.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_relay_server.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_server.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_server_base.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_web_server.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/text_editor_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
 )
@@ -242,6 +356,12 @@ set_property(
 )
 
 set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/variant_type.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
     SOURCE "${CMAKE_BINARY_DIR}/src/video_selections.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
@@ -249,6 +369,138 @@ set_property(
 
 set_property(
     SOURCE "${CMAKE_BINARY_DIR}/src/water.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/widget_factory.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/css_selector.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/css_stylesheet.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/solid_renderable.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_absolute_box.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_background_info.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_block_box.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_border_info.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_box.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_element.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_inline_block_box.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_inline_element_box.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_layout_engine.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_line_box.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_listitem_box.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_node.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_parser.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_root_box.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_script_interface.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_style_tree.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_text_box.cpp"
+    APPEND_STRING
+    PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
+)
+
+set_property(
+    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_text_node.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-overloaded-virtual"
 )

@@ -23,7 +23,7 @@ jobs:
           - "39"
           - "40"
           - "41"
-          # 42 is expected in 2025-04
+          - "42"
           # 43 is expected in 2025-11
           # 44 is expected in 2026-04
         compiler:
