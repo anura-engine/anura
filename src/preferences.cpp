@@ -896,7 +896,7 @@ namespace preferences
 				sys::write_file(path + "preferences.cfg", module::get_default_preferences().write_json());
 				node = module::get_default_preferences();
 			} else {
-				return PreferenceData{1600,800,true,"Default preferences.cfg does not exist"};
+				return PreferenceData{1440,900,false,true,"Default preferences.cfg does not exist"};
 			}
 		}
 
@@ -904,7 +904,7 @@ namespace preferences
 			try {
 				node = json::parse_from_file(path + "preferences.cfg");
 			} catch(const json::ParseError&) {
-				return PreferenceData{1600,800,true,"Could not parse preferences.cfg"};
+				return PreferenceData{1440,900,false,true,"Could not parse preferences.cfg"};
 			}
 		}
 
@@ -966,7 +966,7 @@ namespace preferences
 
         preferences::set_32bpp_textures_if_kb_memory_at_least(512000);
 
-		return PreferenceData{node["resolution_width"].as_int(), node["resolution_height"].as_int()};
+		return PreferenceData{node["resolution_width"].as_int(), node["resolution_height"].as_int(), bool(node["is_full_screen"].as_int(0))};
 	}
 
 	void save_preferences()
@@ -1016,6 +1016,11 @@ namespace preferences
 
 		node.add("resolution_width", variant(graphics::GameScreen::get().getWidth()));
 		node.add("resolution_height", variant(graphics::GameScreen::get().getHeight()));
+
+		bool pref_full_screen = fullscreen_ == preferences::ScreenMode::WINDOWED ? false : true;
+		std::cout << "pref_full_screen: " << pref_full_screen << std::endl;
+
+		node.add("is_full_screen", variant(pref_full_screen));
 
 		std::cout << "save_preferences() :" << graphics::GameScreen::get().getWidth() << ", " << graphics::GameScreen::get().getHeight() << std::endl;
 

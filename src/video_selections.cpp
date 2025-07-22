@@ -153,10 +153,31 @@ void show_video_selection_dialog()
 	// Fullscreen selection
 	bool isWindowInitiallyFullscreen = 
 		KRE::WindowManager::getMainWindow()->fullscreenMode() != KRE::FullScreenMode::WINDOWED;
+	
+	//The checkbox for setting the game to fullscreen. It takes a lambda function which changes said
+	// setting upon ticked. However, using variables that are not passed to a lambda is bad practice,
+	// I encourage future deveopers to change this /ubuntujackson
 	Checkbox* fullscreenCheckbox = new Checkbox(
 		_("Fullscreen"),
 		isWindowInitiallyFullscreen,
-		[](bool checked) { /* Do nothing here, only apply on dialog OK. */ }
+		[](bool checked) { 
+
+			auto& gs = graphics::GameScreen::get();
+			
+			//Setting fullscreen by conventional means
+			gs.setFullscreen(
+				checked
+				? KRE::FullScreenMode::FULLSCREEN_WINDOWED
+				: KRE::FullScreenMode::WINDOWED
+			);
+
+			//Always need to set preferences to reflect the actual screen settings
+			preferences::set_screen_mode(
+				checked
+				? preferences::ScreenMode::FULLSCREEN_WINDOWED
+				: preferences::ScreenMode::WINDOWED);
+
+		}
 	);
 	if(!preferences::no_fullscreen_ever()) {
 		d.addWidget(WidgetPtr(fullscreenCheckbox));
@@ -196,6 +217,7 @@ void show_video_selection_dialog()
 		
 		// Set window size.
 		if(selected_mode >= 0 && static_cast<unsigned>(selected_mode) < display_modes.size()) {
+
 			preferences::adjust_virtual_width_to_match_physical(display_modes[selected_mode].width, display_modes[selected_mode].height);
 			
 			int vw = preferences::requested_virtual_window_width() > 0
@@ -212,13 +234,5 @@ void show_video_selection_dialog()
 			}
 		}
 
-		// Actually set fullscreen.
-		KRE::WindowManager::getMainWindow()->setFullscreenMode(fullscreenCheckbox->checked()
-			? KRE::FullScreenMode::FULLSCREEN_WINDOWED
-			: KRE::FullScreenMode::WINDOWED);
-		preferences::set_screen_mode(
-			KRE::WindowManager::getMainWindow()->fullscreenMode() == KRE::FullScreenMode::WINDOWED
-				? preferences::ScreenMode::WINDOWED
-				: preferences::ScreenMode::FULLSCREEN_WINDOWED);
 	}
 }
