@@ -42,7 +42,7 @@ class tbs_bot_timer_proxy;
 class bot : public game_logic::FormulaCallable
 	{
 	public:
-		bot(boost::asio::io_service& io_service, const std::string& host, const std::string& port, variant v);
+		bot(boost::asio::io_context& io_context, const std::string& host, const std::string& port, variant v);
 		~bot();
 
 		void set_ipc_client(ffl::IntrusivePtr<ipc_client> ipc_client) { ipc_client_ = ipc_client; }
@@ -67,7 +67,7 @@ class bot : public game_logic::FormulaCallable
 		ffl::IntrusivePtr<client> client_;
 		ffl::IntrusivePtr<ipc_client> ipc_client_;
 
-		boost::asio::io_service& service_;
+		boost::asio::io_context& context_;
 		boost::asio::deadline_timer timer_;
 
 		game_logic::FormulaPtr on_create_, on_message_;

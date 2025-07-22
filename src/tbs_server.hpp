@@ -38,7 +38,7 @@ namespace tbs
 	class server : public server_base
 	{
 	public:
-		explicit server(boost::asio::io_service& io_service);
+		explicit server(boost::asio::io_context& io_context);
 		virtual ~server();
 
 		void adopt_ajax_socket(socket_ptr socket, int session_id, const variant& msg);

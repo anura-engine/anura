@@ -88,7 +88,7 @@ COMMAND_LINE_UTILITY(stats_server)
 	//exception instead.
 	const assert_recover_scope recovery_scope;
 
-	boost::asio::io_service io_service;
-	web_server ws(io_service, port);
-	io_service.run();
+	boost::asio::io_context io_context;
+	web_server ws(io_context, port);
+	io_context.run();
 }

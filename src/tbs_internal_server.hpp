@@ -59,7 +59,7 @@ namespace tbs
 			game_logic::MapFormulaCallablePtr callable,
 			std::function<void(const std::string&)> handler);
 		static void process();
-		static boost::asio::io_service& get_io_service() { return io_service_; }
+		static boost::asio::io_context& get_io_context() { return io_context_; }
 
 		static int requests_in_flight(int session_id);
 	protected:
@@ -70,7 +70,7 @@ namespace tbs
 			int session_id,
 			std::function<void(const std::string&)> handler,
 			game_logic::MapFormulaCallablePtr callable);
-		static boost::asio::io_service io_service_;
+		static boost::asio::io_context io_context_;
 
 		void write_queue(send_function send_fn, const variant& v, int session_id);
 		bool read_queue(send_function* send_fn, variant* v, int *session_id);

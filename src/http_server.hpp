@@ -42,7 +42,7 @@ namespace http
 	public:
 
 		struct SocketInfo {
-			explicit SocketInfo(boost::asio::io_service& service);
+			explicit SocketInfo(boost::asio::io_context& context);
 			boost::asio::ip::tcp::socket socket;
 			int client_version;
 			bool supports_deflate;
@@ -51,7 +51,7 @@ namespace http
 		typedef std::shared_ptr<SocketInfo> socket_ptr;
 		typedef std::shared_ptr<std::array<char, 64*1024> > buffer_ptr;
 
-		explicit web_server(boost::asio::io_service& io_service, int port=23456);
+		explicit web_server(boost::asio::io_context& io_context, int port=23456);
 		virtual ~web_server();
 
 		void connect_proxy(uint32_t session_id, const std::string& host, const std::string& port);
@@ -97,7 +97,7 @@ namespace http
 
 		virtual variant parse_message(const std::string& msg) const;
 
-		boost::asio::io_service& io_service_;
+		boost::asio::io_context& io_context_;
 		std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_;
 	};
 }

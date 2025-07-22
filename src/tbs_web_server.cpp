@@ -64,7 +64,7 @@ namespace tbs
 {
 	namespace
 	{
-		boost::asio::io_service* g_service;
+		boost::asio::io_context* g_context;
 		int g_listening_port = -1;
 		web_server* web_server_instance = nullptr;
 	}
@@ -73,12 +73,12 @@ namespace tbs
 
 	using boost::asio::ip::tcp;
 
-	boost::asio::io_service* web_server::service() { return g_service; }
+	boost::asio::io_context* web_server::context() { return g_context; }
 	boost::interprocess::named_semaphore* web_server::termination_semaphore() { return g_termination_semaphore; }
 	int web_server::port() { return g_listening_port; }
 
-	web_server::web_server(server& serv, boost::asio::io_service& io_service, int port)
-		: http::web_server(io_service, port), server_(serv), timer_(io_service)
+	web_server::web_server(server& serv, boost::asio::io_context& io_context, int port)
+		: http::web_server(io_context, port), server_(serv), timer_(io_context)
 	{
 		web_server_instance = this;
 		timer_.expires_from_now(boost::posix_time::milliseconds(1000));
@@ -286,12 +286,12 @@ COMMAND_LINE_UTILITY(tbs_server) {
 */
 	LOG_INFO("MONITOR URL: " << "http://localhost:" << port << "/tbs_monitor.html");
 
-	boost::asio::io_service io_service;
+	boost::asio::io_context io_context;
 
-	tbs::g_service = &io_service;
+	tbs::g_context = &io_context;
 	tbs::g_listening_port = port;
 
-	tbs::server s(io_service);
+	tbs::server s(io_context);
 
 	for(auto session : ipc_sessions) {
 		SharedMemoryPipePtr pipe(new SharedMemoryPipe(session.pipe_name, false));
@@ -302,7 +302,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 
 	boost::shared_ptr<tbs::web_server> ws;
 
-	ws.reset(new tbs::web_server(s, io_service, ipc_sessions.empty() ? port : 0));
+	ws.reset(new tbs::web_server(s, io_context, ipc_sessions.empty() ? port : 0));
 	s.set_http_server(ws.get());
 	LOG_INFO("tbs_server(): Listening on port " << std::dec << port);
 
@@ -358,7 +358,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 		try {
 			const assert_recover_scope assert_scope;
 			for(const std::string& id : bot_id) {
-				bots.push_back(ffl::IntrusivePtr<tbs::bot>(new tbs::bot(io_service, "127.0.0.1", formatter() << port, json::parse_from_file("data/tbs_test/" + id + ".cfg"))));
+				bots.push_back(ffl::IntrusivePtr<tbs::bot>(new tbs::bot(io_context, "127.0.0.1", formatter() << port, json::parse_from_file("data/tbs_test/" + id + ".cfg"))));
 			}
 		} catch(const validation_failure_exception& e) {
 			std::map<variant,variant> m;
@@ -371,7 +371,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 		}
 
 		try {
-			io_service.run();
+			io_context.run();
 		} catch(const code_modified_exception&) {
 			s.clear_games();
 		} catch(const tbs::exit_exception&) {

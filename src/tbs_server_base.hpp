@@ -35,7 +35,7 @@ namespace tbs
 	class server_base
 	{
 	public:
-		server_base(boost::asio::io_service& io_service);
+		server_base(boost::asio::io_context& io_context);
 		virtual ~server_base();
 
 		void clear_games();

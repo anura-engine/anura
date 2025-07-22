@@ -31,7 +31,7 @@
 class ModuleWebServer : public http::web_server
 {
 public:
-	explicit ModuleWebServer(const std::string& data_path, const std::string& chunk_path, boost::asio::io_service& io_service, int port=23456);
+	explicit ModuleWebServer(const std::string& data_path, const std::string& chunk_path, boost::asio::io_context& io_context, int port=23456);
 	virtual ~ModuleWebServer()
 	{}
 private:

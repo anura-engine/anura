@@ -32,15 +32,14 @@
 
 PREF_INT(http_fake_lag, 0, "fake lag to add to http requests");
 
-http_client::http_client(const std::string& host, const std::string& port, int session, boost::asio::io_service* service)
+http_client::http_client(const std::string& host, const std::string& port, int session, boost::asio::io_context* context)
   : session_id_(session),
-    io_service_buf_(service ? nullptr : new boost::asio::io_service),
-	io_service_(service ? service : io_service_buf_.get()),
+    io_context_buf_(context ? nullptr : new boost::asio::io_context),
+	io_context_(context ? context : io_context_buf_.get()),
 	resolution_state_(RESOLUTION_NOT_STARTED),
-    resolver_(new tcp::resolver(*io_service_)),
+	resolver_(new tcp::resolver(*io_context_)),
 	host_(host),
 	port_(port),
-	resolver_query_(new tcp::resolver::query(tcp::resolver::query::protocol_type::v4(), host.c_str(), port.c_str())),
 	in_flight_(0),
 	allow_keepalive_(false),
 	timeout_and_retry_(false)
@@ -84,7 +83,7 @@ void http_client::send_request(std::string method_path, std::string request, std
 		conn->retry_fn = std::bind(&http_client::send_request, this, method_path, request, handler, error_handler, progress_handler, num_retries, attempt_num+1);
 		conn->retry_on_error = num_retries+1;
 	} else {
-		conn.reset(new Connection(*io_service_));
+		conn.reset(new Connection(*io_context_));
 		conn->retry_on_error = num_retries;
 		if(num_retries || timeout_and_retry_) {
 			conn->retry_fn = std::bind(&http_client::send_request, this, method_path, request, handler, error_handler, progress_handler, num_retries-1, attempt_num+1);
@@ -110,7 +109,7 @@ void http_client::send_request(std::string method_path, std::string request, std
 		resolution_state_ = RESOLUTION_IN_PROGRESS;
 
 		try {
-			resolver_->async_resolve(*resolver_query_,
+			resolver_->async_resolve(host_, port_,
 				std::bind(&http_client::handle_resolve, this,
 					std::placeholders::_1,
 					std::placeholders::_2,
@@ -126,7 +125,7 @@ void http_client::send_request(std::string method_path, std::string request, std
 	}
 }
 
-void http_client::handle_resolve(const boost::system::error_code& error, tcp::resolver::iterator endpoint_iterator, connection_ptr conn)
+void http_client::handle_resolve(const boost::system::error_code& error, tcp::resolver::results_type endpoint_result, connection_ptr conn)
 {
 	if(conn->aborted) {
 		return;
@@ -134,7 +133,7 @@ void http_client::handle_resolve(const boost::system::error_code& error, tcp::re
 
 	if(!error)
 	{
-		endpoint_iterator_ = endpoint_iterator;
+		endpoint_result_ = endpoint_result;
 		// Attempt a connection to each endpoint in the list until we
 		// successfully establish a connection.
 		async_connect(conn);
@@ -153,15 +152,15 @@ void http_client::async_connect(connection_ptr conn)
 
 	try {
 		boost::asio::async_connect(*conn->socket,
-			endpoint_iterator_,
+			endpoint_result_,
 			std::bind(&http_client::handle_connect, this,
-				std::placeholders::_1, conn, endpoint_iterator_));
+				std::placeholders::_1, std::placeholders::_2, conn));
 	} catch(const std::exception& e) {
 		LOG_ERROR("Error in async_connect: " << e.what() << "\n");
 	}
 }
 
-void http_client::handle_connect(const boost::system::error_code& error, connection_ptr conn, tcp::resolver::iterator resolve_itor)
+void http_client::handle_connect(const boost::system::error_code& error, tcp::endpoint endpoint, connection_ptr conn)
 {
 	if(conn->aborted) {
 		return;
@@ -169,21 +168,12 @@ void http_client::handle_connect(const boost::system::error_code& error, connect
 
 	if(error) {
 		LOG_WARN("HANDLE_CONNECT_ERROR: " << error);
-		if(endpoint_iterator_ == resolve_itor) {
-			++endpoint_iterator_;
-		}
-		//ASSERT_LOG(endpoint_iterator_ != tcp::resolver::iterator(), "COULD NOT RESOLVE TBS SERVER: " << resolve_itor->endpoint().address().to_string() << ":" << resolve_itor->endpoint().port());
-		if(endpoint_iterator_ == tcp::resolver::iterator()) {
-			resolution_state_ = RESOLUTION_NOT_STARTED;
-			--in_flight_;
-			conn->error_handler("Error establishing connection");
-			return;
-		}
-
-		async_connect(conn);
-
+		resolution_state_ = RESOLUTION_NOT_STARTED;
+		--in_flight_;
+		conn->error_handler("Error establishing connection");
 		return;
 	}
+
 #if defined(_MSC_VER)
 	conn->socket->set_option(boost::asio::ip::tcp::no_delay(true));
 #endif
@@ -483,8 +473,8 @@ void http_client::process()
 	}
 
 	try {
-		io_service_->poll();
-		io_service_->reset();
+		io_context_->poll();
+		io_context_->restart();
 	} catch(const std::exception& e) {
 		LOG_ERROR("Error in http client: " << e.what() << "\n");
 	}

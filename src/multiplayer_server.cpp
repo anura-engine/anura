@@ -51,10 +51,10 @@ namespace multiplayer
 	class server
 	{
 	public:
-		explicit server(boost::asio::io_service& io_service)
-		  : acceptor_(io_service, tcp::endpoint(tcp::v4(), 17002)),
+		explicit server(boost::asio::io_context& io_context)
+		  : acceptor_(io_context, tcp::endpoint(tcp::v4(), 17002)),
 			next_id_(0),
-			udp_socket_(io_service, udp::endpoint(udp::v4(), 17001))
+			udp_socket_(io_context, udp::endpoint(udp::v4(), 17001))
 		{
 			start_accept();
 			start_udp_receive();
@@ -302,8 +302,8 @@ namespace multiplayer
 
 COMMAND_LINE_UTILITY(multiplayer_server)
 {
-	boost::asio::io_service io_service;
+	boost::asio::io_context io_context;
 
-	multiplayer::server srv(io_service);
-	io_service.run();
+	multiplayer::server srv(io_context);
+	io_context.run();
 }
