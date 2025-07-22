@@ -152,16 +152,10 @@ void http_client::async_connect(connection_ptr conn)
 	}
 
 	try {
-#if BOOST_VERSION >= 104700
 		boost::asio::async_connect(*conn->socket,
 			endpoint_iterator_,
 			std::bind(&http_client::handle_connect, this,
 				std::placeholders::_1, conn, endpoint_iterator_));
-#else
-		conn->socket->async_connect(*endpoint_iterator_,
-			std::bind(&http_client::handle_connect, this,
-				std::placeholders::_1, conn, endpoint_iterator_));
-#endif
 	} catch(const std::exception& e) {
 		LOG_ERROR("Error in async_connect: " << e.what() << "\n");
 	}

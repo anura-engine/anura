@@ -27,11 +27,8 @@
 #include <boost/asio.hpp>
 #include <boost/regex.hpp>
 // boost::thread < 1.51 conflicts with C++11-capable compilers
-#if BOOST_VERSION < 105100
-    #include <ctime>
-    #undef TIME_UTC
-#endif
 //#include <boost/thread.hpp>
+// Should this be uncommented now?
 
 #include <iostream>
 #include <string>
@@ -66,11 +63,7 @@ namespace multiplayer
 	private:
 		void start_accept()
 		{
-#if BOOST_ASIO_VERSION >= 101400
 			socket_ptr socket(new tcp::socket(acceptor_.get_executor()));
-#else
-			socket_ptr socket(new tcp::socket(acceptor_.get_io_service()));
-#endif
 			acceptor_.async_accept(*socket, std::bind(&server::handle_accept, this, socket, std::placeholders::_1));
 		}
 
