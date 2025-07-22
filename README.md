@@ -338,7 +338,6 @@ On Pull Requests:
 
 * Smoketest dynamic builds on Linux (both g++ and clang++)
   * Debian
-    * 10 / Buster
     * 11 / Bullseye
     * 12 / Bookworm
   * Ubuntu
