@@ -14,7 +14,7 @@ jobs:
           - "buster" # 10
           - "bullseye" # 11
           - "bookworm" # 12
-          # 13 Trixie is expected in 2025-06
+          - "trixie" # 13
           # 14 is expected in 2027-06
         compiler:
           - g++

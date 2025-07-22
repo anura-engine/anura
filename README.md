@@ -341,6 +341,7 @@ On Pull Requests:
     * 10 / Buster
     * 11 / Bullseye
     * 12 / Bookworm
+    * 13 / Trixie
   * Ubuntu
     * 20.04 / Focal Fossa
     * 22.04 / Jammy Jellyfish
