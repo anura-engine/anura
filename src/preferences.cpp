@@ -806,8 +806,9 @@ namespace preferences
 	{
 		boost::uuids::detail::sha1 hash;
 		hash.process_bytes(pword.c_str(), pword.length());
-		unsigned int digest[5];
-		hash.get_digest(digest);
+		boost::uuids::detail::sha1::digest_type digest_boost;
+		hash.get_digest(digest_boost);
+		auto *digest = reinterpret_cast<uint32_t*>(digest_boost);
 		std::stringstream str;
 		str << std::hex << std::setfill('0')  << std::setw(sizeof(unsigned int)*2) << digest[0] << digest[1] << digest[2] << digest[3] << digest[4];
 		password_ = str.str();
