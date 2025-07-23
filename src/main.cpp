@@ -950,22 +950,18 @@ int main(int argcount, char* argvec[])
 		int width = 0;
 		int height = 0;
 
+		bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
 		if(!preference_data.error){
-			bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
-			//graphics::GameScreen::autoSelectResolution(main_wnd, preference_data.resolution_width, preference_data.resolution_height, true, isFullscreen);
-
-			preferences::adjust_virtual_width_to_match_physical(preference_data.resolution_width, preference_data.resolution_height);
-
-			main_wnd->setWindowSize(preference_data.resolution_width, preference_data.resolution_height);
+			width = preference_data.resolution_width;
+			height = preference_data.resolution_height;
 		}
-		else{
-			bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
+		if(width == 0 || height == 0){
 			graphics::GameScreen::autoSelectResolution(main_wnd, width, height, true, isFullscreen);
-
-			preferences::adjust_virtual_width_to_match_physical(width, height);
-
-			main_wnd->setWindowSize(width, height);
 		}
+
+		preferences::adjust_virtual_width_to_match_physical(width, height);
+
+		main_wnd->setWindowSize(width, height);
 	}
 
 	int vw = preferences::requested_virtual_window_width() > 0
