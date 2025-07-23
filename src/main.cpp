@@ -533,10 +533,15 @@ int main(int argcount, char* argvec[])
 		module::set_core_module_name(DEFAULT_MODULE);
 	}
 
+	//This function both returns AND does stuff on the inside. Ideally the preferences
+	// would be loaded to some gullibly accessible class, but I'll keep it like this for now, despite bad practice
 	PreferenceData preference_data = preferences::load_preferences();
 
 	if(preference_data.error){
-		LOG_ERROR("Preference data error: " << preference_data.error_message);
+		//This bloody std cout statement won't show up in the terminal/CLI despite flushing, and yes
+		// I checked with a deboogaboo (debugger) something is incredibly fishy with Anura when it comes to printing/logging
+		std::cout << "Preference data error: " << preference_data.error_message << std::endl;
+		//std::cout.flush();
 	}
 
 	// load difficulty settings after module, before rest of args.
@@ -947,11 +952,9 @@ int main(int argcount, char* argvec[])
 		&& preferences::requested_window_width() == 0
 		&& preferences::requested_window_height() == 0
 	) {
-		int width = 0;
-		int height = 0;
 
 		if(!preference_data.error){
-			bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
+			//bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
 			//graphics::GameScreen::autoSelectResolution(main_wnd, preference_data.resolution_width, preference_data.resolution_height, true, isFullscreen);
 
 			preferences::adjust_virtual_width_to_match_physical(preference_data.resolution_width, preference_data.resolution_height);
@@ -959,12 +962,13 @@ int main(int argcount, char* argvec[])
 			main_wnd->setWindowSize(preference_data.resolution_width, preference_data.resolution_height);
 		}
 		else{
-			bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
-			graphics::GameScreen::autoSelectResolution(main_wnd, width, height, true, isFullscreen);
 
-			preferences::adjust_virtual_width_to_match_physical(width, height);
+			//Game would not be full screen if there is no valid PreferenceData struct instance
+			graphics::GameScreen::autoSelectResolution(main_wnd, preference_data.resolution_width, preference_data.resolution_height, true, false);
 
-			main_wnd->setWindowSize(width, height);
+			preferences::adjust_virtual_width_to_match_physical(preference_data.resolution_width, preference_data.resolution_height);
+
+			main_wnd->setWindowSize(preference_data.resolution_width, preference_data.resolution_height);
 		}
 	}
 
@@ -980,18 +984,25 @@ int main(int argcount, char* argvec[])
 	auto canvas = Canvas::getInstance();
 	LOG_INFO("canvas size: " << canvas->width() << "x" << canvas->height());
 
-	//WindowManager::getMainWindow()->setWindowSize(main_wnd->width(), main_wnd->height());
-
 	graphics::GameScreen::get().setDimensions(main_wnd->width(), main_wnd->height());
 	graphics::GameScreen::get().setVirtualDimensions(vw, vh);
 
-	std::cout << "Virtual dimensions: " << vw << ", " << vh << std::endl;
-	std::cout << "Screen virtual dimensions: " << graphics::GameScreen::get().getVirtualWidth() << ", " << graphics::GameScreen::get().getVirtualHeight() << std::endl;
-	std::cout << "main_wnd->width(): " << main_wnd->width() << ", " << main_wnd->height() << std::endl;
+	if(!preference_data.error){
+		if(preference_data.is_full_screen){
+			auto& gs = graphics::GameScreen::get();
+			// This changes if editor is active.
+			gs.setFullscreen(
+				preference_data.is_full_screen
+				? KRE::FullScreenMode::FULLSCREEN_WINDOWED
+				: KRE::FullScreenMode::WINDOWED
+			);
 
-	//graphics::GameScreen::get().setDimensions(preference_data.resolution_width, preference_data.resolution_height);
-	//graphics::GameScreen::get().setVirtualDimensions(preference_data.resolution_width, preference_data.resolution_height);
-	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
+			preferences::set_screen_mode(
+				preference_data.is_full_screen
+				? preferences::ScreenMode::FULLSCREEN_WINDOWED
+				: preferences::ScreenMode::WINDOWED);
+		}
+	}
 
 	//we prefer late swap tearing so as to minimize frame loss when possible
 	int swap_result = SDL_GL_SetSwapInterval(g_vsync != 0 ? -1 : 0);
