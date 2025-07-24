@@ -43,7 +43,6 @@ jobs:
             libboost_system-devel \
             cairo-devel \
             glew-devel \
-            glm-devel \
             boost-devel \
             libicu-devel \
             libSDL2_image-devel \

@@ -47,7 +47,6 @@ jobs:
                 boost-devel \
                 cairo-devel \
                 glew-devel \
-                glm-devel \
                 libvorbis-devel \
                 SDL2_image-devel \
                 SDL2_mixer-devel \
