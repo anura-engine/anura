@@ -75,6 +75,9 @@ modules/*
 #Ignore this, don't know why it's being created for me.
 imgui.ini
 
+# We git clone imgui into src/imgui with CMake
+src/imgui
+
 MacOS/include
 MacOS/lib
 xcuserdata
@@ -87,7 +90,7 @@ anura.kdev4
 .kdev4/
 
 #Visual Studio build files.
-*resouces.aps 
+*resouces.aps
 vcpkg_installed/
 windows/build/
 windows/*-Release/

@@ -1,7 +1,8 @@
 # BEGIN CMake setup
 
 # 3.12 added add_compile_definitions
-cmake_minimum_required(VERSION 3.12)
+# 3.14 added FetchContent
+cmake_minimum_required(VERSION 3.14)
 
 if(DEFINED ENV{CXX})
   message("")
@@ -33,6 +34,22 @@ endif()
 
 # Build target for CXX project "anura"
 project(anura LANGUAGES CXX)
+
+# Fetch vendored dependencies
+include(FetchContent)
+
+find_package(Git REQUIRED)
+
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG d4ddc46e7773e9a9b68f965d007968f35ca4e09a # https://github.com/ocornut/imgui/releases/tag/v1.89.7
+    GIT_SHALLOW TRUE
+    SOURCE_DIR "${CMAKE_BINARY_DIR}/src/imgui"
+    SOURCE_SUBDIR purposefully-empty-to-skip-build
+)
+
+FetchContent_MakeAvailable(imgui)
 
 # Use ccache to accelerate iterating on CXX files, if available
 find_program(CCACHE "ccache")
