@@ -24,7 +24,6 @@
     "lerc",
     "zstd",
     "jbigkit",
-    "glew",
-    "glm"
+    "glew"
   ]
 }
