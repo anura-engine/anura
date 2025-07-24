@@ -51,6 +51,18 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(imgui)
 
+# XXX - 1.0.0 is the latest one which builds with C++17 on LLVM
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 33b0eb9fa336ffd8551024b1d2690e418014553b # https://github.com/g-truc/glm/releases/tag/1.0.0
+    GIT_SHALLOW TRUE
+    SOURCE_DIR "${CMAKE_BINARY_DIR}/src/glm"
+    SOURCE_SUBDIR purposefully-empty-to-skip-build
+)
+
+FetchContent_MakeAvailable(glm)
+
 # Use ccache to accelerate iterating on CXX files, if available
 find_program(CCACHE "ccache")
 if(CCACHE)
@@ -84,7 +96,6 @@ find_package(ZLIB REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(Freetype REQUIRED)
-find_package(GLM REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)
 find_package(SDL2_mixer REQUIRED)
@@ -99,6 +110,7 @@ find_package(zstd CONFIG REQUIRED)
 # Add the headers
 include_directories(
     "${CMAKE_BINARY_DIR}/src"
+    "${CMAKE_BINARY_DIR}/src/glm"
     "${CMAKE_BINARY_DIR}/src/hex"
     "${CMAKE_BINARY_DIR}/src/imgui"
     "${CMAKE_BINARY_DIR}/src/imgui_additions"
@@ -152,6 +164,10 @@ endif()
 # Use imgui provided vector math
 # XXX - imgui_custom.cpp relies on these
 add_compile_definitions(IMGUI_DEFINE_MATH_OPERATORS)
+
+# Quaternions have become experimental in GLM???
+# XXX - Newer versions of GLM need this for some reason
+add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 
 # XXX - The md5 module of anura does not build without this.
 # XXX - Other files also emit the warning, but somehow this gets elevated to an error - no clue, probably worse.

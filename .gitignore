@@ -78,6 +78,9 @@ imgui.ini
 # We git clone imgui into src/imgui with CMake
 src/imgui
 
+# We git clone glm into src/glm with CMake
+src/glm
+
 MacOS/include
 MacOS/lib
 xcuserdata

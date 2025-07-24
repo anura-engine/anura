@@ -54,6 +54,18 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(imgui)
 
+# XXX - 1.0.0 is the latest one which builds with C++17 on LLVM
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 33b0eb9fa336ffd8551024b1d2690e418014553b # https://github.com/g-truc/glm/releases/tag/1.0.0
+    GIT_SHALLOW TRUE
+    SOURCE_DIR "${CMAKE_BINARY_DIR}/src/glm"
+    SOURCE_SUBDIR purposefully-empty-to-skip-build
+)
+
+FetchContent_MakeAvailable(glm)
+
 # Use ccache to accelerate iterating on CXX files, if available
 find_program(CCACHE "ccache")
 if(CCACHE)
@@ -97,8 +109,6 @@ find_package(Freetype REQUIRED)
 
 # https://github.com/shadow/shadow/blob/aa0445f42d4b5413b27b27d267d0a7f3ec29bed1/cmake/FindRT.cmake
 find_package(RT REQUIRED)
-# https://chromium.googlesource.com/external/github.com/g-truc/glm/+/refs/heads/0.9.6/util/FindGLM.cmake
-find_package(GLM REQUIRED)
 # https://github.com/tcbrindle/sdl2-cmake-scripts/blob/e037fb54f32973343fada6a051d3a3f8adf3a4a0/FindSDL2.cmake
 find_package(SDL2 REQUIRED)
 # https://github.com/tcbrindle/sdl2-cmake-scripts/blob/e037fb54f32973343fada6a051d3a3f8adf3a4a0/FindSDL2_image.cmake
@@ -118,6 +128,7 @@ find_package(Cairo REQUIRED)
 # XXX - Unknown as of 2023-08 why only Freetype ft2build and SLD2 are needed
 include_directories(
     "${CMAKE_BINARY_DIR}/src"
+    "${CMAKE_BINARY_DIR}/src/glm"
     "${CMAKE_BINARY_DIR}/src/hex"
     "${CMAKE_BINARY_DIR}/src/imgui"
     "${CMAKE_BINARY_DIR}/src/imgui_additions"
