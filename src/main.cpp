@@ -540,7 +540,7 @@ int main(int argcount, char* argvec[])
 	if(preference_data.error){
 		//This bloody std cout statement won't show up in the terminal/CLI despite flushing, and yes
 		// I checked with a deboogaboo (debugger) something is incredibly fishy with Anura when it comes to printing/logging
-		std::cout << "Preference data error: " << preference_data.error_message << std::endl;
+		LOG_ERROR("Preference data error: " + preference_data.error_message);
 		//std::cout.flush();
 	}
 
@@ -906,8 +906,8 @@ int main(int argcount, char* argvec[])
 	variant_builder hints;
 	hints.add("renderer", "opengl");
 	hints.add("use_vsync", g_vsync != 0 ? true : false);
-	hints.add("width", preferences::requested_window_width() > 0 ? preferences::requested_window_width() : 800);
-	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
+	hints.add("width", preferences::cmd_requested_window_width() > 0 ? preferences::cmd_requested_window_width() : 800);
+	hints.add("height", preferences::cmd_requested_window_height() > 0 ? preferences::cmd_requested_window_height() : 600);
 	hints.add("resizeable", g_resizeable);
 	hints.add("fullscreen", preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED ? true : false);
 	if(g_msaa) {
@@ -948,20 +948,21 @@ int main(int argcount, char* argvec[])
 
 	if(
 		!g_desktop_fullscreen && //Comes from a PREF_BOOL() somewhere.
+		preferences::get_screen_mode() != preferences::ScreenMode::FULLSCREEN_WINDOWED &&
 		preferences::auto_size_window()
-		&& preferences::requested_window_width() == 0
-		&& preferences::requested_window_height() == 0
+		&& preferences::cmd_requested_window_width() == 0
+		&& preferences::cmd_requested_window_height() == 0
 	) {
 
 		if(!preference_data.error){
-			//bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
+			//
 			//graphics::GameScreen::autoSelectResolution(main_wnd, preference_data.resolution_width, preference_data.resolution_height, true, isFullscreen);
 
 			preferences::adjust_virtual_width_to_match_physical(preference_data.resolution_width, preference_data.resolution_height);
 
 			main_wnd->setWindowSize(preference_data.resolution_width, preference_data.resolution_height);
 		}
-		else{
+		if(preference_data.error || (preference_data.resolution_width == 0 || preference_data.resolution_height == 0)){
 
 			//Game would not be full screen if there is no valid PreferenceData struct instance
 			graphics::GameScreen::autoSelectResolution(main_wnd, preference_data.resolution_width, preference_data.resolution_height, true, false);

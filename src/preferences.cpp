@@ -532,8 +532,8 @@ namespace preferences
 		bool die_on_assert_ = false;
 		bool type_safety_checks_ = true;
 
-		int requested_window_width_ = 0;
-		int requested_window_height_ = 0;
+		int cmd_requested_window_width_ = 0;
+		int cmd_requested_window_height_ = 0;
 
 		PREF_BOOL(auto_size_window, true, "If true, window is auto-sized");
 		PREF_INT(virtual_window_width, 0, "Virtual width of the game window");
@@ -731,14 +731,14 @@ namespace preferences
 		g_auto_size_window = enabled;
 	}
 
-	int requested_window_width()
+	int cmd_requested_window_width()
 	{
-		return requested_window_width_;
+		return cmd_requested_window_width_;
 	}
 
-	int requested_window_height()
+	int cmd_requested_window_height()
 	{
-		return requested_window_height_;
+		return cmd_requested_window_height_;
 	}
 
 	int requested_virtual_window_width()
@@ -1067,7 +1067,7 @@ namespace preferences
         } else if(s == "--width") {
 			auto widths = util::split_into_vector_int(arg_value, ':');
 			if(widths.size() > 0) {
-				requested_window_width_ = widths[0];
+				cmd_requested_window_width_ = widths[0];
 			}
 			if(widths.size() > 1) {
 				g_virtual_window_width = widths[1];
@@ -1075,17 +1075,17 @@ namespace preferences
 				//	xypos_draw_mask = 0;
 				//}
 			} else if(!g_virtual_window_width) {
-				g_virtual_window_width = requested_window_width_;
+				g_virtual_window_width = cmd_requested_window_width_;
 			}
         } else if(s == "--height") {
 			auto heights = util::split_into_vector_int(arg_value, ':');
 			if(heights.size() > 0) {
-				requested_window_height_ = heights[0];
+				cmd_requested_window_height_ = heights[0];
 			}
 			if(heights.size() > 1) {
 				g_virtual_window_height = heights[1];
 			} else if(!g_virtual_window_height) {
-				g_virtual_window_height = requested_window_height_;
+				g_virtual_window_height = cmd_requested_window_height_;
 			}
 		} else if(s == "--no-resizable") {
 			resizable_ = false;

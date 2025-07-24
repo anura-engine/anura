@@ -115,9 +115,9 @@ namespace graphics
 			if(preferences::auto_size_window() || g_desktop_fullscreen) {
 				int width = 0, height = 0;
 
-				if(preferences::requested_window_width() > 0 && preferences::requested_window_height() > 0) {
-					width = preferences::requested_window_width();
-					height = preferences::requested_window_height();
+				if(preferences::cmd_requested_window_width() > 0 && preferences::cmd_requested_window_height() > 0) {
+					width = preferences::cmd_requested_window_width();
+					height = preferences::cmd_requested_window_height();
 				} else {
 					GameScreen::autoSelectResolution(wnd, width, height, true, false);
 				}
