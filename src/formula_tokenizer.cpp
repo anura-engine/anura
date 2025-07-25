@@ -502,7 +502,7 @@ UNIT_TEST(tokenization_error_test_0)
 		const formula_tokenizer::Token t =
 				formula_tokenizer::get_token(i1, i2);
 		const std::string t_as_string(t.begin, t.end);
-		LOG_INFO(t_as_string);
+		LOG_DEBUG(t_as_string);
 		CHECK_EQ(t_as_string, tokens[i]);
 		CHECK_EQ(static_cast<int>(t.type), static_cast<int>(types[i]));
 	}
@@ -556,7 +556,7 @@ UNIT_TEST(tokenization_error_test_2)
 	for (int i = 0; i < sizeof(tokens) / sizeof(*tokens); i++) {
 		const formula_tokenizer::Token t =
 				formula_tokenizer::get_token(i1, i2);
-		LOG_INFO(std::string(t.begin, t.end));
+		LOG_DEBUG(std::string(t.begin, t.end));
 		CHECK_EQ(std::string(t.begin, t.end), tokens[i]);
 		CHECK_EQ(static_cast<int>(t.type), static_cast<int>(types[i]));
 	}
@@ -645,7 +645,7 @@ UNIT_TEST(tokenization_test_1)
 	for (int i = 0; i < sizeof(tokens) / sizeof(*tokens); i++) {
 		const formula_tokenizer::Token t =
 				formula_tokenizer::get_token(i1, i2);
-		LOG_INFO(std::string(t.begin, t.end));
+		LOG_DEBUG(std::string(t.begin, t.end));
 		CHECK_EQ(std::string(t.begin, t.end), tokens[i]);
 		CHECK_EQ(static_cast<int>(t.type), static_cast<int>(types[i]));
 	}

@@ -1110,7 +1110,7 @@ namespace xhtml
 
 	void add_custom_element(const std::string& e)
 	{
-		LOG_INFO("Creating custom element '" << e << "' with id: " << custom_element_counter);
+		LOG_DEBUG("Creating custom element '" << e << "' with id: " << custom_element_counter);
 
 		register_factory_function(static_cast<ElementId>(custom_element_counter),
 			e,
