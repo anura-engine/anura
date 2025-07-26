@@ -10,10 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         fedora:
-          # Fedora 30 is the oldest Fedora shipping with dnf out of the box
-          - "30"
-          - "31"
-          - "32"
+          # Fedora 33 is the oldest Fedora with a new enough CMake for our FetchContent workarounds
           - "33"
           - "34"
           - "35"

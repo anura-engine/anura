@@ -342,13 +342,9 @@ On Pull Requests:
     * 11 / Bullseye
     * 12 / Bookworm
   * Ubuntu
-    * 20.04 / Focal Fossa
     * 22.04 / Jammy Jellyfish
     * 24.04 / Noble Numbat
   * Fedora
-    * 30
-    * 31
-    * 32
     * 33
     * 34
     * 35

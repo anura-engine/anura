@@ -11,9 +11,7 @@ jobs:
       matrix:
         # Versions between LTS are not available for long - we only do LTS
         ubuntu:
-          # 20.04 is the oldest LTS with a new enough glibc for the node 20
-          # runtime backing the upstream default checkout action
-          - "20.04"
+          # 22.04 is the oldest LTS with a new enough CMake for our FetchContent workarounds
           - "22.04"
           - "24.04"
           # 26.04 LTS is expected in 2026-04
