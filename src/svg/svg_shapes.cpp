@@ -843,7 +843,7 @@ UNIT_TEST(parse_list_of_numbers_bad_input) {
 	std::vector<double> expected_output_vector;
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			KRE::SVG::parse_list_of_numbers(input);
 		} catch (const validation_failure_exception vfe) {

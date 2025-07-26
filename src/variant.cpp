@@ -3531,7 +3531,7 @@ UNIT_TEST(bad_variant_exponentiation_0) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(32);
 		} catch (const validation_failure_exception vfe) {
@@ -3581,7 +3581,7 @@ UNIT_TEST(bad_variant_exponentiation_1) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(16);
 		} catch (const validation_failure_exception vfe) {
@@ -3631,7 +3631,7 @@ UNIT_TEST(bad_variant_exponentiation_2) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(11);
 		} catch (const validation_failure_exception vfe) {
@@ -3681,7 +3681,7 @@ UNIT_TEST(bad_variant_exponentiation_3) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(8);
 		} catch (const validation_failure_exception vfe) {
@@ -3731,7 +3731,7 @@ UNIT_TEST(bad_variant_exponentiation_4) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(7);
 		} catch (const validation_failure_exception vfe) {
@@ -3781,7 +3781,7 @@ UNIT_TEST(bad_variant_exponentiation_5) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(6);
 		} catch (const validation_failure_exception vfe) {
@@ -3831,7 +3831,7 @@ UNIT_TEST(bad_variant_exponentiation_6) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(5);
 		} catch (const validation_failure_exception vfe) {
@@ -3857,7 +3857,7 @@ UNIT_TEST(bad_variant_exponentiation_7) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(4);
 		} catch (const validation_failure_exception vfe) {
@@ -3883,7 +3883,7 @@ UNIT_TEST(bad_variant_exponentiation_8) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(4);
 		} catch (const validation_failure_exception vfe) {
@@ -3909,7 +3909,7 @@ UNIT_TEST(bad_variant_exponentiation_9) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(4);
 		} catch (const validation_failure_exception vfe) {
@@ -3935,7 +3935,7 @@ UNIT_TEST(bad_variant_exponentiation_10) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(3);
 		} catch (const validation_failure_exception vfe) {
@@ -3961,7 +3961,7 @@ UNIT_TEST(bad_variant_exponentiation_11) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(3);
 		} catch (const validation_failure_exception vfe) {
@@ -3987,7 +3987,7 @@ UNIT_TEST(bad_variant_exponentiation_12) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(3);
 		} catch (const validation_failure_exception vfe) {
@@ -4013,7 +4013,7 @@ UNIT_TEST(bad_variant_exponentiation_13) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(3);
 		} catch (const validation_failure_exception vfe) {
@@ -4039,7 +4039,7 @@ UNIT_TEST(bad_variant_exponentiation_14) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(3);
 		} catch (const validation_failure_exception vfe) {
@@ -4065,7 +4065,7 @@ UNIT_TEST(bad_variant_exponentiation_15) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(2);
 		} catch (const validation_failure_exception vfe) {
@@ -4091,7 +4091,7 @@ UNIT_TEST(bad_variant_exponentiation_16) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(2);
 		} catch (const validation_failure_exception vfe) {
@@ -4117,7 +4117,7 @@ UNIT_TEST(bad_variant_exponentiation_17) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(2);
 		} catch (const validation_failure_exception vfe) {
@@ -4200,7 +4200,7 @@ UNIT_TEST(bad_variant_exponentiation_30) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ variant(2);
 		} catch (const validation_failure_exception vfe) {
@@ -4217,7 +4217,7 @@ UNIT_TEST(bad_variant_exponentiation_31) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ a;
 		} catch (const validation_failure_exception vfe) {
@@ -4235,7 +4235,7 @@ UNIT_TEST(bad_variant_exponentiation_32) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ c;
 		} catch (const validation_failure_exception vfe) {
@@ -4253,7 +4253,7 @@ UNIT_TEST(bad_variant_exponentiation_33) {
 	variant b(min_32_bit_integer);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			b = a ^ c;
 		} catch (const validation_failure_exception vfe) {
@@ -4271,7 +4271,7 @@ UNIT_TEST(variant_from_null_char_array) {
 	check::type_is_null(variant_from_null_plain_old_char_array);
 	//   Logging the null char array is unsafe. However, it's safe to log
 	// the variant created out of it.
-	LOG_INFO(variant_from_null_plain_old_char_array);
+	LOG_DEBUG(variant_from_null_plain_old_char_array);
 }
 
 UNIT_TEST(create_translated_string) {
@@ -4349,7 +4349,7 @@ UNIT_TEST(list_indexing_out_of_bounds_excepts) {
 	const variant list_variant(& list);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			list_variant[3];
 		} catch (const validation_failure_exception vfe) {
@@ -4365,7 +4365,7 @@ UNIT_TEST(refuse_to_index_a_decimal_variant) {
 	const variant decimal_variant(decimal::from_string("0.0"));
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			decimal_variant[decimal_variant];
 		} catch (const validation_failure_exception vfe) {
@@ -4419,7 +4419,7 @@ UNIT_TEST(refuse_to_return_num_elements_of_decimal_variant) {
 	const variant decimal_variant(decimal::from_string("0.0"));
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			decimal_variant.num_elements();
 		} catch (const validation_failure_exception vfe) {
@@ -4460,7 +4460,7 @@ UNIT_TEST(refuse_to_slice_lists_for_illegal_indexes) {
 	const variant list_variant(& list);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			list_variant.get_list_slice(-2147483648, 2147483647);
 		} catch (const validation_failure_exception vfe) {
@@ -4536,7 +4536,7 @@ UNIT_TEST(function_call_passing_wrong_number_of_arguments_generates_error) {
 	args.emplace_back(decimal::from_string("0.32993"));
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			function(& args);
 		} catch (const validation_failure_exception vfe) {
@@ -4697,7 +4697,7 @@ UNIT_TEST(string_variant_plus_dictionary_variant_excepts) {
 	const variant empty_dictionary_variant(& empty_variants_map);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			string_variant + empty_dictionary_variant;
 		} catch (const validation_failure_exception vfe) {
@@ -4843,7 +4843,7 @@ UNIT_TEST(divide_by_zero_decimal_excepts) {
 	const variant decimal_zero_variant(decimal::from_string("0.0"));
 	bool excepted = false;
 	{
-        const assert_recover_scope unit_test_exception_expected;
+        const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			null_variant / decimal_zero_variant;
 		} catch (const validation_failure_exception vfe) {
@@ -4868,7 +4868,7 @@ UNIT_TEST(divide_by_zero_integer_excepts) {
 	const variant integer_zero_variant(0);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			null_variant / integer_zero_variant;
 		} catch (const validation_failure_exception vfe) {
@@ -4883,7 +4883,7 @@ UNIT_TEST(remainder_of_divide_by_zero_integer_excepts) {
 	const variant integer_zero_variant(0);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			null_variant % integer_zero_variant;
 		} catch (const validation_failure_exception vfe) {
@@ -5024,7 +5024,7 @@ UNIT_TEST(deserialize_string_variant_from_crashy_formula_in_string) {
 	const std::string string = "(-2147483648) ^ ";
 	variant variant_;
 	{
-		const assert_recover_scope expecting_exception;
+		const assert_recover_scope expecting_exception(SilenceAsserts);
 		variant_.serialize_from_string(string);
 	}
 	check::type_is_string(variant_);
