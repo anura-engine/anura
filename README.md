@@ -215,6 +215,7 @@ The sets of warnings and diagnostics we currently silence:
     * [`-Wno-dangling-reference`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/04-dangling-reference/CMakeLists.txt)
     * [`-Wno-deprecated-copy`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/05-deprecated-copy/CMakeLists.txt)
     * [`-Wno-missing-field-initializers`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/06-missing-field-initializers/CMakeLists.txt)
+    * [`-Wno-type-limits`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/07-type-limits/CMakeLists.txt)
   * Clang
     * [`-Wno-unused-parameter`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/clang/01-unused-parameter/CMakeLists.txt)
     * [`-Wno-sign-compare`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/clang/02-sign-compare/CMakeLists.txt)
@@ -341,13 +342,9 @@ On Pull Requests:
     * 11 / Bullseye
     * 12 / Bookworm
   * Ubuntu
-    * 20.04 / Focal Fossa
     * 22.04 / Jammy Jellyfish
     * 24.04 / Noble Numbat
   * Fedora
-    * 30
-    * 31
-    * 32
     * 33
     * 34
     * 35

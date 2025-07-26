@@ -45,7 +45,6 @@ jobs:
               mesa-libGL-devel \
               glew-devel \
               freetype-devel \
-              glm-devel \
               SDL2-devel \
               SDL2_image-devel \
               SDL2_mixer-devel \
