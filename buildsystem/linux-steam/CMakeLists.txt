@@ -177,6 +177,14 @@ set_property(
 # Output an executable from the anura sources for anura
 add_executable(anura "${anura_SRC}")
 
+# Set manual LTO flags as CMAKE_INTERPROCEDURAL_OPTIMIZATION does not parallelize
+if (CMAKE_BUILD_TYPE MATCHES Release)
+    include(ProcessorCount)
+    ProcessorCount(NPROC)
+    target_compile_options(anura PRIVATE "-flto=${NPROC}")
+    target_link_options(anura PRIVATE "-flto=${NPROC}")
+endif()
+
 # Link libraries
 target_link_libraries(
     anura
