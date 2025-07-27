@@ -19,10 +19,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-# Use vcpkg for dependencies
-set(VCPKG_MANIFEST_DIR "${CMAKE_BINARY_DIR}")
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_BINARY_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
-
 # Default to using LTO for Release builds
 if (CMAKE_BUILD_TYPE MATCHES Release)
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
@@ -87,26 +83,6 @@ file(
     "${CMAKE_BINARY_DIR}/src/xhtml/*.cpp"
 )
 
-# Configure compiling against vcpkg provided libraries
-# XXX - At the moment (2023-08) we have no idea of the upper and lower bounds
-# XXX - At the moment (2023-08) we have no idea of the full minimal set
-find_package(Threads REQUIRED)
-find_package(Boost REQUIRED COMPONENTS filesystem locale regex system)
-find_package(ZLIB REQUIRED)
-find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(Freetype REQUIRED)
-find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
-find_package(SDL2_mixer REQUIRED)
-find_package(SDL2_ttf REQUIRED)
-find_package(Ogg REQUIRED)
-find_package(Vorbis REQUIRED)
-find_package(harfbuzz CONFIG REQUIRED)
-find_package(WebP CONFIG REQUIRED)
-find_package(unofficial-lerc CONFIG REQUIRED)
-find_package(zstd CONFIG REQUIRED)
-
 # Add the headers
 include_directories(
     "${CMAKE_BINARY_DIR}/src"
@@ -119,7 +95,6 @@ include_directories(
     "${CMAKE_BINARY_DIR}/src/tiled"
     "${CMAKE_BINARY_DIR}/src/treetree"
     "${CMAKE_BINARY_DIR}/src/xhtml"
-    "${CMAKE_BINARY_DIR}/vcpkg_installed/x64-linux/include"
 )
 
 # END Project config
@@ -138,17 +113,11 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
     # Debug builds need to be debuggable
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og")
-    set(VCPKG_TARGET_TRIPLET x64-linux-dbg)
-    set(VCPKG_BUILD_TYPE debug)
-    link_directories("${CMAKE_BINARY_DIR}/vcpkg_installed/x64-linux/debug/lib")
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
     # Optimize release builds
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-    set(VCPKG_TARGET_TRIPLET x64-linux-rel)
-    set(VCPKG_BUILD_TYPE release)
-    link_directories("${CMAKE_BINARY_DIR}/vcpkg_installed/x64-linux/release/lib")
 endif()
 
 # Inject our own imgui config for our own vector operations
@@ -181,104 +150,13 @@ set_property(
 
 # BEGIN Linker config
 
-# Staticly link dependencies in
-set(VCPKG_CRT_LINKAGE static)
-set(VCPKG_LIBRARY_LINKAGE static)
-
 # Output an executable from the anura sources for anura
 add_executable(anura "${anura_SRC}")
 
 # Link libraries
-# XXX - The order of the static linking matters!
-# XXX - The grouping of the static linking matters!
-# XXX - DO NOT BUMP VCPKG BASELINE - ANURA CODE CHANGES REQUIRED FIRST!
-# XXX - Some stuff is simply not staticly linkable:
-# - Audio stuff (samplerate, ALSA, Pulseaudio)
-# - Graphics stuff (OpenGL, EGL, DRM, GBM)
-# - X11
-# - Wayland
-# - libc (with: realtme, dlopen)
-#
-# We must YOLO and trust the platform has these things
 target_link_libraries(
     anura
     PRIVATE
-    -Wl,-Bstatic
-
-    -Wl,--start-group
-    SDL2
-    -Wl,--end-group
-
-    -Wl,--start-group
-    Boost::filesystem
-    -Wl,--end-group
-
-    -Wl,--start-group
-    cairo
-    pixman-1
-    freetype
-    ZLIB::ZLIB
-    fontconfig
-    png
-    expat
-    brotlidec
-    brotlicommon
-    uuid
-    -Wl,--end-group
-
-    -Wl,--start-group
-    GLEW::GLEW
-    -Wl,--end-group
-
-    -Wl,--start-group
-    vorbisfile
-    vorbis
-    ogg
-    -Wl,--end-group
-
-    -Wl,--start-group
-    SDL2_ttf
-    harfbuzz::harfbuzz
-    -Wl,--end-group
-
-    -Wl,--start-group
-    Boost::locale
-    -Wl,--end-group
-
-    -Wl,--start-group
-    SDL2_image
-    WebP::webp
-    WebP::webpdemux
-    WebP::webpdecoder
-    tiff
-    lzma
-    deflate
-    WebP::webp
-    jpeg
-    unofficial::Lerc::Lerc
-    zstd::libzstd_static
-    -Wl,--end-group
-
-    -Wl,-Bdynamic
-    -lrt
-    -ldl
-    -ldrm
-    -lgbm
-    -lX11
-    -lXcursor
-    -lXext
-    -lXfixes
-    -lXi
-    -lXrandr
-    -lXss
-    -lxkbcommon
-    -ldecor-0
-    -lwayland-client
-    -lwayland-cursor
-    -lwayland-egl
-    -lsamplerate
-    -lasound
-    -lpulse
 )
 
 # END Linker config
