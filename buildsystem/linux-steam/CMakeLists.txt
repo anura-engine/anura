@@ -24,6 +24,21 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
+# Prefer pkgconfig as that's what Conan will provide
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/buildsystem/conan/conan_toolchain.cmake")
+    message("Conan toolchain file not found. ")
+    message("")
+    message(
+        FATAL_ERROR
+        "Please run 'conan install buildsystem/conan -s build_type=Debug --build=b2 --build=missing' first."
+  )
+endif()
+
+# Use Conan as the package manager
+include(${CMAKE_BINARY_DIR}/buildsystem/conan/conan_toolchain.cmake)
+
 # END CMake setup
 
 # BEGIN Project config
@@ -31,10 +46,19 @@ endif()
 # Build target for CXX project "anura"
 project(anura LANGUAGES CXX)
 
+# Build time dependencies
+find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package(freetype REQUIRED)
+find_package(SDL2 REQUIRED CONFIG)
+find_package(Cairo REQUIRED CONFIG)
+find_package(GLEW REQUIRED CONFIG)
+find_package(SDL2_ttf REQUIRED CONFIG)
+find_package(SDL2_image REQUIRED CONFIG)
+find_package(Vorbis REQUIRED CONFIG)
+find_package(Git REQUIRED)
+
 # Fetch vendored dependencies
 include(FetchContent)
-
-find_package(Git REQUIRED)
 
 FetchContent_Declare(
     imgui
@@ -157,6 +181,15 @@ add_executable(anura "${anura_SRC}")
 target_link_libraries(
     anura
     PRIVATE
+    boost::boost
+    Freetype::Freetype
+    SDL2::SDL2
+    Boost::filesystem
+    cairo::cairo
+    GLEW::GLEW
+    sdl_ttf::sdl_ttf
+    SDL2_image::SDL2_image
+    vorbis::vorbis
 )
 
 # END Linker config
