@@ -13,8 +13,9 @@ jobs:
           # Bullseye is the oldest Debian with repositories still alive upstream
           - "bullseye" # 11
           - "bookworm" # 12
-          # 13 Trixie is expected in 2025-06
-          # 14 is expected in 2027-06
+          - "trixie" # 13
+          # 14 forky is expected in Summer 2027
+          # 15 duke is expected in Summer 2029
         compiler:
           - g++
           - clang++
