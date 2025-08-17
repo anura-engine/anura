@@ -138,3 +138,8 @@ master-config.cfg
 
 # The anura binary
 /anura
+
+# Conan based builds
+/buildsystem/conan
+/.conan-venv
+/.venv

@@ -83,10 +83,11 @@ builds.
 
 The default build type on every platform is Debug.
 
-Additionally on some platforms it is possible to also build the engine
-dynamically linked against the operating system provided libraries. The default
-build type on every platform is to use vcpkg to pull the dependencies in and to
-statically link those in into the resulting binary for the ease of distribution.
+The default build type is to link dynamically against OS provided libraries.
+
+A static build also exists for the following platforms:
+
+* Steam Linux Runtime "Medic"
 
 Anura is an old clunky beast with over a decade of history. It's currently
 (2023-08) spitting out a lot of compiler warnings on most platforms we
