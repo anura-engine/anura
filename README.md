@@ -209,6 +209,7 @@ The sets of warnings and diagnostics we currently silence:
     * [`-Wno-unused-local-typedef`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/08-unused-local-typedef/CMakeLists.txt)
     * [`-Wno-unused-const-variable`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/09-unused-const-variable/CMakeLists.txt)
     * [`-Wno-unused-lambda-capture`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/10-unused-lambda-capture/CMakeLists.txt)
+    * [`-Wno-uninitialized-const-pointer`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/11-uninitialized-const-pointer/CMakeLists.txt)
 * `-Wextra`
   * GCC
     * [`-Wno-unused-parameter`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/01-unused-parameter/CMakeLists.txt)
@@ -357,6 +358,7 @@ On Pull Requests:
     * 40
     * 41
     * 42
+    * 43
   * Rocky Linux
     * 8
     * 9
