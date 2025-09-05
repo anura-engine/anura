@@ -19,11 +19,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-# Default to using LTO for Release builds
-if (CMAKE_BUILD_TYPE MATCHES Release)
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()
-
 # Include repo local modules
 set(
     CMAKE_MODULE_PATH
@@ -37,6 +32,21 @@ set(
 
 # Build target for CXX project "anura"
 project(anura LANGUAGES CXX)
+
+# Default to doing parallel LTO for Release builds, do thin LTO on Clang
+if (CMAKE_BUILD_TYPE MATCHES Release)
+    include(ProcessorCount)
+    ProcessorCount(NPROC)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set(LTO_COMPILE_FLAGS "-flto=${NPROC}")
+        set(LTO_LINK_FLAGS    "-flto=${NPROC}")
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|LLVM")
+        # ThinLTO + parallel backend jobs for Clang
+        set(LTO_COMPILE_FLAGS "-flto=thin")
+        set(LTO_LINK_FLAGS    "-flto=thin" "-flto-jobs=${N}")
+    endif()
+endif()
 
 # Fetch vendored dependencies
 include(FetchContent)
@@ -208,6 +218,12 @@ include("${CMAKE_BINARY_DIR}/buildsystem/cmake-includes/silence-warnings/CMakeLi
 
 # Output an executable from the anura sources for anura
 add_executable(anura "${anura_SRC}")
+
+# Set manual LTO flags as CMAKE_INTERPROCEDURAL_OPTIMIZATION does not parallelize
+if (CMAKE_BUILD_TYPE MATCHES Release)
+    target_compile_options(anura PRIVATE ${LTO_COMPILE_FLAGS})
+    target_link_options(anura PRIVATE ${LTO_LINK_FLAGS})
+endif()
 
 # Link libraries
 target_link_libraries(
