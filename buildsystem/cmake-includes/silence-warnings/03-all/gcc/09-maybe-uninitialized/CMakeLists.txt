@@ -2,7 +2,7 @@
 # XXX - The leading spaces in this file are meaningful for string concatenation!
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/VoronoiDiagramGenerator.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/VoronoiDiagramGenerator.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-maybe-uninitialized"
 )
