@@ -146,8 +146,8 @@ Linux operating systems.
 Sample build flow:
 
 ```bash
-cmake buildsystem/linux-dynamic -D CMAKE_CXX_COMPILER='clang++' -D CMAKE_BUILD_TYPE=Release
-make -j "$(getconf _NPROCESSORS_ONLN)"
+cmake buildsystem/linux-dynamic --preset=Debug
+cmake --build buildsystem/linux-dynamic/build/Debug --parallel "$(getconf _NPROCESSORS_ONLN)"
 ```
 
 You may not pass the compiler in via the environment variable `CXX` as that
@@ -185,6 +185,7 @@ The sets of warnings and diagnostics we currently silence:
     * [`-Wno-odr`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/01-odr/CMakeLists.txt)
     * [`-Wno-aggressive-loop-optimizations`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/02-aggressive-loop-optimizations/CMakeLists.txt)
     * [`-Wno-lto-type-mismatch`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/03-lto-type-mismatch/CMakeLists.txt)
+    * [`-Wno-stringpop-overflow`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/04-stringpop-overflow/CMakeLists.txt)
   * Clang is currently (2023-09) LTO warning free
 * `-Wall`
   * GCC
@@ -340,7 +341,6 @@ On Pull Requests:
 
 * Smoketest dynamic builds on Linux (both g++ and clang++)
   * Debian
-    * 11 / Bullseye
     * 12 / Bookworm
     * 13 / Trixie
   * Ubuntu

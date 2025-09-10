@@ -2,7 +2,9 @@
 
 # 3.12 added add_compile_definitions
 # 3.14 added FetchContent
-cmake_minimum_required(VERSION 3.14)
+# 3.19 added presets v1: we use configurePresets
+# XXX - We cannot take this further than 3.23 as that's what ships in the Steam Sniper SDK!
+cmake_minimum_required(VERSION 3.19)
 
 if(DEFINED ENV{CXX})
   message("")
@@ -27,7 +29,7 @@ endif()
 # Prefer pkgconfig as that's what Conan will provide
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 
-if(NOT EXISTS "${CMAKE_BINARY_DIR}/buildsystem/conan/conan_toolchain.cmake")
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/../conan/conan_toolchain.cmake")
     message("Conan toolchain file not found. ")
     message("")
     message(
@@ -37,7 +39,7 @@ if(NOT EXISTS "${CMAKE_BINARY_DIR}/buildsystem/conan/conan_toolchain.cmake")
 endif()
 
 # Use Conan as the package manager
-include(${CMAKE_BINARY_DIR}/buildsystem/conan/conan_toolchain.cmake)
+include(${CMAKE_SOURCE_DIR}/../conan/conan_toolchain.cmake)
 
 # END CMake setup
 
@@ -45,6 +47,9 @@ include(${CMAKE_BINARY_DIR}/buildsystem/conan/conan_toolchain.cmake)
 
 # Build target for CXX project "anura"
 project(anura LANGUAGES CXX)
+
+# For running tests through CTest
+enable_testing()
 
 # Build time dependencies
 find_package(Boost COMPONENTS filesystem REQUIRED)
@@ -65,7 +70,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/ocornut/imgui.git
     GIT_TAG d4ddc46e7773e9a9b68f965d007968f35ca4e09a # https://github.com/ocornut/imgui/releases/tag/v1.89.7
     GIT_SHALLOW TRUE
-    SOURCE_DIR "${CMAKE_BINARY_DIR}/src/imgui"
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}/build/src/imgui"
     SOURCE_SUBDIR purposefully-empty-to-skip-build
 )
 
@@ -77,7 +82,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/g-truc/glm.git
     GIT_TAG 33b0eb9fa336ffd8551024b1d2690e418014553b # https://github.com/g-truc/glm/releases/tag/1.0.0
     GIT_SHALLOW TRUE
-    SOURCE_DIR "${CMAKE_BINARY_DIR}/src/glm"
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}/build/src/glm"
     SOURCE_SUBDIR purposefully-empty-to-skip-build
 )
 
@@ -93,32 +98,32 @@ endif(CCACHE)
 file(
     GLOB
     anura_SRC
-    "${CMAKE_BINARY_DIR}/src/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/hex/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui_draw.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui_tables.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui_widgets.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui_additions/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/kre/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/svg/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/tiled/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/treetree/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/xhtml/*.cpp"
+    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_draw.cpp"
+    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_tables.cpp"
+    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_widgets.cpp"
+    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/hex/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/imgui_additions/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/kre/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/svg/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/tiled/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/treetree/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/xhtml/*.cpp"
 )
 
 # Add the headers
 include_directories(
-    "${CMAKE_BINARY_DIR}/src"
-    "${CMAKE_BINARY_DIR}/src/glm"
-    "${CMAKE_BINARY_DIR}/src/hex"
-    "${CMAKE_BINARY_DIR}/src/imgui"
-    "${CMAKE_BINARY_DIR}/src/imgui_additions"
-    "${CMAKE_BINARY_DIR}/src/kre"
-    "${CMAKE_BINARY_DIR}/src/svg"
-    "${CMAKE_BINARY_DIR}/src/tiled"
-    "${CMAKE_BINARY_DIR}/src/treetree"
-    "${CMAKE_BINARY_DIR}/src/xhtml"
+    "${CMAKE_SOURCE_DIR}/build/src/glm"
+    "${CMAKE_SOURCE_DIR}/build/src/imgui"
+    "${CMAKE_SOURCE_DIR}/../../src"
+    "${CMAKE_SOURCE_DIR}/../../src/hex"
+    "${CMAKE_SOURCE_DIR}/../../src/imgui_additions"
+    "${CMAKE_SOURCE_DIR}/../../src/kre"
+    "${CMAKE_SOURCE_DIR}/../../src/svg"
+    "${CMAKE_SOURCE_DIR}/../../src/tiled"
+    "${CMAKE_SOURCE_DIR}/../../src/treetree"
+    "${CMAKE_SOURCE_DIR}/../../src/xhtml"
 )
 
 # END Project config
@@ -145,7 +150,7 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
 endif()
 
 # Inject our own imgui config for our own vector operations
-add_compile_definitions(IMGUI_USER_CONFIG="${CMAKE_BINARY_DIR}/src/imgui_additions/imconfig_anura.h")
+add_compile_definitions(IMGUI_USER_CONFIG="${CMAKE_SOURCE_DIR}/../../src/imgui_additions/imconfig_anura.h")
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
     # Turn all things debug, like assertions, off for a release build
@@ -165,7 +170,7 @@ add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 # XXX - The md5 module of anura does not build without this.
 # XXX - Other files also emit the warning, but somehow this gets elevated to an error - no clue, probably worse.
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/md5.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/md5.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-narrowing"
 )
@@ -201,3 +206,14 @@ target_link_libraries(
 )
 
 # END Linker config
+
+# BEGIN Test config
+
+add_test(
+    NAME engine_unit_tests
+    COMMAND $<TARGET_FILE:anura> --tests
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/../../
+)
+set_tests_properties(engine_unit_tests PROPERTIES LABELS "unittest")
+
+# END Test config

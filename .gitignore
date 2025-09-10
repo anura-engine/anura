@@ -132,6 +132,12 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
+# Default binary directories
+buildsystem/linux-dynamic/build/Debug
+buildsystem/linux-dynamic/build/Release
+buildsystem/linux-steam/build/Debug
+buildsystem/linux-steam/build/Release
+
 # Don't commit master-config.cfg by default.
 # It should be copied or symlinked from a module.
 master-config.cfg

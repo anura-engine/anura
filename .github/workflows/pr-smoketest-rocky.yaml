@@ -64,13 +64,19 @@ jobs:
       - name: Build Prep Anura
         run: |
           cmake buildsystem/linux-dynamic \
-          -D CMAKE_CXX_COMPILER="${{ matrix.compiler }}" \
-          -D CMAKE_BUILD_TYPE="${{ matrix.build-type }}"
+            --preset="${{ matrix.build-type }}" \
+            -D CMAKE_CXX_COMPILER="${{ matrix.compiler }}"
 
       - name: Build Anura
         run: |
           # Compile with number of available hyperthreads
-          make -j "$(getconf _NPROCESSORS_ONLN)"
+          cmake \
+            --build buildsystem/linux-dynamic/build/"${{ matrix.build-type }}" \
+            --parallel "$(getconf _NPROCESSORS_ONLN)"
 
       - name: Run Unit Tests
-        run: ./anura --tests
+        run: |
+          ctest \
+            --output-on-failure \
+            --test-dir buildsystem/linux-dynamic/build/"${{ matrix.build-type }}" \
+            -L unittest

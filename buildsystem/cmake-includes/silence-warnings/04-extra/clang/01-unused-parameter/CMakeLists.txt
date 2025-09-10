@@ -2,1759 +2,1759 @@
 # XXX - The leading spaces in this file are meaningful for string concatenation!
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/ColorTransform.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/ColorTransform.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/LayerBlitInfo.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/LayerBlitInfo.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/ParticleSystemWidget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/ParticleSystemWidget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/SceneObjectCallable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/SceneObjectCallable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/TextureObject.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/TextureObject.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/VoronoiDiagramGenerator.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/VoronoiDiagramGenerator.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/achievements.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/achievements.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/animation_creator.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/animation_creator.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/animation_preview_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/animation_preview_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/animation_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/animation_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/anura_shader.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/anura_shader.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/asserts.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/asserts.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/auto_update_window.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/auto_update_window.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/background.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/background.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/bar_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/bar_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/blur.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/blur.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/border_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/border_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/button.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/button.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/cairo.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/cairo.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/character_editor_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/character_editor_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/checkbox.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/checkbox.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/checksum.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/checksum.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/clipboard.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/clipboard.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/code_editor_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/code_editor_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/code_editor_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/code_editor_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/collision_utils.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/collision_utils.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/color_picker.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/color_picker.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/compress.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/compress.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/controls.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/controls.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/controls_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/controls_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/current_generator.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/current_generator.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/custom_object.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/custom_object.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/custom_object_callable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/custom_object_callable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/custom_object_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/custom_object_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/custom_object_functions.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/custom_object_functions.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/custom_object_type.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/custom_object_type.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/db_client.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/db_client.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/debug_console.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/debug_console.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/difficulty.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/difficulty.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/distortion.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/distortion.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/drag_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/drag_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/draw_primitive.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/draw_primitive.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/draw_scene.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/draw_scene.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/draw_tile.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/draw_tile.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/dropdown_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/dropdown_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/editor.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/editor.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/editor_dialogs.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/editor_dialogs.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/editor_formula_functions.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/editor_formula_functions.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/editor_layers_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/editor_layers_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/editor_level_properties_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/editor_level_properties_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/editor_module_properties_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/editor_module_properties_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/editor_stats_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/editor_stats_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/editor_variable_info.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/editor_variable_info.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/entity.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/entity.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/external_text_editor.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/external_text_editor.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/ffl_dom.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/ffl_dom.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/ffl_lib.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/ffl_lib.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/file_chooser_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/file_chooser_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/filesystem.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/filesystem.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_callable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_callable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_callable_definition.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_callable_definition.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_callable_visitor.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_callable_visitor.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_constants.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_constants.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_function.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_function.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_function_registry.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_function_registry.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_garbage_collector.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_garbage_collector.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_interface.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_interface.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_internal.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_internal.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_object.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_object.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_profiler.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_profiler.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_test.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_test.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_variable_storage.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_variable_storage.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_visualize_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_visualize_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/formula_vm.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/formula_vm.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/frame.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/frame.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/framed_gui_element.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/framed_gui_element.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/ft_iface.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/ft_iface.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/game_registry.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/game_registry.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/geometry_callable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/geometry_callable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/graphical_font.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/graphical_font.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/graphical_font_label.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/graphical_font_label.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/grid_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/grid_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/group_property_editor_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/group_property_editor_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/gui_section.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/gui_section.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/hex/hex_helper.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/hex/hex_helper.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/hex/hex_loader.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/hex/hex_loader.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/hex/hex_map.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/hex/hex_map.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/hex/hex_mask.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/hex/hex_mask.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/hex/hex_renderable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/hex/hex_renderable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/hex/hex_tile.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/hex/hex_tile.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/hex/tile_rules.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/hex/tile_rules.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/http_client.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/http_client.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/http_server.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/http_server.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/i18n.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/i18n.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/image_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/image_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/input.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/input.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/joystick.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/joystick.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/json_parser.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/json_parser.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/key_button.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/key_button.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/AttributeSet.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/AttributeSet.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/AttributeSetOGL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/AttributeSetOGL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Blend.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Blend.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/BlendModeScope.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/BlendModeScope.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/BlendOGL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/BlendOGL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Blittable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Blittable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/CameraObject.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/CameraObject.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Canvas.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Canvas.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/CanvasOGL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/CanvasOGL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/ClipScope.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/ClipScope.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/ClipScopeOGL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/ClipScopeOGL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Color.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Color.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/ColorScope.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/ColorScope.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Cursor.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Cursor.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Depth.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Depth.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/DisplayDevice.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/DisplayDevice.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/DisplayDeviceOGL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/DisplayDeviceOGL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/EffectsOGL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/EffectsOGL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/FboOGL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/FboOGL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Font.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Font.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/FontDriver.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/FontDriver.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/FontFreetype.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/FontFreetype.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/FontSDL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/FontSDL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/FontSTB.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/FontSTB.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Gradients.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Gradients.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/LightObject.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/LightObject.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/ParticleSystem.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/ParticleSystem.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/ParticleSystemAffectors.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/ParticleSystemAffectors.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/ParticleSystemEmitters.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/ParticleSystemEmitters.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/ParticleSystemParameters.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/ParticleSystemParameters.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/ParticleSystemUI.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/ParticleSystemUI.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/RenderQueue.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/RenderQueue.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/RenderTarget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/RenderTarget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Renderable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Renderable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/SceneGraph.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/SceneGraph.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/SceneNode.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/SceneNode.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/SceneObject.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/SceneObject.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/SceneParameters.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/SceneParameters.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/SceneTree.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/SceneTree.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Scissor.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Scissor.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/ScissorOGL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/ScissorOGL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Shaders.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Shaders.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/ShadersOGL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/ShadersOGL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/StencilScope.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/StencilScope.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Surface.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Surface.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/SurfaceBlur.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/SurfaceBlur.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/SurfaceSDL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/SurfaceSDL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/SurfaceScale.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/SurfaceScale.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/TexPack.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/TexPack.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/Texture.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/Texture.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/TextureOGL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/TextureOGL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/UniformBufferOGL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/UniformBufferOGL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/VGraph.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/VGraph.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/VGraphCairo.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/VGraphCairo.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/WindowManager.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/WindowManager.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/label.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/label.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/language_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/language_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/layout_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/layout_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/level.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/level.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/level_logic.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/level_logic.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/level_object.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/level_object.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/level_runner.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/level_runner.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/level_solid_map.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/level_solid_map.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/light.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/light.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/load_level_nothread.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/load_level_nothread.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/loading_screen.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/loading_screen.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/logger.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/logger.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/main.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/main.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/md5.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/md5.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/message_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/message_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/module.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/module.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/module_web_server.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/module_web_server.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/multi_tile_pattern.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/multi_tile_pattern.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/multiplayer.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/multiplayer.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/multiplayer_server.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/multiplayer_server.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/object_events.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/object_events.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/particle_system.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/particle_system.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/particle_system_proxy.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/particle_system_proxy.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/pathfinding.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/pathfinding.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/pause_game_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/pause_game_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/playable_custom_object.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/playable_custom_object.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/player_info.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/player_info.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/poly_line_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/poly_line_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/poly_map.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/poly_map.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/preferences.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/preferences.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/preprocessor.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/preprocessor.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/preview_tileset_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/preview_tileset_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/progress_bar.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/progress_bar.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/property_editor_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/property_editor_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/rect_renderable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/rect_renderable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/rectangle_rotator.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/rectangle_rotator.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/rich_text_label.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/rich_text_label.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/screen_handling.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/screen_handling.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/scrollable_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/scrollable_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/scrollbar_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/scrollbar_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/segment_editor_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/segment_editor_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/settings_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/settings_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/shared_memory_pipe.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/shared_memory_pipe.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/slider.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/slider.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/solid_map.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/solid_map.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/sound.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/sound.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/speech_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/speech_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/stats.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/stats.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/stats_server.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/stats_server.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/stats_server_main.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/stats_server_main.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/stats_web_server.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/stats_web_server.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/surface_cache.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/surface_cache.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/surface_palette.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/surface_palette.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/surface_utils.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/surface_utils.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/easy_svg.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/easy_svg.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/svg_container.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/svg_container.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/svg_element.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/svg_element.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/svg_fwd.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/svg_fwd.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/svg_gradient.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/svg_gradient.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/svg_length.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/svg_length.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/svg_paint.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/svg_paint.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/svg_parse.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/svg_parse.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/svg_path_parse.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/svg_path_parse.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/svg_shapes.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/svg_shapes.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/svg_style.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/svg_style.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/svg/svg_transform.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/svg/svg_transform.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/sys.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/sys.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_ai_player.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_ai_player.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_bot.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_bot.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_client.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_client.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_functions.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_functions.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_game.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_game.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_internal_client.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_internal_client.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_internal_server.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_internal_server.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_ipc_client.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_ipc_client.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_matchmaking_server.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_matchmaking_server.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_relay_server.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_relay_server.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_server.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_server.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_server_base.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_server_base.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tbs_web_server.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tbs_web_server.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/text_editor_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/text_editor_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/theme_imgui.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/theme_imgui.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/thread.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/thread.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tile_map.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tile_map.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tiled/tiled.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tiled/tiled.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tiled/tmx_reader.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tiled/tmx_reader.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tileset_editor_dialog.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tileset_editor_dialog.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tooltip.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tooltip.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/tree_view_widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/tree_view_widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/unit_test.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/unit_test.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/utility_object_compiler.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/utility_object_compiler.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/utility_query.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/utility_query.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/utility_render_level.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/utility_render_level.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/utils.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/utils.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/uuid.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/uuid.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/variant.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/variant.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/variant_callable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/variant_callable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/variant_type.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/variant_type.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/variant_type_check.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/variant_type_check.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/variant_utils.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/variant_utils.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/video_selections.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/video_selections.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/water.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/water.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/water_particle_system.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/water_particle_system.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/weather_particle_system.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/weather_particle_system.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/widget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/widget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/widget_factory.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/widget_factory.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/wml_formula_callable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/wml_formula_callable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/css_lexer.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/css_lexer.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/css_parser.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/css_parser.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/css_properties.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/css_properties.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/css_selector.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/css_selector.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/css_styles.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/css_styles.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/css_stylesheet.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/css_stylesheet.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/css_transition.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/css_transition.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/event_listener.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/event_listener.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/scrollable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/scrollable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/solid_renderable.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/solid_renderable.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_absolute_box.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_absolute_box.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_background_info.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_background_info.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_block_box.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_block_box.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_border_info.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_border_info.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_box.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_box.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_element.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_element.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_inline_block_box.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_inline_block_box.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_inline_element_box.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_inline_element_box.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_layout_engine.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_layout_engine.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_line_box.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_line_box.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_listitem_box.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_listitem_box.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_node.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_node.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_parser.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_parser.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_render_ctx.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_render_ctx.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_root_box.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_root_box.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_script_interface.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_script_interface.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_style_tree.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_style_tree.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_text_box.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_text_box.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xhtml_text_node.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xhtml_text_node.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/xhtml/xslider.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/xhtml/xslider.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-unused-parameter"
 )

@@ -2,13 +2,13 @@
 # XXX - The leading spaces in this file are meaningful for string concatenation!
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/ParticleSystemWidget.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/ParticleSystemWidget.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-deprecated-copy-with-user-provided-copy"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/CameraObject.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/CameraObject.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-deprecated-copy-with-user-provided-copy"
 )
