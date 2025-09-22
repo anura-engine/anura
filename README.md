@@ -401,6 +401,29 @@ On Pull Requests:
 * NOT IMPLEMENTED [LLVM
   scan-build](https://clang-analyzer.llvm.org/scan-build.html)
 
+### Caching
+
+In October 2025 GitHub got stricter about how its free caching tier works. We
+now get 7d lifetime on the caches created instead of the previously
+undocumented-but-sorta-inferrable 30d. We will also get a 10GB hard limit where
+new entries evict the oldest entries on creation where previously we simply had
+a warning about having exceeded the free 10GB limit.
+
+The previous caching strategy (before 2025-09) simply wrote to the cache from
+all builds, leading into situations where we could be consuming 100s of GBs of
+cache. Which we deemed fine as it only resulted in a soft warning and no extra
+costs.
+
+The current (2025-10) hot set of ccache stored objects for all the build
+permutations of Anura is about 13GB. This means we will get build acceleration
+happening for free for up to 10GB, which is ok enough for at least quartering
+the compute we spend on a per push basis.
+
+The resulting caching strategy going forwards:
+
+* Cache on all pushes to the default branch `trunk` to refresh new objects
+* Cache on Sundays to ensure we have some hot 10GB set within the 7d limit
+
 ## CD
 
 All publishing will happen from the module side, most notably from

@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - trunk
+  schedule:
+    - cron: '0 0 * * 0' # Weekly on Sunday
 
 jobs:
   build:
@@ -53,7 +55,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@bfa03e1de4d7f7c3e80ad9109feedd05c4f5a716 # v1.2.19
         with:
           key: unit-tests-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
-          save: ${{ github.event_name == 'push' && github.ref == 'refs/heads/trunk' }}
+          save: ${{ (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/trunk' }}
 
       - name: Install Conan
         uses: conan-io/setup-conan@09566912d661de90608308897a4d513e850c04e8 # v1.2.0
