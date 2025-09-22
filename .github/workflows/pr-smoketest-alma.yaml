@@ -1,6 +1,9 @@
 name: Smoketest / Informative / Alma
 on:
   pull_request:
+  push:
+    branches:
+      - trunk
 
 jobs:
   test:
@@ -56,10 +59,12 @@ jobs:
       - name: Checkout Anura
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
+      # Only write to cache on pushes to trunk
       - name: Set ccache up
         uses: hendrikmuhs/ccache-action@bfa03e1de4d7f7c3e80ad9109feedd05c4f5a716 # v1.2.19
         with:
           key: ${{ github.job }}-alma-${{ matrix.alma }}-${{ matrix.compiler }}-${{ matrix.build-type }}
+          save: ${{ github.event_name == 'push' && github.ref == 'refs/heads/trunk' }}
 
       - name: Build Prep Anura
         run: |
