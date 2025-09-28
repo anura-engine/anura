@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - trunk
+  schedule:
+    - cron: '0 0 * * 0' # Weekly on Sunday
 
 jobs:
   test:
@@ -64,7 +66,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@bfa03e1de4d7f7c3e80ad9109feedd05c4f5a716 # v1.2.19
         with:
           key: ${{ github.job }}-alma-${{ matrix.alma }}-${{ matrix.compiler }}-${{ matrix.build-type }}
-          save: ${{ github.event_name == 'push' && github.ref == 'refs/heads/trunk' }}
+          save: ${{ (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/trunk' }}
 
       - name: Build Prep Anura
         run: |
