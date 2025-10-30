@@ -11,12 +11,13 @@ class Anura(ConanFile):
         "build_type",
     ]
 
-    # Anything we actually link against is explicitly pinned
+    # Minimal organically growing set to keep the Steam build alive
     requires = [
         "boost/1.88.0",
         "cairo/1.18.0",
         "freetype/2.13.2",
         "glew/2.2.0",
+        "libwebp/1.5.0", # 1.6.0 wants -mavx2 which breaks builds on SteamOS
         "sdl_image/2.8.2",
         "sdl_ttf/2.24.0",
         "sdl/2.28.3",
