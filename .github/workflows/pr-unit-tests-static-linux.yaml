@@ -62,6 +62,15 @@ jobs:
         with:
           use_venv: true
 
+      # Always restore cache
+      - name: Restore Conan Cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.conan2/p
+          key: conan-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
+          restore-keys: |
+            conan-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}-
+
       - name: Install Dependencies with Conan
         run: |
           # XXX - We need to force build b2 as Conan assumes a too new libc++
@@ -70,6 +79,14 @@ jobs:
             -s compiler.cppstd=17 \
             --build='b2/*' \
             --build=missing
+
+      # Only write to cache on pushes to trunk
+      - name: Save Conan Cache
+        if: github.event_name == 'push' && github.ref == 'refs/heads/trunk'
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.conan2/p
+          key: conan-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
 
       - name: Build Prep Anura
         run: |
