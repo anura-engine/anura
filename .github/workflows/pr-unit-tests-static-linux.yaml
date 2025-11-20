@@ -26,8 +26,8 @@ jobs:
           # - scout v1 - Debian Stretch  / 9 - has a glibc too old for Github Actions / Node 20
           # - soldier v2 - Debian Buster / 10 - has a weird compiler and a weird ld, no idea what is up there
           - sniper # v3 - Debian Bullseye / 11
-          # - medic v4 - Debian Bookworm / 12 - not in the container registry yet
-          # - ??? v5 - Debian Trixie / 13 - not in the container registry yet
+          - steamrt4 # v4 - Debian Trixie / 13
+          # - ??? v5 - Debian Forky / 14 - not in the container registry yet
     container: registry.gitlab.steamos.cloud/steamrt/${{ matrix.steam-runtime }}/sdk
     steps:
       - name: Install Dependencies
@@ -42,7 +42,8 @@ jobs:
             python3-venv \
             libfontenc-dev \
             libxmuu-dev \
-            libxres-dev
+            libxres-dev \
+            libxaw7-dev
 
       - name: Checkout Anura
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
