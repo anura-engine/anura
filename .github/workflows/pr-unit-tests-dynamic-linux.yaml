@@ -11,13 +11,16 @@ on:
 jobs:
   test:
     name: Ubuntu
-    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
         build-type:
           - Release
           - Debug
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Install Dependencies
         env:
@@ -52,7 +55,7 @@ jobs:
       - name: Set ccache up
         uses: hendrikmuhs/ccache-action@bfa03e1de4d7f7c3e80ad9109feedd05c4f5a716 # v1.2.19
         with:
-          key: unit-tests-linux-${{ matrix.build-type }}
+          key: unit-tests-linux-${{ matrix.build-type }}-${{ matrix.runner }}
           save: ${{ (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/trunk' }}
 
       - name: Build Prep Anura
