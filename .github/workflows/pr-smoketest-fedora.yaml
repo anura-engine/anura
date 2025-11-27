@@ -61,7 +61,7 @@ jobs:
 
       # Only write to cache on pushes to trunk
       - name: Set ccache up
-        uses: hendrikmuhs/ccache-action@bfa03e1de4d7f7c3e80ad9109feedd05c4f5a716 # v1.2.19
+        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
         with:
           key: ${{ github.job }}-fedora-${{ matrix.fedora }}-${{ matrix.compiler }}-${{ matrix.build-type }}
           save: ${{ (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/trunk' }}
