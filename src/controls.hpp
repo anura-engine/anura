@@ -49,6 +49,7 @@ namespace controls
 	typedef std::vector<KeyCombination> ComboList;
 
 	void apply_engine_controls(variant node);
+	variant get_keys_for_action(std::string action_name);
 
 	const char** control_names();
 

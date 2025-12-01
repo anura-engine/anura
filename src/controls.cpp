@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include "variant_type.hpp"
 #include <SDL2/SDL_keycode.h>
 #ifdef _MSC_VER
 #include <winsock2.h>
@@ -48,6 +49,26 @@ PREF_INT(max_control_history, 1024, "Maximum number of frames to keep control hi
 namespace controls
 {
 	std::map<std::string, ComboList> engine_keys;
+
+	variant get_keys_for_action(std::string action_name){
+		std::vector<variant> result = {};
+
+		if (engine_keys.find(action_name) != engine_keys.end()) {
+	        printf("Action %s found.\n", action_name.c_str());
+			ComboList events = engine_keys[action_name];
+			for(int i=0;i<events.size();i++){
+				KeyCombination kb;
+				kb = events[i];
+				std::vector<variant> tmp = {};
+				for(int j=0;j<kb.size();j++){
+					tmp.push_back(variant(kb[j]));
+				}
+				result.emplace_back(variant(&tmp));
+			}
+	    }
+
+		return variant(&result);
+	};
 
 	void apply_engine_controls(variant node)
 	{

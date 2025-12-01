@@ -4454,6 +4454,16 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(module_launch)
 
+		//(name, min_args, max_args, helpstring)
+	FUNCTION_DEF(keys_for_action, 1, 1, "keys_for_action(string) -> list: Prints the SDL keycodes configured for engine actions.")
+			std::string action_name = EVAL_ARG(0).as_string();
+			return controls::get_keys_for_action(action_name);
+
+			FUNCTION_ARGS_DEF
+				ARG_TYPE("string");
+			RETURN_TYPE("list");
+	END_FUNCTION_DEF(keys_for_action)
+
 	FUNCTION_DEF(eval, 1, 2, "eval(str, [arg map]): evaluate the given string as FFL")
 		variant s = EVAL_ARG(0);
 		try {
