@@ -535,6 +535,16 @@ int main(int argcount, char* argvec[])
 
 	PreferenceData preference_data = preferences::load_preferences();
 
+
+	// Load control scheme from engine's config file
+	try {
+		variant cfg = json::parse_from_file("data/controls.cfg");
+		controls::apply_engine_controls(cfg);
+	} catch(const json::ParseError& error) {
+		LOG_ERROR(error.errorMessage());
+		return 1;
+	}
+
 	if(preference_data.error){
 		LOG_ERROR("Preference data error: " << preference_data.error_message);
 	}

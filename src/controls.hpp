@@ -45,6 +45,11 @@ namespace controls
 		NUM_CONTROLS,
 	};
 
+	typedef std::vector<int> KeyCombination;
+	typedef std::vector<KeyCombination> ComboList;
+
+	void apply_engine_controls(variant node);
+
 	const char** control_names();
 
 	void set_mouse_to_keycode(CONTROL_ITEM item, int mouse_button);
