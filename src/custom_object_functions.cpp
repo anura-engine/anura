@@ -4455,14 +4455,31 @@ RETURN_TYPE("bool")
 	END_FUNCTION_DEF(module_launch)
 
 		//(name, min_args, max_args, helpstring)
-	FUNCTION_DEF(keys_for_action, 1, 1, "keys_for_action(string) -> list: Prints the SDL keycodes configured for engine actions.")
+	FUNCTION_DEF(get_keys_for_action, 1, 1, "get_keys_for_action(string) -> list: Prints the SDL keycodes configured for engine actions.")
 			std::string action_name = EVAL_ARG(0).as_string();
 			return controls::get_keys_for_action(action_name);
 
 			FUNCTION_ARGS_DEF
 				ARG_TYPE("string");
 			RETURN_TYPE("list");
-	END_FUNCTION_DEF(keys_for_action)
+	END_FUNCTION_DEF(get_keys_for_action)
+
+	//variant set_key_for_action(std::string action_name, int index, std::vector<int> value);
+	FUNCTION_DEF(set_key_for_action, 3, 3, "set_keys_for_action(string action_name, int index, list[int] value) -> int: Gets the key combination at 'index' of the action 'action_name' and sets it to 'value'. value is an array containing sdl keycodes which need to be pressed at the same time to trigger the actio.")
+			std::string action_name = EVAL_ARG(0).as_string();
+			int index = EVAL_ARG(1).as_int();
+			variant value = EVAL_ARG(2);
+
+			std::vector<int> c_value = value.as_list_int();
+
+			return controls::set_key_for_action(action_name, index, c_value);
+
+			FUNCTION_ARGS_DEF
+				ARG_TYPE("string");
+				ARG_TYPE("int");
+				ARG_TYPE("list");
+			RETURN_TYPE("int");
+	END_FUNCTION_DEF(set_key_for_action)
 
 	FUNCTION_DEF(eval, 1, 2, "eval(str, [arg map]): evaluate the given string as FFL")
 		variant s = EVAL_ARG(0);

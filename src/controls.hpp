@@ -50,6 +50,7 @@ namespace controls
 
 	void apply_engine_controls(variant node);
 	variant get_keys_for_action(std::string action_name);
+	variant set_key_for_action(std::string action_name, int index, std::vector<int> value);
 
 	const char** control_names();
 

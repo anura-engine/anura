@@ -70,6 +70,24 @@ namespace controls
 		return variant(&result);
 	};
 
+	variant set_key_for_action(std::string action_name, int index, std::vector<int> value){
+		if (engine_keys.find(action_name) != engine_keys.end()) {
+			ComboList events = engine_keys[action_name];
+			if(index >= events.size()){
+				// List index out of range
+				return variant(0);
+			}
+
+			KeyCombination k = events[index];
+			k.clear();
+			for(int i=0;i<value.size();i++){
+				k.push_back(value[i]);
+			}
+			engine_keys[action_name][index] = k;
+			return variant(1);
+		}
+		return variant(0);
+	}
 	void apply_engine_controls(variant node)
 	{
 	    std::map<variant, variant> key_binds = node["controls"]["key_bindings"].as_map();
