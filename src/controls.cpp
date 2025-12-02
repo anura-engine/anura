@@ -88,12 +88,12 @@ namespace controls
 		return names;
 	}
 
-	variant get_engine_keys_for_action(std::string action_name){
+	variant get_keys_for_action(std::string action_name, KeyBindings &keys){
 		std::vector<variant> result = {};
 
-		if (engine_keys.find(action_name) != engine_keys.end()) {
+		if (keys.find(action_name) != keys.end()) {
 	        printf("Action %s found.\n", action_name.c_str());
-			ComboList events = engine_keys[action_name];
+			ComboList events = keys[action_name];
 			for(int i=0;i<events.size();i++){
 				KeyCombination kb;
 				kb = events[i];
@@ -108,44 +108,37 @@ namespace controls
 		return variant(&result);
 	};
 
-	variant get_module_keys_for_action(std::string action_name){
-		std::vector<variant> result = {};
-		std::map<std::string, ComboList> module_keys = module::get_module_keys();
+	variant add_key_for_action(std::string action_name, int before_index, KeyCombination value, KeyBindings &keys){
+		if (keys.find(action_name) != keys.end()) {
+			ComboList events = keys[action_name];
 
-		if (module_keys.find(action_name) != module_keys.end()) {
-	        printf("Action %s found.\n", action_name.c_str());
-			ComboList events = module_keys[action_name];
-			for(int i=0;i<events.size();i++){
-				KeyCombination kb;
-				kb = events[i];
-				std::vector<variant> tmp = {};
-				for(int j=0;j<kb.size();j++){
-					tmp.push_back(variant(kb[j]));
-				}
-				result.emplace_back(variant(&tmp));
-			}
-	    }
-
-		return variant(&result);
-	};
-
-	variant set_engine_key_for_action(std::string action_name, int index, std::vector<int> value){
-		if (engine_keys.find(action_name) != engine_keys.end()) {
-			ComboList events = engine_keys[action_name];
-			if(index >= events.size()){
-				// List index out of range
-				return variant(0);
-			}
-
-			KeyCombination k = events[index];
-			k.clear();
+			KeyCombination k;
 			for(int i=0;i<value.size();i++){
 				k.push_back(value[i]);
 			}
-			engine_keys[action_name][index] = k;
-			return variant(1);
+
+			std::vector<int> temp = k;
+			events.insert(events.begin() + before_index, temp);
+			keys[action_name] = events;
+			return variant::from_bool(true);
 		}
-		return variant(0);
+		return variant::from_bool(false);
+	}
+
+	variant del_key_for_action(std::string action_name, int at_index, KeyBindings &keys){
+		if (keys.find(action_name) != keys.end()) {
+			ComboList events = keys[action_name];
+
+			if(at_index >= events.size()){
+				// List index out of range
+				return variant::from_bool(false);
+			}
+			//TODO: Determine if the allocated memory for the KeyCombo at events[at_index] will be
+			// automatically freed
+			events.erase(events.begin() + at_index);
+			return variant::from_bool(true);
+		}
+		return variant::from_bool(false);
 	}
 	void apply_engine_controls(variant node)
 	{

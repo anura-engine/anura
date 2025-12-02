@@ -60,7 +60,7 @@ namespace module
 		variant default_preferences;
 
 		std::map<std::string, std::string> action_names;
-		std::map<std::string, controls::ComboList> module_keys;
+		controls::KeyBindings module_keys;
 	};
 
 
@@ -83,8 +83,13 @@ namespace module
 	//doesn't depend on any existing files.
 	std::string map_write_path(const std::string& fname, BASE_PATH_TYPE path_type=BASE_PATH_GAME);
 
-	std::map<std::string, controls::ComboList> get_module_keys();
+	variant get_keys_for_action(std::string action_name);
+
 	std::map<std::string, std::string> get_action_names();
+	controls::KeyBindings get_module_keys();
+	variant get_keys_for_action(std::string action_name);
+	variant add_key_for_action(std::string action_name, int before_index, controls::KeyCombination value);
+	variant del_key_for_action(std::string action_name, int at_index);
 
 	std::string get_default_font();
 	const KRE::ColorPtr& get_speech_dialog_bg_color();

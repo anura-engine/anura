@@ -993,7 +993,7 @@ namespace preferences
 		node.add("show_iphone_controls", variant::from_bool(show_iphone_controls_));
 
 		std::map<std::string, std::string> action_names = module::get_action_names();
-		std::map<std::string, controls::ComboList> module_keys = module::get_module_keys();
+		controls::KeyBindings module_keys = module::get_module_keys();
 		printf("%d\n", (int)action_names.size());
 		for(auto p = action_names.begin(); p != action_names.end(); ++p) {
       		std::string action_name = p->first;
@@ -1001,7 +1001,7 @@ namespace preferences
         	std::string preference_name = "keys_";
         	preference_name += action_name;
 
-         	std::vector<variant> temp = controls::get_module_keys_for_action(action_name).as_list();
+         	std::vector<variant> temp = module::get_keys_for_action(action_name).as_list();
           	printf("keys for action %d\n", (int)temp.size());
           	for(int j=0;j<temp.size();j++){
            		std::vector<variant> a = temp[j].as_list();
@@ -1010,7 +1010,7 @@ namespace preferences
               		printf("%d ", a[k].as_int());
               	}
            	}
-         	node.add(preference_name, controls::get_module_keys_for_action(action_name));
+         	node.add(preference_name, module::get_keys_for_action(action_name));
 		}
 
 		for(int n = 1; n <= 3; ++n) {

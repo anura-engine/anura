@@ -557,12 +557,24 @@ namespace module
 		}
 	}
 
-	std::map<std::string, controls::ComboList> get_module_keys(){
+	controls::KeyBindings get_module_keys(){
 		return loaded_paths().front().module_keys;
 	}
 
 	std::map<std::string, std::string> get_action_names(){
 		return loaded_paths().front().action_names;
+	}
+
+	variant get_keys_for_action(std::string action_name){
+		return controls::get_keys_for_action(action_name, loaded_paths().front().module_keys);
+	}
+
+	variant add_key_for_action(std::string action_name, int before_index, controls::KeyCombination value){
+		return controls::add_key_for_action(action_name, before_index, value, loaded_paths().front().module_keys);
+	}
+
+	variant del_key_for_action(std::string action_name, int at_index){
+		return controls::del_key_for_action(action_name, at_index, loaded_paths().front().module_keys);
 	}
 
 	std::string get_default_font()

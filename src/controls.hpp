@@ -48,14 +48,15 @@ namespace controls
 
 	typedef std::vector<int> KeyCombination;
 	typedef std::vector<KeyCombination> ComboList;
+	typedef std::map<std::string, ComboList> KeyBindings;
 
 	extern std::map<std::string, ComboList> engine_keys;
 
 	void parse_keys_from_node_into_map(variant node, std::map<std::string, ComboList> *dictionary);
-	variant get_engine_keys_for_action(std::string action_name);
-	variant get_module_keys_for_action(std::string action_name);
 
-	variant set_engine_key_for_action(std::string action_name, int index, std::vector<int> value);
+	variant get_keys_for_action(std::string action_name, KeyBindings &keys);
+	variant add_key_for_action(std::string action_name, int before_index, KeyCombination value, KeyBindings &keys);
+	variant del_key_for_action(std::string action_name, int at_index, KeyBindings &keys);
 
 	const char** control_names();
 
