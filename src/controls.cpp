@@ -82,12 +82,6 @@ namespace controls
 	    }
 	}
 
-	const char** control_names()
-	{
-		static const char* names[] = { "up", "down", "left", "right", "attack", "jump", "tongue", "sprint", nullptr };
-		return names;
-	}
-
 	variant get_keys_for_action(std::string action_name, KeyBindings &keys){
 		std::vector<variant> result = {};
 
