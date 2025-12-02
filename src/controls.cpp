@@ -39,6 +39,7 @@
 
 #include "asserts.hpp"
 #include "controls.hpp"
+#include "module.hpp"
 #include "joystick.hpp"
 #include "multiplayer.hpp"
 #include "preferences.hpp"
@@ -50,7 +51,7 @@ namespace controls
 {
 	std::map<std::string, ComboList> engine_keys;
 
-	void parse_controls_from_node_into_map(variant node, std::map<std::string, ComboList> dictionary){
+	void parse_keys_from_node_into_map(variant node, std::map<std::string, ComboList> *dictionary){
 	    std::map<variant, variant> key_binds = node.as_map();
 	    for(auto p = key_binds.begin(); p != key_binds.end(); ++p) {
 	        std::string action_name = p->first.as_string();
@@ -76,8 +77,8 @@ namespace controls
 				combo_list.push_back(kb);
 	            printf("\n"); // print a new line after each key combination
 			}
-
-			dictionary.insert({action_name, combo_list});
+			printf("Inserting key value pair %s %d\n", action_name.c_str(), combo_list[0][0]);
+			dictionary->insert({action_name, combo_list});
 	    }
 	}
 
@@ -87,7 +88,7 @@ namespace controls
 		return names;
 	}
 
-	variant get_keys_for_action(std::string action_name){
+	variant get_engine_keys_for_action(std::string action_name){
 		std::vector<variant> result = {};
 
 		if (engine_keys.find(action_name) != engine_keys.end()) {
@@ -107,7 +108,28 @@ namespace controls
 		return variant(&result);
 	};
 
-	variant set_key_for_action(std::string action_name, int index, std::vector<int> value){
+	variant get_module_keys_for_action(std::string action_name){
+		std::vector<variant> result = {};
+		std::map<std::string, ComboList> module_keys = module::get_module_keys();
+
+		if (module_keys.find(action_name) != module_keys.end()) {
+	        printf("Action %s found.\n", action_name.c_str());
+			ComboList events = module_keys[action_name];
+			for(int i=0;i<events.size();i++){
+				KeyCombination kb;
+				kb = events[i];
+				std::vector<variant> tmp = {};
+				for(int j=0;j<kb.size();j++){
+					tmp.push_back(variant(kb[j]));
+				}
+				result.emplace_back(variant(&tmp));
+			}
+	    }
+
+		return variant(&result);
+	};
+
+	variant set_engine_key_for_action(std::string action_name, int index, std::vector<int> value){
 		if (engine_keys.find(action_name) != engine_keys.end()) {
 			ComboList events = engine_keys[action_name];
 			if(index >= events.size()){

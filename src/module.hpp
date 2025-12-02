@@ -83,6 +83,9 @@ namespace module
 	//doesn't depend on any existing files.
 	std::string map_write_path(const std::string& fname, BASE_PATH_TYPE path_type=BASE_PATH_GAME);
 
+	std::map<std::string, controls::ComboList> get_module_keys();
+	std::map<std::string, std::string> get_action_names();
+
 	std::string get_default_font();
 	const KRE::ColorPtr& get_speech_dialog_bg_color();
 

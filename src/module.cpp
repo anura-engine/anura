@@ -29,6 +29,7 @@
 #include "asserts.hpp"
 #include "base64.hpp"
 #include "compress.hpp"
+#include "controls.hpp"
 #include "custom_object_type.hpp"
 #include "i18n.hpp"
 #include "filesystem.hpp"
@@ -405,7 +406,8 @@ namespace module
 		auto speech_dialog_bg_color = std::make_shared<KRE::Color>(58, 61, 76, 255);
 		variant player_type;
 
-
+		std::map<std::string, controls::ComboList> module_keys = {};
+		std::map<std::string, std::string> action_names = {};
 
 		const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";
 		if(sys::file_exists(constants_path)) {
@@ -514,30 +516,27 @@ namespace module
 
 		m.default_preferences = v["default_preferences"];
 		m.version_ = module_version;
-		loaded_paths().insert(loaded_paths().begin(), m);
 
-		if(initial) {
-			CustomObjectType::setPlayerVariantType(player_type);
-		}
 		if(v.has_key("controls")) {
     		if(v["controls"].has_key("names")){
       			std::map<variant, variant> action_names_variant = v["controls"]["names"].as_map();
-         		std::map<std::string, std::string> action_names = {};
 
          		for(auto p = action_names_variant.begin(); p != action_names_variant.end(); ++p) {
            			std::string action_id = p->first.as_string();
               		std::string action_name = p->second.as_string();
                 	action_names.insert({action_id, action_name});
           		}
-         		m.action_names = action_names;
     		}
+      		m.action_names = action_names;
 
             if(v["controls"].has_key("key_bindings")){
-            	controls::parse_controls_from_node_into_map(v["controls"]["key_bindings"], m.module_keys);
+            	controls::parse_keys_from_node_into_map(v["controls"]["key_bindings"], &module_keys);
             }
+            printf("%d\n", (int) module_keys.size());
+            m.module_keys = module_keys;
 
             LOG_INFO("KEYS:");
-            for (auto act_keys = begin(m.module_keys); act_keys != end(m.module_keys); act_keys++) {
+            for (auto act_keys = begin(module_keys); act_keys != end(module_keys); act_keys++) {
                 LOG_INFO(act_keys->first);
                 std::vector<std::vector<int>> key_combos = act_keys->second;
                 for(auto key_combo : key_combos){
@@ -549,6 +548,21 @@ namespace module
                 }
             }
 		}
+
+
+		loaded_paths().insert(loaded_paths().begin(), m);
+
+		if(initial) {
+			CustomObjectType::setPlayerVariantType(player_type);
+		}
+	}
+
+	std::map<std::string, controls::ComboList> get_module_keys(){
+		return loaded_paths().front().module_keys;
+	}
+
+	std::map<std::string, std::string> get_action_names(){
+		return loaded_paths().front().action_names;
 	}
 
 	std::string get_default_font()

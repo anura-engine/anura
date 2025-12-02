@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include "variant.hpp"
 #include <iostream>
 #include <algorithm>
 #include <string>
@@ -28,6 +29,7 @@
 
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
+#include <vector>
 
 #if defined __has_include
 #  if __has_include("boost/uuid/detail/sha1.hpp")
@@ -989,6 +991,27 @@ namespace preferences
 		node.add("key_jump", controls::get_keycode(controls::CONTROL_JUMP));
 		node.add("key_tongue", controls::get_keycode(controls::CONTROL_TONGUE));
 		node.add("show_iphone_controls", variant::from_bool(show_iphone_controls_));
+
+		std::map<std::string, std::string> action_names = module::get_action_names();
+		std::map<std::string, controls::ComboList> module_keys = module::get_module_keys();
+		printf("%d\n", (int)action_names.size());
+		for(auto p = action_names.begin(); p != action_names.end(); ++p) {
+      		std::string action_name = p->first;
+        	printf("%s\n", action_name.c_str());
+        	std::string preference_name = "keys_";
+        	preference_name += action_name;
+
+         	std::vector<variant> temp = controls::get_module_keys_for_action(action_name).as_list();
+          	printf("keys for action %d\n", (int)temp.size());
+          	for(int j=0;j<temp.size();j++){
+           		std::vector<variant> a = temp[j].as_list();
+             	printf("Key %d\n", j);
+             	for(int k=0;k<a.size();k++){
+              		printf("%d ", a[k].as_int());
+              	}
+           	}
+         	node.add(preference_name, controls::get_module_keys_for_action(action_name));
+		}
 
 		for(int n = 1; n <= 3; ++n) {
 			controls::CONTROL_ITEM ctrl = controls::get_mouse_keycode(n);
