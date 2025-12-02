@@ -533,7 +533,7 @@ int main(int argcount, char* argvec[])
 		module::set_core_module_name(DEFAULT_MODULE);
 	}
 
-	PreferenceData preference_data = preferences::load_preferences();
+	preferences::load_preferences();
 
 
 	// Load control scheme from engine's config file
