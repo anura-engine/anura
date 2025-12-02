@@ -405,6 +405,8 @@ namespace module
 		auto speech_dialog_bg_color = std::make_shared<KRE::Color>(58, 61, 76, 255);
 		variant player_type;
 
+
+
 		const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";
 		if(sys::file_exists(constants_path)) {
 			const std::string contents = sys::read_file(constants_path);
@@ -509,12 +511,43 @@ namespace module
 		modules m = {name, pretty_name, abbrev,
 					 {make_base_module_path(name), make_user_module_path(name)},
 				def_font, def_font_cjk, speech_dialog_bg_color};
+
 		m.default_preferences = v["default_preferences"];
 		m.version_ = module_version;
 		loaded_paths().insert(loaded_paths().begin(), m);
 
 		if(initial) {
 			CustomObjectType::setPlayerVariantType(player_type);
+		}
+		if(v.has_key("controls")) {
+    		if(v["controls"].has_key("names")){
+      			std::map<variant, variant> action_names_variant = v["controls"]["names"].as_map();
+         		std::map<std::string, std::string> action_names = {};
+
+         		for(auto p = action_names_variant.begin(); p != action_names_variant.end(); ++p) {
+           			std::string action_id = p->first.as_string();
+              		std::string action_name = p->second.as_string();
+                	action_names.insert({action_id, action_name});
+          		}
+         		m.action_names = action_names;
+    		}
+
+            if(v["controls"].has_key("key_bindings")){
+            	controls::parse_controls_from_node_into_map(v["controls"]["key_bindings"], m.module_keys);
+            }
+
+            LOG_INFO("KEYS:");
+            for (auto act_keys = begin(m.module_keys); act_keys != end(m.module_keys); act_keys++) {
+                LOG_INFO(act_keys->first);
+                std::vector<std::vector<int>> key_combos = act_keys->second;
+                for(auto key_combo : key_combos){
+                    LOG_INFO("[");
+                    for(auto key : key_combo){
+                        LOG_INFO(key);
+                    }
+                    LOG_INFO("]");
+                }
+            }
 		}
 	}
 

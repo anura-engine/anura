@@ -29,6 +29,7 @@
 
 #include "Color.hpp"
 
+#include "controls.hpp"
 #include <map>
 #include <string>
 #include <vector>
@@ -57,6 +58,9 @@ namespace module
 		std::vector<std::string> included_modules_;
 
 		variant default_preferences;
+
+		std::map<std::string, std::string> action_names;
+		std::map<std::string, controls::ComboList> module_keys;
 	};
 
 

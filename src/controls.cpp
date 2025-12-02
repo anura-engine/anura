@@ -50,6 +50,43 @@ namespace controls
 {
 	std::map<std::string, ComboList> engine_keys;
 
+	void parse_controls_from_node_into_map(variant node, std::map<std::string, ComboList> dictionary){
+	    std::map<variant, variant> key_binds = node.as_map();
+	    for(auto p = key_binds.begin(); p != key_binds.end(); ++p) {
+	        std::string action_name = p->first.as_string();
+			ComboList combo_list;
+
+			printf("Action %s\n", action_name.c_str());
+
+			std::vector<variant> key_sequences = p->second.as_list();
+	        for(int i=0;i<key_sequences.size();i++){
+				std::vector<std::string> key_combo = key_sequences[i].as_list_string();
+				KeyCombination kb;
+
+	            printf("Key combo: ");
+				for(int j=0;j<key_combo.size();j++){
+					const char* key_name = key_combo[j].c_str();
+					printf("%s\n", key_name);
+					int keycode = SDL_GetKeyFromName(key_name);
+					//TODO: Handle 'unknown' key
+					if(keycode != SDLK_UNKNOWN){
+						kb.push_back(keycode);
+					}
+				}
+				combo_list.push_back(kb);
+	            printf("\n"); // print a new line after each key combination
+			}
+
+			dictionary.insert({action_name, combo_list});
+	    }
+	}
+
+	const char** control_names()
+	{
+		static const char* names[] = { "up", "down", "left", "right", "attack", "jump", "tongue", "sprint", nullptr };
+		return names;
+	}
+
 	variant get_keys_for_action(std::string action_name){
 		std::vector<variant> result = {};
 

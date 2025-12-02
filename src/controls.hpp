@@ -26,6 +26,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <map>
 
 typedef unsigned long key_type;
 
@@ -48,7 +49,9 @@ namespace controls
 	typedef std::vector<int> KeyCombination;
 	typedef std::vector<KeyCombination> ComboList;
 
-	void apply_engine_controls(variant node);
+	extern std::map<std::string, ComboList> engine_keys;
+
+	void parse_controls_from_node_into_map(variant node, std::map<std::string, ComboList> dictionary);
 	variant get_keys_for_action(std::string action_name);
 	variant set_key_for_action(std::string action_name, int index, std::vector<int> value);
 
