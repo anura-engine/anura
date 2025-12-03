@@ -153,6 +153,7 @@ namespace controls
 			// Assign back the modified array
 			keys[action_name] = events;
 
+			dirty_actions[action_name] = true;
 			return variant::from_bool(true);
 		}
 		return variant::from_bool(false);
@@ -172,6 +173,24 @@ namespace controls
 		}
 		return true;
 	}
+	void set_are_bindings_default(std::string action_name, bool value){
+		if(value == false){
+			dirty_actions[action_name] = true;
+		} else {
+			auto itor = dirty_actions.find(action_name);
+			if (itor != dirty_actions.end()){
+				dirty_actions.erase(itor);
+			}
+		}
+	}
+
+	bool are_bindings_default_for_action(std::string action_name){
+		if (dirty_actions.find(action_name) == dirty_actions.end()) {
+			return true;
+		}
+		return false;
+	}
+
 	const char** control_names()
 	{
 		static const char* names[] = { "up", "down", "left", "right", "attack", "jump", "tongue", "sprint", nullptr };
