@@ -533,12 +533,12 @@ int main(int argcount, char* argvec[])
 		module::set_core_module_name(DEFAULT_MODULE);
 	}
 
-	preferences::load_preferences();
-
+	PreferenceData preference_data = preferences::load_preferences();
 
 	// Load control scheme from engine's config file
 	try {
 		variant cfg = json::parse_from_file("data/controls.cfg");
+		controls::parse_action_names(cfg["controls"]["names"]);
 		controls::parse_keys_from_node_into_map(cfg["controls"]["key_bindings"], &controls::engine_keys);
 	} catch(const json::ParseError& error) {
 		LOG_ERROR(error.errorMessage());

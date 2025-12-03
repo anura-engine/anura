@@ -50,6 +50,16 @@ PREF_INT(max_control_history, 1024, "Maximum number of frames to keep control hi
 namespace controls
 {
 	std::map<std::string, ComboList> engine_keys;
+	std::map<std::string, std::string> action_names;
+	void parse_action_names(variant node){
+		std::map<variant, variant> acts = node.as_map();
+
+		for(auto p = acts.begin(); p!=acts.end();++p){
+			std::string act_id = p->first.as_string();
+			std::string act_name = p->second.as_string();
+			action_names.insert({act_id, act_name});
+		}
+	}
 
 	void parse_keys_from_node_into_map(variant node, std::map<std::string, ComboList> *dictionary){
 	    std::map<variant, variant> key_binds = node.as_map();
@@ -133,6 +143,10 @@ namespace controls
 			return variant::from_bool(true);
 		}
 		return variant::from_bool(false);
+	}
+
+	std::map<std::string, std::string> get_action_names(){
+		return action_names;
 	}
 
 	const char** control_names()

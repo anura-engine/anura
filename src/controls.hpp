@@ -53,10 +53,12 @@ namespace controls
 	extern std::map<std::string, ComboList> engine_keys;
 
 	void parse_keys_from_node_into_map(variant node, std::map<std::string, ComboList> *dictionary);
+	void parse_action_names(variant node);
 
 	variant get_keys_for_action(std::string action_name, KeyBindings &keys);
 	variant add_key_for_action(std::string action_name, int before_index, KeyCombination value, KeyBindings &keys);
 	variant del_key_for_action(std::string action_name, int at_index, KeyBindings &keys);
+	std::map<std::string, std::string> get_action_names();
 
 	const char** control_names();
 
