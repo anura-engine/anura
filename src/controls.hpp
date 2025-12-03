@@ -58,7 +58,9 @@ namespace controls
 	variant get_keys_for_action(std::string action_name, KeyBindings &keys);
 	variant add_key_for_action(std::string action_name, int before_index, KeyCombination value, KeyBindings &keys);
 	variant del_key_for_action(std::string action_name, int at_index, KeyBindings &keys);
+	bool has_action(std::string action_name, KeyBindings &keys);
 	std::map<std::string, std::string> get_action_names();
+	void set_keys_for_action(std::string action, ComboList &combos);
 
 	const char** control_names();
 

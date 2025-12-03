@@ -162,6 +162,16 @@ namespace controls
 		return action_names;
 	}
 
+	void set_keys_for_action(std::string action, ComboList &combos){
+		engine_keys[action] = combos;
+	}
+
+	bool has_action(std::string action_name, KeyBindings &keys){
+		if(keys.find(action_name) == keys.end()){
+			return false;
+		}
+		return true;
+	}
 	const char** control_names()
 	{
 		static const char* names[] = { "up", "down", "left", "right", "attack", "jump", "tongue", "sprint", nullptr };

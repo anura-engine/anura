@@ -569,12 +569,20 @@ namespace module
 		return controls::get_keys_for_action(action_name, loaded_paths().front().module_keys);
 	}
 
+	void set_keys_for_action(std::string action_name, controls::ComboList &combos){
+		loaded_paths().front().module_keys[action_name] = combos;
+	}
+
 	variant add_key_for_action(std::string action_name, int before_index, controls::KeyCombination value){
 		return controls::add_key_for_action(action_name, before_index, value, loaded_paths().front().module_keys);
 	}
 
 	variant del_key_for_action(std::string action_name, int at_index){
 		return controls::del_key_for_action(action_name, at_index, loaded_paths().front().module_keys);
+	}
+
+	bool has_action(std::string action_name){
+		return controls::has_action(action_name, loaded_paths().front().module_keys);
 	}
 
 	std::string get_default_font()

@@ -90,6 +90,8 @@ namespace module
 	variant get_keys_for_action(std::string action_name);
 	variant add_key_for_action(std::string action_name, int before_index, controls::KeyCombination value);
 	variant del_key_for_action(std::string action_name, int at_index);
+	bool has_action(std::string action_name);
+	void set_keys_for_action(std::string action_name, controls::ComboList &combos);
 
 	std::string get_default_font();
 	const KRE::ColorPtr& get_speech_dialog_bg_color();
