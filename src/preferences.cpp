@@ -874,6 +874,38 @@ namespace preferences
 		return &GameRegistry::getInstance();
 	}
 
+	void parse_controls_from_preferences_given_action_list(std::map<std::string, std::string> action_names, variant node, bool for_engine){
+		for(auto p = action_names.begin(); p != action_names.end(); ++p) {
+      		std::string action_name = p->first;
+        	std::string preference_name = "keys_";
+        	preference_name += action_name;
+
+         	// For each 'keys_action' that is found in preferences.cfg
+        	const variant keys_node = node[preference_name];
+         	if(keys_node.is_null() == false) {
+          		printf("Found preference key %s\n", preference_name.c_str());
+          		// Mark action as dirty, i.e. changed from default
+          		controls::set_are_bindings_default(action_name, false);
+
+            	// Parse the data (key combinations) from variants
+             	// to the KeyCombination type.
+            	controls::ComboList combos;
+            	std::vector<variant> temp = keys_node.as_list();
+             	for(int i=0;i<temp.size();i++){
+              		controls::KeyCombination key_combo;
+               		key_combo = temp[i].as_list_int();
+            		combos.push_back(key_combo);
+              	}
+
+              	// Assign the new bindings
+               	if(for_engine){
+               		controls::set_keys_for_action(action_name, combos);
+                } else {
+                	module::set_keys_for_action(action_name, combos);
+                }
+          	}
+		}
+	}
 	PreferenceData load_preferences()
 	{
 		std::string path;
@@ -926,6 +958,15 @@ namespace preferences
 		if(show_control_rects.is_null() == false) {
 			show_iphone_controls_ = show_control_rects.as_bool(show_iphone_controls_);
 		}
+
+		// Read controls
+		std::map<std::string, std::string> module_action_names = module::get_action_names();
+		std::map<std::string, std::string> engine_action_names = controls::get_action_names();
+
+		parse_controls_from_preferences_given_action_list(module_action_names, node, false);
+		parse_controls_from_preferences_given_action_list(engine_action_names, node, true);
+
+		// end read controls
 
 		no_sound_ = node["no_sound"].as_bool(no_sound_);
 		no_music_ = node["no_music"].as_bool(no_music_);
@@ -997,19 +1038,13 @@ namespace preferences
 		printf("%d\n", (int)action_names.size());
 		for(auto p = action_names.begin(); p != action_names.end(); ++p) {
       		std::string action_name = p->first;
+        	if(controls::are_bindings_default_for_action(action_name)){
+         		continue;
+         	}
         	printf("%s\n", action_name.c_str());
         	std::string preference_name = "keys_";
         	preference_name += action_name;
 
-         	std::vector<variant> temp = module::get_keys_for_action(action_name).as_list();
-          	printf("keys for action %d\n", (int)temp.size());
-          	for(int j=0;j<temp.size();j++){
-           		std::vector<variant> a = temp[j].as_list();
-             	printf("Key %d\n", j);
-             	for(int k=0;k<a.size();k++){
-              		printf("%d ", a[k].as_int());
-              	}
-           	}
          	node.add(preference_name, module::get_keys_for_action(action_name));
 		}
 
