@@ -49,8 +49,10 @@ PREF_INT(max_control_history, 1024, "Maximum number of frames to keep control hi
 
 namespace controls
 {
-	std::map<std::string, ComboList> engine_keys;
+	KeyBindings engine_keys;
+	std::map<std::string, bool> dirty_actions; //To store if a user has changed an action's binds from the default
 	std::map<std::string, std::string> action_names;
+
 	void parse_action_names(variant node){
 		std::map<variant, variant> acts = node.as_map();
 
@@ -122,8 +124,15 @@ namespace controls
 			}
 
 			std::vector<int> temp = k;
+			if(before_index >= events.size()){
+				// List index out of range
+				return variant::from_bool(false);
+			}
 			events.insert(events.begin() + before_index, temp);
 			keys[action_name] = events;
+
+			// Assign back the modified array
+			dirty_actions[action_name] = true;
 			return variant::from_bool(true);
 		}
 		return variant::from_bool(false);
@@ -140,6 +149,10 @@ namespace controls
 			//TODO: Determine if the allocated memory for the KeyCombo at events[at_index] will be
 			// automatically freed
 			events.erase(events.begin() + at_index);
+
+			// Assign back the modified array
+			keys[action_name] = events;
+
 			return variant::from_bool(true);
 		}
 		return variant::from_bool(false);
