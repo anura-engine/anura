@@ -4457,7 +4457,12 @@ RETURN_TYPE("bool")
 		//(name, min_args, max_args, helpstring)
 	FUNCTION_DEF(get_keys_for_action, 1, 1, "get_keys_for_action(string) -> list: Prints the SDL keycodes configured for engine actions.")
 			std::string action_name = EVAL_ARG(0).as_string();
-			return module::get_keys_for_action(action_name);
+
+			if(controls::has_action(action_name, controls::engine_keys)){
+				return controls::get_keys_for_action(action_name, controls::engine_keys);
+			} else {
+				return module::get_keys_for_action(action_name);
+			}
 
 			FUNCTION_ARGS_DEF
 				ARG_TYPE("string");
@@ -4471,7 +4476,11 @@ RETURN_TYPE("bool")
 
 		std::vector<int> c_value = value.as_list_int();
 
-		return module::add_key_for_action(action_name, index, c_value);
+		if(controls::has_action(action_name, controls::engine_keys)){
+			return controls::add_key_for_action(action_name, index, c_value, controls::engine_keys);
+		} else {
+			return module::add_key_for_action(action_name, index, c_value);
+		}
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("string");
 			ARG_TYPE("int");
@@ -4483,7 +4492,12 @@ RETURN_TYPE("bool")
 		std::string action_name = EVAL_ARG(0).as_string();
 		int index = EVAL_ARG(1).as_int();
 
-		return module::del_key_for_action(action_name, index);
+		if(controls::has_action(action_name, controls::engine_keys)){
+			return controls::del_key_for_action(action_name, index, controls::engine_keys);
+		} else {
+			return module::del_key_for_action(action_name, index);
+		}
+
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("string");
 			ARG_TYPE("int");
