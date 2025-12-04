@@ -529,21 +529,7 @@ namespace module
             	module_mappings.parse_keys(v["controls"]["key_bindings"]);
             }
 
-            printf("%d\n", (int) module_keys.size());
             m.module_mappings = module_mappings;
-
-            LOG_INFO("KEYS:");
-            for (auto act_keys = begin(module_keys); act_keys != end(module_keys); act_keys++) {
-                LOG_INFO(act_keys->first);
-                std::vector<std::vector<int>> key_combos = act_keys->second;
-                for(auto key_combo : key_combos){
-                    LOG_INFO("[");
-                    for(auto key : key_combo){
-                        LOG_INFO(key);
-                    }
-                    LOG_INFO("]");
-                }
-            }
 		}
 
 

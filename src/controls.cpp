@@ -70,17 +70,13 @@ namespace controls
 		    std::string action_name = p->first.as_string();
 			ComboList combo_list;
 
-			printf("Action %s\n", action_name.c_str());
-
 			std::vector<variant> key_sequences = p->second.as_list();
 			for(int i=0;i<key_sequences.size();i++){
 				std::vector<std::string> key_combo = key_sequences[i].as_list_string();
 				KeyCombination kb;
 
-			    printf("Key combo: ");
 				for(int j=0;j<key_combo.size();j++){
 					const char* key_name = key_combo[j].c_str();
-					printf("%s\n", key_name);
 					int keycode = SDL_GetKeyFromName(key_name);
 					//TODO: Handle 'unknown' key
 					if(keycode != SDLK_UNKNOWN){
@@ -88,9 +84,7 @@ namespace controls
 					}
 				}
 				combo_list.push_back(kb);
-			    printf("\n"); // print a new line after each key combination
 			}
-			printf("Inserting key value pair %s %d\n", action_name.c_str(), combo_list[0][0]);
 			this->key_mapping.insert({action_name, combo_list});
 		}
 	};
@@ -99,7 +93,6 @@ namespace controls
 		std::vector<variant> result = {};
 
 		if (this->key_mapping.find(action_name) != this->key_mapping.end()) {
-	        printf("Action %s found.\n", action_name.c_str());
 			ComboList events = this->key_mapping[action_name];
 			for(int i=0;i<events.size();i++){
 				KeyCombination kb;
@@ -196,7 +189,6 @@ namespace controls
 		for(auto p = this->action_names.begin(); p != this->action_names.end(); ++p) {
       		std::string action_name = p->first;
         	if(this->are_bindings_default_for_action(action_name)){
-         		printf("Not writing keys for %s, as is has not been changed by user\n", action_name.c_str());
          		continue;
          	}
         	std::string preference_name = "keys_";
@@ -215,7 +207,6 @@ namespace controls
          	// For each 'keys_action' that is found in preferences.cfg
         	const variant keys_node = node[preference_name];
          	if(keys_node.is_null() == false) {
-          		printf("Found preference key %s\n", preference_name.c_str());
           		// Mark action as dirty, i.e. changed from default
           		this->set_are_bindings_default(action_name, false);
 
