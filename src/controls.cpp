@@ -49,34 +49,35 @@ PREF_INT(max_control_history, 1024, "Maximum number of frames to keep control hi
 
 namespace controls
 {
-	KeyBindings engine_keys;
-	std::map<std::string, bool> dirty_actions; //To store if a user has changed an action's binds from the default
-	std::map<std::string, std::string> action_names;
-
-	void parse_action_names(variant node){
+	ActionBindings::ActionBindings(){
+	}
+	ActionBindings::~ActionBindings(){
+		//TODO: Is there anything I need to free here?
+	}
+	void ActionBindings::parse_action_names(variant node){
 		std::map<variant, variant> acts = node.as_map();
 
 		for(auto p = acts.begin(); p!=acts.end();++p){
 			std::string act_id = p->first.as_string();
 			std::string act_name = p->second.as_string();
-			action_names.insert({act_id, act_name});
+			this->action_names.insert({act_id, act_name});
 		}
-	}
+	};
 
-	void parse_keys_from_node_into_map(variant node, std::map<std::string, ComboList> *dictionary){
-	    std::map<variant, variant> key_binds = node.as_map();
-	    for(auto p = key_binds.begin(); p != key_binds.end(); ++p) {
-	        std::string action_name = p->first.as_string();
+	void ActionBindings::parse_keys(variant node){
+		std::map<variant, variant> key_binds = node.as_map();
+		for(auto p = key_binds.begin(); p != key_binds.end(); ++p) {
+		    std::string action_name = p->first.as_string();
 			ComboList combo_list;
 
 			printf("Action %s\n", action_name.c_str());
 
 			std::vector<variant> key_sequences = p->second.as_list();
-	        for(int i=0;i<key_sequences.size();i++){
+			for(int i=0;i<key_sequences.size();i++){
 				std::vector<std::string> key_combo = key_sequences[i].as_list_string();
 				KeyCombination kb;
 
-	            printf("Key combo: ");
+			    printf("Key combo: ");
 				for(int j=0;j<key_combo.size();j++){
 					const char* key_name = key_combo[j].c_str();
 					printf("%s\n", key_name);
@@ -87,19 +88,19 @@ namespace controls
 					}
 				}
 				combo_list.push_back(kb);
-	            printf("\n"); // print a new line after each key combination
+			    printf("\n"); // print a new line after each key combination
 			}
 			printf("Inserting key value pair %s %d\n", action_name.c_str(), combo_list[0][0]);
-			dictionary->insert({action_name, combo_list});
-	    }
-	}
+			this->key_mapping.insert({action_name, combo_list});
+		}
+	};
 
-	variant get_keys_for_action(std::string action_name, KeyBindings &keys){
+	variant ActionBindings::get_keys_for_action(std::string action_name){
 		std::vector<variant> result = {};
 
-		if (keys.find(action_name) != keys.end()) {
+		if (this->key_mapping.find(action_name) != this->key_mapping.end()) {
 	        printf("Action %s found.\n", action_name.c_str());
-			ComboList events = keys[action_name];
+			ComboList events = this->key_mapping[action_name];
 			for(int i=0;i<events.size();i++){
 				KeyCombination kb;
 				kb = events[i];
@@ -112,11 +113,11 @@ namespace controls
 	    }
 
 		return variant(&result);
-	};
+	}
 
-	variant add_key_for_action(std::string action_name, int before_index, KeyCombination value, KeyBindings &keys){
-		if (keys.find(action_name) != keys.end()) {
-			ComboList events = keys[action_name];
+	variant ActionBindings::add_key_for_action(std::string action_name, int before_index, KeyCombination value){
+		if (this->key_mapping.find(action_name) != this->key_mapping.end()) {
+			ComboList events = this->key_mapping[action_name];
 
 			KeyCombination k;
 			for(int i=0;i<value.size();i++){
@@ -124,23 +125,23 @@ namespace controls
 			}
 
 			std::vector<int> temp = k;
-			if(before_index >= events.size()){
+			if(before_index >= events.size() && before_index != 0){
 				// List index out of range
 				return variant::from_bool(false);
 			}
 			events.insert(events.begin() + before_index, temp);
-			keys[action_name] = events;
+			this->key_mapping[action_name] = events;
 
 			// Assign back the modified array
-			dirty_actions[action_name] = true;
+			this->dirty_actions[action_name] = true;
 			return variant::from_bool(true);
 		}
 		return variant::from_bool(false);
 	}
 
-	variant del_key_for_action(std::string action_name, int at_index, KeyBindings &keys){
-		if (keys.find(action_name) != keys.end()) {
-			ComboList events = keys[action_name];
+	variant ActionBindings::del_key_for_action(std::string action_name, int at_index){
+		if (this->key_mapping.find(action_name) != this->key_mapping.end()) {
+			ComboList events = this->key_mapping[action_name];
 
 			if(at_index >= events.size()){
 				// List index out of range
@@ -151,45 +152,90 @@ namespace controls
 			events.erase(events.begin() + at_index);
 
 			// Assign back the modified array
-			keys[action_name] = events;
+			this->key_mapping[action_name] = events;
 
-			dirty_actions[action_name] = true;
+			this->dirty_actions[action_name] = true;
 			return variant::from_bool(true);
 		}
 		return variant::from_bool(false);
 	}
 
-	std::map<std::string, std::string> get_action_names(){
+	std::map<std::string, std::string> ActionBindings::get_action_names(){
 		return action_names;
 	}
 
-	void set_keys_for_action(std::string action, ComboList &combos){
-		engine_keys[action] = combos;
+	void ActionBindings::set_keys_for_action(std::string action, ComboList &combos){
+		this->key_mapping[action] = combos;
 	}
 
-	bool has_action(std::string action_name, KeyBindings &keys){
-		if(keys.find(action_name) == keys.end()){
+	bool ActionBindings::has_action(std::string action_name){
+		if(this->key_mapping.find(action_name) == this->key_mapping.end()){
 			return false;
 		}
 		return true;
 	}
-	void set_are_bindings_default(std::string action_name, bool value){
+	void ActionBindings::set_are_bindings_default(std::string action_name, bool value){
 		if(value == false){
-			dirty_actions[action_name] = true;
+			this->dirty_actions[action_name] = true;
 		} else {
-			auto itor = dirty_actions.find(action_name);
-			if (itor != dirty_actions.end()){
-				dirty_actions.erase(itor);
+			auto itor = this->dirty_actions.find(action_name);
+			if (itor != this->dirty_actions.end()){
+				this->dirty_actions.erase(itor);
 			}
 		}
 	}
 
-	bool are_bindings_default_for_action(std::string action_name){
-		if (dirty_actions.find(action_name) == dirty_actions.end()) {
+	bool ActionBindings::are_bindings_default_for_action(std::string action_name){
+		if (this->dirty_actions.find(action_name) == this->dirty_actions.end()) {
 			return true;
 		}
 		return false;
 	}
+
+	void ActionBindings::write_to_preferences(variant_builder *node){
+		for(auto p = this->action_names.begin(); p != this->action_names.end(); ++p) {
+      		std::string action_name = p->first;
+        	if(this->are_bindings_default_for_action(action_name)){
+         		printf("Not writing keys for %s, as is has not been changed by user\n", action_name.c_str());
+         		continue;
+         	}
+        	std::string preference_name = "keys_";
+        	preference_name += action_name;
+
+         	node->add(preference_name, this->get_keys_for_action(action_name));
+		}
+	}
+
+	void ActionBindings::read_from_preferences(variant node){
+		for(auto p = action_names.begin(); p != action_names.end(); ++p) {
+      		std::string action_name = p->first;
+        	std::string preference_name = "keys_";
+        	preference_name += action_name;
+
+         	// For each 'keys_action' that is found in preferences.cfg
+        	const variant keys_node = node[preference_name];
+         	if(keys_node.is_null() == false) {
+          		printf("Found preference key %s\n", preference_name.c_str());
+          		// Mark action as dirty, i.e. changed from default
+          		this->set_are_bindings_default(action_name, false);
+
+            	// Parse the data (key combinations) from variants
+             	// to the KeyCombination type.
+            	controls::ComboList combos;
+            	std::vector<variant> temp = keys_node.as_list();
+             	for(int i=0;i<temp.size();i++){
+              		controls::KeyCombination key_combo;
+               		key_combo = temp[i].as_list_int();
+            		combos.push_back(key_combo);
+              	}
+
+              	// Assign the new bindings
+              	this->set_keys_for_action(action_name, combos);
+			}
+		}
+	}
+
+	ActionBindings engine_mappings;
 
 	const char** control_names()
 	{

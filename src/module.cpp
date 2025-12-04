@@ -25,6 +25,7 @@
 
 #include <boost/filesystem/exception.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <glm/common.hpp>
 
 #include "asserts.hpp"
 #include "base64.hpp"
@@ -517,23 +518,19 @@ namespace module
 		m.default_preferences = v["default_preferences"];
 		m.version_ = module_version;
 
+		controls::ActionBindings module_mappings;
+
 		if(v.has_key("controls")) {
     		if(v["controls"].has_key("names")){
-      			std::map<variant, variant> action_names_variant = v["controls"]["names"].as_map();
-
-         		for(auto p = action_names_variant.begin(); p != action_names_variant.end(); ++p) {
-           			std::string action_id = p->first.as_string();
-              		std::string action_name = p->second.as_string();
-                	action_names.insert({action_id, action_name});
-          		}
-    		}
-      		m.action_names = action_names;
+      			module_mappings.parse_action_names(v["controls"]["names"]);
+     		}
 
             if(v["controls"].has_key("key_bindings")){
-            	controls::parse_keys_from_node_into_map(v["controls"]["key_bindings"], &module_keys);
+            	module_mappings.parse_keys(v["controls"]["key_bindings"]);
             }
+
             printf("%d\n", (int) module_keys.size());
-            m.module_keys = module_keys;
+            m.module_mappings = module_mappings;
 
             LOG_INFO("KEYS:");
             for (auto act_keys = begin(module_keys); act_keys != end(module_keys); act_keys++) {
@@ -557,32 +554,8 @@ namespace module
 		}
 	}
 
-	controls::KeyBindings get_module_keys(){
-		return loaded_paths().front().module_keys;
-	}
-
-	std::map<std::string, std::string> get_action_names(){
-		return loaded_paths().front().action_names;
-	}
-
-	variant get_keys_for_action(std::string action_name){
-		return controls::get_keys_for_action(action_name, loaded_paths().front().module_keys);
-	}
-
-	void set_keys_for_action(std::string action_name, controls::ComboList &combos){
-		loaded_paths().front().module_keys[action_name] = combos;
-	}
-
-	variant add_key_for_action(std::string action_name, int before_index, controls::KeyCombination value){
-		return controls::add_key_for_action(action_name, before_index, value, loaded_paths().front().module_keys);
-	}
-
-	variant del_key_for_action(std::string action_name, int at_index){
-		return controls::del_key_for_action(action_name, at_index, loaded_paths().front().module_keys);
-	}
-
-	bool has_action(std::string action_name){
-		return controls::has_action(action_name, loaded_paths().front().module_keys);
+	controls::ActionBindings* get_module_mappings(){
+		return &loaded_paths().front().module_mappings;
 	}
 
 	std::string get_default_font()

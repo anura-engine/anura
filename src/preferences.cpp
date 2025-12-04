@@ -874,56 +874,6 @@ namespace preferences
 		return &GameRegistry::getInstance();
 	}
 
-	void write_controls_to_preferences(controls::KeyBindings keys, std::map<std::string, std::string> action_names, variant_builder *node, bool for_engine){
-		for(auto p = action_names.begin(); p != action_names.end(); ++p) {
-      		std::string action_name = p->first;
-        	if(controls::are_bindings_default_for_action(action_name)){
-         		printf("Not writing keys for %s, as is has not been changed by user\n", action_name.c_str());
-         		continue;
-         	}
-        	std::string preference_name = "keys_";
-        	preference_name += action_name;
-
-         	if(for_engine){
-          		node->add(preference_name, controls::get_keys_for_action(action_name, controls::engine_keys));
-          	} else {
-         		node->add(preference_name, module::get_keys_for_action(action_name));
-          	}
-		}
-	}
-
-	void parse_controls_from_preferences_given_action_list(std::map<std::string, std::string> action_names, variant node, bool for_engine){
-		for(auto p = action_names.begin(); p != action_names.end(); ++p) {
-      		std::string action_name = p->first;
-        	std::string preference_name = "keys_";
-        	preference_name += action_name;
-
-         	// For each 'keys_action' that is found in preferences.cfg
-        	const variant keys_node = node[preference_name];
-         	if(keys_node.is_null() == false) {
-          		printf("Found preference key %s\n", preference_name.c_str());
-          		// Mark action as dirty, i.e. changed from default
-          		controls::set_are_bindings_default(action_name, false);
-
-            	// Parse the data (key combinations) from variants
-             	// to the KeyCombination type.
-            	controls::ComboList combos;
-            	std::vector<variant> temp = keys_node.as_list();
-             	for(int i=0;i<temp.size();i++){
-              		controls::KeyCombination key_combo;
-               		key_combo = temp[i].as_list_int();
-            		combos.push_back(key_combo);
-              	}
-
-              	// Assign the new bindings
-               	if(for_engine){
-               		controls::set_keys_for_action(action_name, combos);
-                } else {
-                	module::set_keys_for_action(action_name, combos);
-                }
-          	}
-		}
-	}
 	PreferenceData load_preferences()
 	{
 		std::string path;
@@ -978,11 +928,10 @@ namespace preferences
 		}
 
 		// Read controls
-		std::map<std::string, std::string> module_action_names = module::get_action_names();
-		std::map<std::string, std::string> engine_action_names = controls::get_action_names();
+		controls::ActionBindings* module_mappings = module::get_module_mappings();
 
-		parse_controls_from_preferences_given_action_list(module_action_names, node, false);
-		parse_controls_from_preferences_given_action_list(engine_action_names, node, true);
+		controls::engine_mappings.read_from_preferences(node);
+		module_mappings->read_from_preferences(node);
 
 		// end read controls
 
@@ -1051,13 +1000,10 @@ namespace preferences
 		node.add("key_tongue", controls::get_keycode(controls::CONTROL_TONGUE));
 		node.add("show_iphone_controls", variant::from_bool(show_iphone_controls_));
 
-		std::map<std::string, std::string> module_actions = module::get_action_names();
-		std::map<std::string, std::string> engine_actions = controls::get_action_names();
-		controls::KeyBindings module_keys = module::get_module_keys();
-		controls::KeyBindings engine_keys = controls::engine_keys;
+		controls::ActionBindings* module_mappings = module::get_module_mappings();
 
-		write_controls_to_preferences(module_keys, module_actions, &node, false);
-		write_controls_to_preferences(engine_keys, engine_actions, &node, true);
+		controls::engine_mappings.write_to_preferences(&node);
+		module_mappings->write_to_preferences(&node);
 
 		for(int n = 1; n <= 3; ++n) {
 			controls::CONTROL_ITEM ctrl = controls::get_mouse_keycode(n);

@@ -59,8 +59,7 @@ namespace module
 
 		variant default_preferences;
 
-		std::map<std::string, std::string> action_names;
-		controls::KeyBindings module_keys;
+		controls::ActionBindings module_mappings;
 	};
 
 
@@ -72,6 +71,8 @@ namespace module
 	//using any other module functions to establish the dlc path we use.
 	void set_core_module_name(const std::string& module_name);
 
+	controls::ActionBindings* get_module_mappings();
+
 	const std::string get_module_name();
 	const std::string get_module_pretty_name();
 	std::string get_module_version();
@@ -82,16 +83,6 @@ namespace module
 	//maps a filename, which might have an encoded module id, otherwise uses get_module_name().
 	//doesn't depend on any existing files.
 	std::string map_write_path(const std::string& fname, BASE_PATH_TYPE path_type=BASE_PATH_GAME);
-
-	variant get_keys_for_action(std::string action_name);
-
-	std::map<std::string, std::string> get_action_names();
-	controls::KeyBindings get_module_keys();
-	variant get_keys_for_action(std::string action_name);
-	variant add_key_for_action(std::string action_name, int before_index, controls::KeyCombination value);
-	variant del_key_for_action(std::string action_name, int at_index);
-	bool has_action(std::string action_name);
-	void set_keys_for_action(std::string action_name, controls::ComboList &combos);
 
 	std::string get_default_font();
 	const KRE::ColorPtr& get_speech_dialog_bg_color();

@@ -538,8 +538,12 @@ int main(int argcount, char* argvec[])
 	// Load control scheme from engine's config file
 	try {
 		variant cfg = json::parse_from_file("data/controls.cfg");
-		controls::parse_action_names(cfg["controls"]["names"]);
-		controls::parse_keys_from_node_into_map(cfg["controls"]["key_bindings"], &controls::engine_keys);
+
+		controls::engine_mappings.parse_action_names(cfg["controls"]["names"]);
+		controls::engine_mappings.parse_keys(cfg["controls"]["key_bindings"]);
+
+		//controls::parse_action_names(cfg["controls"]["names"]);
+		//controls::parse_keys_from_node_into_map(cfg["controls"]["key_bindings"], &controls::engine_keys);
 	} catch(const json::ParseError& error) {
 		LOG_ERROR(error.errorMessage());
 		return 1;
