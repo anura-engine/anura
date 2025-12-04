@@ -528,6 +528,10 @@ namespace controls
 			if(joystick::button(2)) {
 				state.keys |= 0x40;
 			}
+			// sprint
+			if(joystick::button(3)) {
+				state.keys |= 0x80;
+			}
 
 			if(g_user_ctrl_output.is_null() == false) {
 				state.user = g_user_ctrl_output.write_json();
