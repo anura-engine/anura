@@ -14,19 +14,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rocky:
+        include:
           # 8 is the oldest Rocky Linux to exist
-          - "8"
-          - "9"
+          - rocky: "8"
+            compiler: g++
+            build-type: Debug
+          - rocky: "8"
+            compiler: g++
+            build-type: Release
+          - rocky: "8"
+            compiler: clang++
+            build-type: Debug
+          - rocky: "8"
+            compiler: clang++
+            build-type: Release
+          # Rocky 9 ships Clang 20 and that cannot build against Boost MPL older than 1.86, and Rocky 9 ships 1.75
+          - rocky: "9"
+            compiler: g++
+            build-type: Debug
+          - rocky: "9"
+            compiler: g++
+            build-type: Release
           # 10 is expected in 2025-05
           # 11 is expected in 2028-05
           # 12 is expected in 2031-05
-        compiler:
-          - g++
-          - clang++
-        build-type:
-          - Release
-          - Debug
     container: rockylinux:${{ matrix.rocky }}
     steps:
       - name: Install Dependencies
