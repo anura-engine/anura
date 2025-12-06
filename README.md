@@ -424,8 +424,8 @@ the compute we spend on a per push basis.
 
 The resulting caching strategy going forwards:
 
-* Cache on all pushes to the default branch `trunk` to refresh new objects
-* Cache on Sundays to ensure we have some hot 10GB set within the 7d limit
+* Write to cache on Sundays to ensure we always have some hot 10GB set within the 7d limit
+* Consume from cache on all builds
 
 ## CD
 
