@@ -2,9 +2,6 @@ name: Unit Tests / Required / Static / Linux
 on:
   pull_request:
   merge_group:
-  push:
-    branches:
-      - trunk
   schedule:
     - cron: '0 0 * * 0' # Weekly on Sunday
 
@@ -50,12 +47,12 @@ jobs:
       - name: Ignore Filesystem Permissions for Git
         run: git config --global --add safe.directory '*'
 
-      # Only write to cache on pushes to trunk
+      # Only write to cache on scheduled builds on trunk
       - name: Set ccache up
         uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
         with:
           key: unit-tests-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
-          save: ${{ (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/trunk' }}
+          save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
 
       - name: Install Conan
         uses: conan-io/setup-conan@09566912d661de90608308897a4d513e850c04e8 # v1.2.0
