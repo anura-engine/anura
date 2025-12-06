@@ -32,7 +32,18 @@ jobs:
           - alma: "9"
             compiler: g++
             build-type: Release
-          # 10 is expected in 2025-05
+          - alma: "10"
+            compiler: g++
+            build-type: Debug
+          - alma: "10"
+            compiler: g++
+            build-type: Release
+          - alma: "10"
+            compiler: clang++
+            build-type: Debug
+          - alma: "10"
+            compiler: clang++
+            build-type: Release
           # 11 is expected in 2028-05
           # 12 is expected in 2031-05
     container: almalinux:${{ matrix.alma }}
