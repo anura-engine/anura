@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include "variant.hpp"
 #include <iostream>
 #include <algorithm>
 #include <string>
@@ -28,6 +29,7 @@
 
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
+#include <vector>
 
 #if defined __has_include
 #  if __has_include("boost/uuid/detail/sha1.hpp")
@@ -925,6 +927,14 @@ namespace preferences
 			show_iphone_controls_ = show_control_rects.as_bool(show_iphone_controls_);
 		}
 
+		// Read controls
+		controls::ActionBindings* module_mappings = module::get_module_mappings();
+
+		controls::engine_mappings.read_from_preferences(node);
+		module_mappings->read_from_preferences(node);
+
+		// end read controls
+
 		no_sound_ = node["no_sound"].as_bool(no_sound_);
 		no_music_ = node["no_music"].as_bool(no_music_);
 		reverse_ab_ = node["reverse_ab"].as_bool(reverse_ab_);
@@ -989,6 +999,11 @@ namespace preferences
 		node.add("key_jump", controls::get_keycode(controls::CONTROL_JUMP));
 		node.add("key_tongue", controls::get_keycode(controls::CONTROL_TONGUE));
 		node.add("show_iphone_controls", variant::from_bool(show_iphone_controls_));
+
+		controls::ActionBindings* module_mappings = module::get_module_mappings();
+
+		controls::engine_mappings.write_to_preferences(&node);
+		module_mappings->write_to_preferences(&node);
 
 		for(int n = 1; n <= 3; ++n) {
 			controls::CONTROL_ITEM ctrl = controls::get_mouse_keycode(n);

@@ -4454,6 +4454,56 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(module_launch)
 
+		//(name, min_args, max_args, helpstring)
+	FUNCTION_DEF(get_keys_for_action, 1, 1, "get_keys_for_action(string) -> list: Prints the SDL keycodes configured for engine actions.")
+			std::string action_name = EVAL_ARG(0).as_string();
+
+			if(controls::engine_mappings.has_action(action_name)){
+				return controls::engine_mappings.get_keys_for_action(action_name);
+			} else {
+				return module::get_module_mappings()->get_keys_for_action(action_name);
+			}
+
+			FUNCTION_ARGS_DEF
+				ARG_TYPE("string");
+			RETURN_TYPE("list");
+	END_FUNCTION_DEF(get_keys_for_action)
+
+	FUNCTION_DEF(add_key_for_action, 3, 3, "add_key_for_action(string action_name, int index_before, list[int] value: Adds the key binding 'value' for action_name")
+		std::string action_name = EVAL_ARG(0).as_string();
+		int index = EVAL_ARG(1).as_int();
+		variant value = EVAL_ARG(2);
+
+		std::vector<int> c_value = value.as_list_int();
+
+		if(controls::engine_mappings.has_action(action_name)){
+			return controls::engine_mappings.add_key_for_action(action_name, index, c_value);
+		} else {
+			return module::get_module_mappings()->add_key_for_action(action_name, index, c_value);
+		}
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("string");
+			ARG_TYPE("int");
+			ARG_TYPE("list");
+		RETURN_TYPE("bool");
+	END_FUNCTION_DEF(add_key_for_action)
+
+	FUNCTION_DEF(del_key_for_action, 2, 2, "del_key_for_action(string action_name, int index_at): Deletes the given key binding for action_name")
+		std::string action_name = EVAL_ARG(0).as_string();
+		int index = EVAL_ARG(1).as_int();
+
+		if(controls::engine_mappings.has_action(action_name)){
+			return controls::engine_mappings.del_key_for_action(action_name, index);
+		} else {
+			return module::get_module_mappings()->del_key_for_action(action_name, index);
+		}
+
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("string");
+			ARG_TYPE("int");
+		RETURN_TYPE("bool");
+	END_FUNCTION_DEF(del_key_for_action)
+
 	FUNCTION_DEF(eval, 1, 2, "eval(str, [arg map]): evaluate the given string as FFL")
 		variant s = EVAL_ARG(0);
 		try {

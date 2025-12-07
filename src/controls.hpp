@@ -23,9 +23,11 @@
 
 #pragma once
 
+#include "variant_utils.hpp"
 #include <vector>
 #include <memory>
 #include <string>
+#include <map>
 
 typedef unsigned long key_type;
 
@@ -44,6 +46,38 @@ namespace controls
 		CONTROL_SPRINT,
 		NUM_CONTROLS,
 	};
+
+	typedef std::vector<int> KeyCombination;
+	typedef std::vector<KeyCombination> ComboList;
+	typedef std::map<std::string, ComboList> KeyBindings;
+
+	class ActionBindings {
+		public:
+			ActionBindings();
+			~ActionBindings();
+
+			void parse_action_names(variant node);
+			void parse_keys(variant node);
+			variant get_keys_for_action(std::string action_name);
+			variant add_key_for_action(std::string action_name, int before_index, KeyCombination value);
+			variant del_key_for_action(std::string action_name, int at_index);
+			std::map<std::string, std::string> get_action_names();
+			void set_keys_for_action(std::string action, ComboList &combos);
+
+			bool has_action(std::string action_name);
+			void set_are_bindings_default(std::string action_name, bool value);
+			bool are_bindings_default_for_action(std::string action_name);
+
+			void write_to_preferences(variant_builder *node);
+			void read_from_preferences(variant node);
+		private:
+			KeyBindings key_mapping;
+			//To store if a user has changed an action's binds from the default
+			std::map<std::string, bool> dirty_actions;
+			std::map<std::string, std::string> action_names;
+	};
+
+	extern ActionBindings engine_mappings;
 
 	const char** control_names();
 
