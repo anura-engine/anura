@@ -48,25 +48,27 @@ jobs:
         run: git config --global --add safe.directory '*'
 
       # Only write to cache on scheduled builds on trunk
+      # Don't restore when creating and saving cache
       - name: Set ccache up
         uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
         with:
           key: unit-tests-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
+          append-timestamp: false
           save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
+          restore: ! ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
 
       - name: Install Conan
         uses: conan-io/setup-conan@09566912d661de90608308897a4d513e850c04e8 # v1.2.0
         with:
           use_venv: true
 
-      # Always restore cache
+      # Don't restore when creating and saving cache
       - name: Restore Conan Cache
+        if: ! github.event_name == 'schedule' && github.ref == 'refs/heads/trunk'
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         with:
           path: ~/.conan2/p
           key: conan-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
-          restore-keys: |
-            conan-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}-
 
       - name: Install Dependencies with Conan
         run: |
@@ -77,9 +79,9 @@ jobs:
             --build='b2/*' \
             --build=missing
 
-      # Only write to cache on pushes to trunk
+      # Only write to cache on scheduled builds on trunk
       - name: Save Conan Cache
-        if: github.event_name == 'push' && github.ref == 'refs/heads/trunk'
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/trunk'
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         with:
           path: ~/.conan2/p
