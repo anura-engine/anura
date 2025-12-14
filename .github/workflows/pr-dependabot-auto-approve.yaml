@@ -16,6 +16,11 @@ jobs:
         with:
           app-id: ${{ secrets.AUTOAPPROVE_APP_ID }}
           private-key: ${{ secrets.AUTOAPPROVE_APP_PRIVATE_KEY }}
+      - name: Wait for status checks
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: gh pr checks "$PR_URL" --watch --interval 30
       - name: Auto Approve Dependabot PRs
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
