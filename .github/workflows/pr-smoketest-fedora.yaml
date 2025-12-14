@@ -36,22 +36,22 @@ jobs:
     steps:
       - name: Install Dependencies
         run: |
-            dnf -qy update
-            dnf -qy install \
-                git \
-                g++ \
-                clang \
-                cmake \
-                make \
-                ccache \
-                boost-devel \
-                cairo-devel \
-                glew-devel \
-                libvorbis-devel \
-                SDL2_image-devel \
-                SDL2_mixer-devel \
-                SDL2_ttf-devel \
-                SDL2-devel
+          dnf -qy update
+          dnf -qy install \
+              git \
+              g++ \
+              clang \
+              cmake \
+              make \
+              ccache \
+              boost-devel \
+              cairo-devel \
+              glew-devel \
+              libvorbis-devel \
+              SDL2_image-devel \
+              SDL2_mixer-devel \
+              SDL2_ttf-devel \
+              SDL2-devel
 
       - name: Checkout Anura
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
