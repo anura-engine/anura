@@ -2,7 +2,7 @@ name: Smoketest / Informative / Rocky
 on:
   pull_request:
   schedule:
-    - cron: '0 0 * * 0' # Weekly on Sunday
+    - cron: "0 0 * * 0" # Weekly on Sunday
 
 jobs:
   test:
@@ -50,42 +50,45 @@ jobs:
     steps:
       - name: Install Dependencies
         run: |
-            dnf -qy update
-            # We need to add an extra command to DNF to manage its config
-            dnf install -qy 'dnf-command(config-manager)'
-            # We need either PowerTools or CodeReady Builder
-            # Rocky 8 has PowerTools, Rocky 9 has CodeReady Builder
-            dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled crb
-            # We need packages from EPEL
-            dnf install -qy epel-release
-            dnf install -qy \
-              git \
-              cmake \
-              gcc-c++ \
-              clang \
-              ccache \
-              boost-devel \
-              zlib-devel \
-              mesa-libGL-devel \
-              glew-devel \
-              freetype-devel \
-              SDL2-devel \
-              SDL2_image-devel \
-              SDL2_mixer-devel \
-              SDL2_ttf-devel \
-              libogg-devel \
-              libvorbis-devel \
-              cairo-devel
+          dnf -qy update
+          # We need to add an extra command to DNF to manage its config
+          dnf install -qy 'dnf-command(config-manager)'
+          # We need either PowerTools or CodeReady Builder
+          # Rocky 8 has PowerTools, Rocky 9 has CodeReady Builder
+          dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled crb
+          # We need packages from EPEL
+          dnf install -qy epel-release
+          dnf install -qy \
+            git \
+            cmake \
+            gcc-c++ \
+            clang \
+            ccache \
+            boost-devel \
+            zlib-devel \
+            mesa-libGL-devel \
+            glew-devel \
+            freetype-devel \
+            SDL2-devel \
+            SDL2_image-devel \
+            SDL2_mixer-devel \
+            SDL2_ttf-devel \
+            libogg-devel \
+            libvorbis-devel \
+            cairo-devel
 
       - name: Checkout Anura
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       # Only write to cache on scheduled builds on trunk
+      # Don't restore when creating and saving cache
       - name: Set ccache up
         uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
         with:
           key: ${{ github.job }}-rocky-${{ matrix.rocky }}-${{ matrix.compiler }}-${{ matrix.build-type }}
+          append-timestamp: false
           save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
+          restore: ! ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
 
       - name: Build Prep Anura
         run: |
