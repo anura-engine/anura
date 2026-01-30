@@ -56,7 +56,7 @@ jobs:
           key: unit-tests-linux-${{ matrix.build-type }}-${{ matrix.runner }}
           append-timestamp: false
           save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
-          restore: ! ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
+          restore: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
 
       - name: Build Prep Anura
         run: |

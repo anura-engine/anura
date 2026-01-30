@@ -55,7 +55,7 @@ jobs:
           key: unit-tests-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
           append-timestamp: false
           save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
-          restore: ! ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
+          restore: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
 
       - name: Install Conan
         uses: conan-io/setup-conan@2f4bd34e8e0af00e1a77a66e1d284e06d71d703f # v1.3.0
