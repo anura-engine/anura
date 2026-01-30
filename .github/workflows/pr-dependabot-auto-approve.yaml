@@ -16,11 +16,53 @@ jobs:
         with:
           app-id: ${{ secrets.AUTOAPPROVE_APP_ID }}
           private-key: ${{ secrets.AUTOAPPROVE_APP_PRIVATE_KEY }}
-      - name: Wait for status checks
+
+      - name: Install jq
         env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: gh pr checks "$PR_URL" --watch --interval 30
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get -qq update
+          apt-get -qq install -y --no-install-recommends jq
+
+      - name: Wait for checks (120min max, 5min interval)
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          MAX_WAIT_MINUTES=120
+          INTERVAL_MINUTES=5
+          START_TIME=$(date +%s)
+
+          while true; do
+            TOKEN=$(
+              gh api \
+                -H "Authorization: Bearer ${{ secrets.AUTOAPPROVE_APP_PRIVATE_KEY }}" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "/app/installations/${{ secrets.AUTOAPPROVE_APP_ID }}/access_tokens" \
+                | jq -r .token
+            )
+
+            export GH_TOKEN="$TOKEN"
+
+            SUCCESS_CHECKS=$(gh pr checks "$PR_URL" --status=success | wc -l)
+            TOTAL_CHECKS=$(gh pr checks "$PR_URL" | wc -l)
+
+            echo "Checks: $SUCCESS_CHECKS/$TOTAL_CHECKS passed"
+
+            if [ "$SUCCESS_CHECKS" -ge "$TOTAL_CHECKS" ] && [ "$TOTAL_CHECKS" -gt 0 ]; then
+              echo "All checks passed!"
+              break
+            fi
+
+            ELAPSED_MINUTES=$(( ($(date +%s) - START_TIME) / 60 ))
+            if [ "$ELAPSED_MINUTES" -ge "$MAX_WAIT_MINUTES" ]; then
+              echo "Max wait time exceeded"
+              exit 1
+            fi
+
+            echo "Waiting $INTERVAL_MINUTES min..."
+            sleep $((INTERVAL_MINUTES * 60))
+          done
+
       - name: Auto Approve Dependabot PRs
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
