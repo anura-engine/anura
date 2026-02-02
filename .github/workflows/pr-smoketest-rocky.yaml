@@ -88,7 +88,7 @@ jobs:
           key: ${{ github.job }}-rocky-${{ matrix.rocky }}-${{ matrix.compiler }}-${{ matrix.build-type }}
           append-timestamp: false
           save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
-          restore: ! ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
+          restore: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
 
       - name: Build Prep Anura
         run: |
