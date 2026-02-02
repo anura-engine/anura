@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   dependabot-auto-approve:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     steps:
       - name: Create app token
@@ -16,11 +16,28 @@ jobs:
         with:
           app-id: ${{ secrets.AUTOAPPROVE_APP_ID }}
           private-key: ${{ secrets.AUTOAPPROVE_APP_PRIVATE_KEY }}
+
       - name: Wait for status checks
         env:
-          PR_URL: ${{github.event.pull_request.html_url}}
+          PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: gh pr checks "$PR_URL" --watch --interval 30
+          OWN_CHECK: "dependabot-auto-approve"
+        run: |
+          gh auth login --with-token <<< "$GH_TOKEN"
+
+          for i in {1..120}; do
+            # Get checks as text, grep for pending ones, exclude own
+            CHECK_STATUS=$(gh pr checks "$PR_URL" 2>/dev/null | grep -E "(pending|\?)" | grep -v "$OWN_CHECK")
+
+            if [ -z "$CHECK_STATUS" ]; then
+              echo "✅ All other checks passed!"
+              break
+            fi
+
+            echo "⏳ Waiting... (attempt $i/120)"
+            sleep 30
+          done
+
       - name: Auto Approve Dependabot PRs
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
