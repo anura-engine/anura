@@ -77,6 +77,7 @@ jobs:
             -s build_type="${{ matrix.build-type }}" \
             -s compiler.cppstd=17 \
             --build='b2/*' \
+            --build='m4/*' \
             --build=missing
 
       # Only write to cache on scheduled builds on trunk
