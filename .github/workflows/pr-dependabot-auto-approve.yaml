@@ -23,8 +23,6 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           OWN_CHECK: "dependabot-auto-approve"
         run: |
-          gh auth login --with-token <<< "$GH_TOKEN"
-
           for i in {1..120}; do
             # Get checks as text, grep for pending ones, exclude own
             CHECK_STATUS=$(gh pr checks "$PR_URL" 2>/dev/null | grep -E "(pending|\?)" | grep -v "$OWN_CHECK")
