@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   dependabot-auto-approve:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-24.04
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     steps:
       - name: Create app token
