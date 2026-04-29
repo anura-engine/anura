@@ -12,20 +12,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # 8 is the oldest Alma Linux to exist
-          - alma: "8"
-            compiler: g++
-            build-type: Debug
-          - alma: "8"
-            compiler: g++
-            build-type: Release
-          - alma: "8"
-            compiler: clang++
-            build-type: Debug
-          - alma: "8"
-            compiler: clang++
-            build-type: Release
-          # Alma 9 ships Clang 20 and that cannot build against Boost MPL older than 1.86, and Alma 9 ships 1.75
+          # 9 is the oldest Alma Linux with a new enough libboost
+          # 9 ships Clang 20 and that cannot build against Boost MPL older than 1.86, and Alma 9 ships 1.75
           - alma: "9"
             compiler: g++
             build-type: Debug
