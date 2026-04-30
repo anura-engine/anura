@@ -347,11 +347,8 @@ On Pull Requests:
   * Ubuntu
     * 22.04 / Jammy Jellyfish
     * 24.04 / Noble Numbat
+    * 26.04 / Resolute Raccoon
   * Fedora
-    * 33
-    * 34
-    * 35
-    * 36
     * 37
     * 38
     * 39
@@ -360,17 +357,12 @@ On Pull Requests:
     * 42
     * 43
   * Rocky Linux
-    * 8
     * 9
     * 10
   * Alma Linux
-    * 8
     * 9
     * 10
   * openSUSE Leap
-    * 15.4
-    * 15.5
-    * 15.6
     * 16.0
 
 This set should cover most popular use cases and also derivative distributions

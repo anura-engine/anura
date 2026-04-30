@@ -12,10 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         suse:
-          # 15.4 is the oldest openSUSE Leap with a new enough clang
-          - "15.4"
-          - "15.5"
-          - "15.6"
+          # 16.0 is the oldest openSUSE Leap with a new enough libboost
           - "16.0"
           # 16.1 is expected in 2026-06
           # 16.2 is expected in 2027-06

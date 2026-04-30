@@ -16,8 +16,9 @@ jobs:
           # 22.04 is the oldest LTS with a new enough CMake for our FetchContent workarounds
           - "22.04"
           - "24.04"
-          # 26.04 LTS is expected in 2026-04
+          - "26.04"
           # 28.04 LTS is expected in 2028-04
+          # 30.04 LTS is expected in 2030-04
         compiler:
           - g++
           - clang++
