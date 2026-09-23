@@ -150,6 +150,15 @@ cmake buildsystem/linux-dynamic --preset=Debug
 cmake --build buildsystem/linux-dynamic/build/Debug --parallel "$(getconf _NPROCESSORS_ONLN)"
 ```
 
+##### Building without network access
+
+`imgui` is vendored by downloading it from GitHub while configuring. Build hosts
+without network access can use a system provided imgui instead:
+
+```bash
+cmake buildsystem/linux-dynamic --preset=Release -D ANURA_USE_SYSTEM_IMGUI=ON
+```
+
 You may not pass the compiler in via the environment variable `CXX` as that
 fools quite a lot of CMake internal machinery. Only two different kinds of C++
 compilers being passed in actually work: `g++` and `clang++`. Passing in `gcc`
