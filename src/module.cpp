@@ -67,19 +67,64 @@ namespace module
 			return g_module_chunk_query.size() > 3 && std::equal(g_module_chunk_query.begin(), g_module_chunk_query.begin()+3, "GET");
 		}
 
-		// The base files are referred to as core.
-		module::modules core = {"core", "core", "core", {""}};
+		// The base files are referred to as core. They normally live in the
+		// current directory, which is what running the engine from a source
+		// tree does, but a package manager installs them in the system data
+		// directory instead.
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__ANDROID__)
+#ifndef ANURA_SYSTEM_DATA_DIR
+#define ANURA_SYSTEM_DATA_DIR "/usr/share/anura"
+#endif
+#else
+#define ANURA_SYSTEM_DATA_DIR ""
+#endif
+
+		const std::string& core_base_path() {
+			static const std::string result = sys::dir_exists("data")
+				? std::string()
+				: std::string(ANURA_SYSTEM_DATA_DIR) + "/";
+			return result;
+		}
+
+		module::modules core = {"core", "core", "core", {core_base_path()}};
 
 		std::vector<module::modules>& loaded_paths() {
 			static std::vector<module::modules> result(1, core);
 			return result;
 		}
 
+		// Directories which are searched for modules when the modules are
+		// installed by a package manager. The engine is normally installed
+		// system-wide, so modules can live in the system data directories and be
+		// shared between all users of the machine.
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__ANDROID__)
+#ifndef ANURA_SYSTEM_MODULE_DIRS
+#define ANURA_SYSTEM_MODULE_DIRS "/usr/local/share/anura/modules:/usr/share/anura/modules"
+#endif
+#else
+#define ANURA_SYSTEM_MODULE_DIRS ""
+#endif
+
+		const std::vector<std::string>& system_module_dirs() {
+			static const std::vector<std::string> result = util::split(ANURA_SYSTEM_MODULE_DIRS, ':');
+			return result;
+		}
+
+		bool is_system_module_dir(const std::string& dir) {
+			const std::vector<std::string>& dirs = system_module_dirs();
+			return std::find(dirs.begin(), dirs.end(), dir) != dirs.end();
+		}
+
 		const std::vector<std::string>& module_dirs() {
 			static std::vector<std::string> result;
 			if(result.empty()) {
+				// The directory relative to the current directory takes precedence,
+				// then the user's own (downloaded) modules, then the system-wide
+				// directories which are installed read-only by a package manager.
 				result.push_back("modules");
 				result.push_back(preferences::dlc_path());
+				const std::vector<std::string>& sys_dirs = system_module_dirs();
+				result.insert(result.end(), sys_dirs.begin(), sys_dirs.end());
 			}
 			return result;
 		}
@@ -381,7 +426,9 @@ namespace module
 			return result;
 		}
 
-		std::string path = module_dirs().back() + "/" + name + "/";
+		// The module doesn't exist yet, so create it in the user's writable
+		// dlc directory (never in a read-only system directory).
+		std::string path = preferences::dlc_path() + "/" + name + "/";
 		sys::get_dir(path);
 		return path;
 	}
@@ -1791,6 +1838,13 @@ static const int ModuleProtocolVersion = 1;
 
 				bool found = false;
 				for(auto dir : module_dirs()) {
+					// System-wide directories hold read-only, possibly differently
+					// versioned copies of a module and are not a valid source for
+					// re-installing it.
+					if(is_system_module_dir(dir)) {
+						continue;
+					}
+
 					std::string src_path = dir + "/" + module_id_ + "/" + path.as_string();
 					if(sys::file_exists(src_path)) {
 						std::string contents = sys::read_file(src_path);
