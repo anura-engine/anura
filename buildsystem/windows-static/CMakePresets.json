@@ -12,6 +12,7 @@
       "binaryDir": "${sourceDir}/build",
       "toolchainFile": "${sourceDir}/../conan/conan_toolchain.cmake",
       "cacheVariables": {
+        "CMAKE_POLICY_DEFAULT_CMP0091": "NEW",
         "FETCHCONTENT_QUIET": "FALSE"
       }
     },
