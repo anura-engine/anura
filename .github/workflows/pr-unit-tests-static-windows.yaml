@@ -19,6 +19,11 @@ jobs:
       - name: Checkout Anura
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@774d421fb516901eb7cfc037e0a439ece01e3997 # v2.0.2
+        with:
+          cmake-version: 4.4.3
+
       # Only write to cache on scheduled builds on trunk
       # Don't restore when creating and saving cache
       - name: Set ccache up
@@ -44,10 +49,12 @@ jobs:
 
       - name: Install Dependencies with Conan
         run: |
+          $cmakePath = (Get-Command cmake).Source
           conan install buildsystem/conan `
             -s build_type="${{ matrix.build-type }}" `
             -s compiler.cppstd=17 `
-            -c tools.cmake.cmaketoolchain:generator=Ninja `
+            -c "tools.cmake:cmake_program=$cmakePath" `
+            -c "tools.cmake.cmaketoolchain:generator=Visual Studio 18 2026" `
             --build=missing
 
       # Only write to cache on scheduled builds on trunk
