@@ -2,6 +2,14 @@ name: Dependabot Auto Approve
 
 on: pull_request
 
+concurrency:
+  group: dependabot-auto-approve-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+concurrency:
+  group: dependabot-auto-approve-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   pull-requests: write
 
