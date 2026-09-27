@@ -20,6 +20,8 @@ endif()
 # Build target for CXX project "anura"
 project(anura LANGUAGES CXX)
 
+get_filename_component(ANURA_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+
 # Use ccache to accelerate iterating on CXX files, if available
 find_program(CCACHE "ccache")
 if(CCACHE)
@@ -30,31 +32,31 @@ endif(CCACHE)
 file(
     GLOB
     anura_SRC
-    "${CMAKE_BINARY_DIR}/src/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/hex/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui_draw.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui_tables.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui_widgets.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui_additions/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/kre/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/svg/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/tiled/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/treetree/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/xhtml/*.cpp"
+    "${ANURA_SOURCE_DIR}/src/*.cpp"
+    "${ANURA_SOURCE_DIR}/src/hex/*.cpp"
+    "${ANURA_SOURCE_DIR}/src/imgui/imgui_draw.cpp"
+    "${ANURA_SOURCE_DIR}/src/imgui/imgui_tables.cpp"
+    "${ANURA_SOURCE_DIR}/src/imgui/imgui_widgets.cpp"
+    "${ANURA_SOURCE_DIR}/src/imgui/imgui.cpp"
+    "${ANURA_SOURCE_DIR}/src/imgui_additions/*.cpp"
+    "${ANURA_SOURCE_DIR}/src/kre/*.cpp"
+    "${ANURA_SOURCE_DIR}/src/svg/*.cpp"
+    "${ANURA_SOURCE_DIR}/src/tiled/*.cpp"
+    "${ANURA_SOURCE_DIR}/src/treetree/*.cpp"
+    "${ANURA_SOURCE_DIR}/src/xhtml/*.cpp"
 )
 
 # Add the headers
 include_directories(
-    "${CMAKE_BINARY_DIR}/src"
-    "${CMAKE_BINARY_DIR}/src/hex"
-    "${CMAKE_BINARY_DIR}/src/imgui"
-    "${CMAKE_BINARY_DIR}/src/imgui_additions"
-    "${CMAKE_BINARY_DIR}/src/kre"
-    "${CMAKE_BINARY_DIR}/src/svg"
-    "${CMAKE_BINARY_DIR}/src/tiled"
-    "${CMAKE_BINARY_DIR}/src/treetree"
-    "${CMAKE_BINARY_DIR}/src/xhtml"
+    "${ANURA_SOURCE_DIR}/src"
+    "${ANURA_SOURCE_DIR}/src/hex"
+    "${ANURA_SOURCE_DIR}/src/imgui"
+    "${ANURA_SOURCE_DIR}/src/imgui_additions"
+    "${ANURA_SOURCE_DIR}/src/kre"
+    "${ANURA_SOURCE_DIR}/src/svg"
+    "${ANURA_SOURCE_DIR}/src/tiled"
+    "${ANURA_SOURCE_DIR}/src/treetree"
+    "${ANURA_SOURCE_DIR}/src/xhtml"
     "${CMAKE_BINARY_DIR}/vcpkg_installed/x64-windows/include"
 )
 
@@ -79,7 +81,7 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
 endif()
 
 # Inject our own imgui config for our own vector operations
-add_compile_definitions(IMGUI_USER_CONFIG="${CMAKE_BINARY_DIR}/src/imgui_additions/imconfig_anura.h")
+add_compile_definitions(IMGUI_USER_CONFIG="${ANURA_SOURCE_DIR}/src/imgui_additions/imconfig_anura.h")
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
     # Turn all things debug, like assertions, off for a release build
