@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 3,
   "cmakeMinimumRequired": {
     "major": 4,
     "minor": 4,
@@ -10,6 +10,7 @@
       "name": "default",
       "generator": "Visual Studio 18 2026",
       "binaryDir": "${sourceDir}/build",
+      "toolchainFile": "${sourceDir}/../conan/conan_toolchain.cmake",
       "cacheVariables": {
         "FETCHCONTENT_QUIET": "FALSE"
       }
