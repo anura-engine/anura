@@ -6,10 +6,6 @@ concurrency:
   group: dependabot-auto-approve-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-concurrency:
-  group: dependabot-auto-approve-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-
 permissions:
   pull-requests: write
 
@@ -29,47 +25,35 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          OWN_CHECK: "dependabot-auto-approve"
         run: |
           set -euo pipefail
 
-          max_attempts=100
-          first_success_seen=false
-
-          for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+          while :; do
             checks=$(gh pr checks "$PR_URL" --json name,bucket)
-            other_checks=$(jq -c --arg own_check "$OWN_CHECK" \
-              '[.[] | select(.name != $own_check)]' <<< "$checks")
+            state=$(jq -r '
+              map(select(.name != "dependabot-auto-approve")) as $checks |
+              if ($checks | length) == 0 then "pending"
+              elif any($checks[]; .bucket == "fail" or .bucket == "cancel") then "failed"
+              elif any($checks[]; .bucket == "pending") then "pending"
+              elif all($checks[]; .bucket == "pass" or .bucket == "skipping") then "done"
+              else "failed"
+              end
+            ' <<< "$checks")
 
-            failed_checks=$(jq -c \
-              '[.[] | select(.bucket == "fail" or .bucket == "cancel" or (.bucket != "pass" and .bucket != "pending" and .bucket != "skipping"))]' \
-              <<< "$other_checks")
-            if [[ $(jq 'length' <<< "$failed_checks") -gt 0 ]]; then
-              jq -r '.[] | "\(.bucket): \(.name)"' <<< "$failed_checks"
-              echo "At least one check did not succeed; refusing to approve."
-              exit 1
-            fi
-
-            check_count=$(jq 'length' <<< "$other_checks")
-            pending_count=$(jq '[.[] | select(.bucket == "pending")] | length' <<< "$other_checks")
-            success_count=$(jq '[.[] | select(.bucket == "pass")] | length' <<< "$other_checks")
-
-            if [[ "$success_count" -gt 0 && "$first_success_seen" == false ]]; then
-              first_success_seen=true
-              echo "A check has succeeded; rechecking all checks after 30 seconds."
-            elif [[ "$check_count" -gt 0 && "$pending_count" -eq 0 && "$first_success_seen" == true ]]; then
-              echo "All checks have completed successfully or were skipped."
-              exit 0
-            else
-              echo "Checks: $success_count successful, $pending_count pending."
-            fi
-
-            if [[ "$attempt" -eq "$max_attempts" ]]; then
-              echo "Timed out waiting for checks; refusing to approve."
-              exit 1
-            fi
-
-            sleep 30
+            case "$state" in
+              done)
+                echo "All checks passed or were skipped."
+                exit 0
+                ;;
+              failed)
+                echo "A check failed, was canceled, or has an unknown state."
+                exit 1
+                ;;
+              pending)
+                echo "Checks are still pending; retrying in 5 minutes."
+                sleep 300
+                ;;
+            esac
           done
 
       - name: Auto Approve Dependabot PRs
