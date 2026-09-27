@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up CMake
-        uses: jwlawson/actions-setup-cmake@774d421fb516901eb7cfc037e0a439ece01e3997 # v2.0.2
+        uses: jwlawson/actions-setup-cmake@802fa1a2c4e212495c05bf94dba2704a92a472be # v2.0.2
         with:
           cmake-version: 4.4.3
 
