@@ -74,7 +74,10 @@ jobs:
         run: dir
 
       - name: Build Anura
-        run: msbuild -m anura.sln
+        run: |
+          cmake --build "buildsystem/windows-static/build/${{ matrix.build-type }}" `
+            --config "${{ matrix.build-type }}" `
+            --parallel
 
       - name: temp show
         run: dir
