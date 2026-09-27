@@ -20,25 +20,27 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       # Only write to cache on scheduled builds on trunk
+      # Don't restore when creating and saving cache
       - name: Set ccache up
         uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
         with:
           key: unit-tests-windows-${{ matrix.build-type }}
+          append-timestamp: false
           save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
+          restore: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
 
       - name: Install Conan
         uses: conan-io/setup-conan@09566912d661de90608308897a4d513e850c04e8 # v1.2.0
         with:
           use_venv: true
 
-      # Always restore cache
+      # Don't restore when creating and saving cache
       - name: Restore Conan Cache
+        if: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: '%USERPROFILE%\.conan2\p'
+          path: ~/.conan2/p
           key: conan-windows-static-${{ matrix.build-type }}
-          restore-keys: |
-            conan-windows-static-${{ matrix.build-type }}-
 
       - name: Install Dependencies with Conan
         run: |
@@ -52,7 +54,7 @@ jobs:
         if: github.event_name == 'schedule' && github.ref == 'refs/heads/trunk'
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: '%USERPROFILE%\.conan2\p'
+          path: ~/.conan2/p
           key: conan-windows-static-${{ matrix.build-type }}
 
       - name: Build Prep Anura
