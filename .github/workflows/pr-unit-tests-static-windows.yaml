@@ -47,6 +47,7 @@ jobs:
           conan install buildsystem/conan `
             -s build_type="${{ matrix.build-type }}" `
             -s compiler.cppstd=17 `
+            -c tools.cmake.cmaketoolchain:generator="Visual Studio 17 2022" `
             --build=missing
 
       # Only write to cache on scheduled builds on trunk
