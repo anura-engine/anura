@@ -2,12 +2,16 @@ name: Dependabot Auto Approve
 
 on: pull_request
 
+concurrency:
+  group: dependabot-auto-approve-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   pull-requests: write
 
 jobs:
   dependabot-auto-approve:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-24.04
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     steps:
       - name: Create app token
@@ -21,19 +25,35 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          OWN_CHECK: "dependabot-auto-approve"
         run: |
-          for i in {1..120}; do
-            # Get checks as text, grep for pending ones, exclude own
-            CHECK_STATUS=$(gh pr checks "$PR_URL" 2>/dev/null | grep -E "(pending|\?)" | grep -v "$OWN_CHECK")
+          set -euo pipefail
 
-            if [ -z "$CHECK_STATUS" ]; then
-              echo "✅ All other checks passed!"
-              break
-            fi
+          while :; do
+            checks=$(gh pr checks "$PR_URL" --json name,bucket)
+            state=$(jq -r '
+              map(select(.name != "dependabot-auto-approve")) as $checks |
+              if ($checks | length) == 0 then "pending"
+              elif any($checks[]; .bucket == "fail" or .bucket == "cancel") then "failed"
+              elif any($checks[]; .bucket == "pending") then "pending"
+              elif all($checks[]; .bucket == "pass" or .bucket == "skipping") then "done"
+              else "failed"
+              end
+            ' <<< "$checks")
 
-            echo "⏳ Waiting... (attempt $i/120)"
-            sleep 30
+            case "$state" in
+              done)
+                echo "All checks passed or were skipped."
+                exit 0
+                ;;
+              failed)
+                echo "A check failed, was canceled, or has an unknown state."
+                exit 1
+                ;;
+              pending)
+                echo "Checks are still pending; retrying in 5 minutes."
+                sleep 300
+                ;;
+            esac
           done
 
       - name: Auto Approve Dependabot PRs
