@@ -119,7 +119,11 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
 endif()
 
 # Inject our own imgui config for our own vector operations
-add_compile_definitions(IMGUI_USER_CONFIG="${ANURA_SOURCE_DIR}/src/imgui_additions/imconfig_anura.h")
+add_compile_definitions(
+    GLM_ENABLE_EXPERIMENTAL
+    IMGUI_USER_CONFIG="${ANURA_SOURCE_DIR}/src/imgui_additions/imconfig_anura.h"
+    NOMINMAX
+)
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
     # Turn all things debug, like assertions, off for a release build
