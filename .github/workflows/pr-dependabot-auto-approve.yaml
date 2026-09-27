@@ -23,16 +23,44 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           OWN_CHECK: "dependabot-auto-approve"
         run: |
-          for i in {1..120}; do
-            # Get checks as text, grep for pending ones, exclude own
-            CHECK_STATUS=$(gh pr checks "$PR_URL" 2>/dev/null | grep -E "(pending|\?)" | grep -v "$OWN_CHECK")
+          set -euo pipefail
 
-            if [ -z "$CHECK_STATUS" ]; then
-              echo "✅ All other checks passed!"
-              break
+          max_attempts=100
+          first_success_seen=false
+
+          for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+            checks=$(gh pr checks "$PR_URL" --json name,bucket)
+            other_checks=$(jq -c --arg own_check "$OWN_CHECK" \
+              '[.[] | select(.name != $own_check)]' <<< "$checks")
+
+            failed_checks=$(jq -c \
+              '[.[] | select(.bucket == "fail" or .bucket == "cancel" or (.bucket != "pass" and .bucket != "pending" and .bucket != "skipping"))]' \
+              <<< "$other_checks")
+            if [[ $(jq 'length' <<< "$failed_checks") -gt 0 ]]; then
+              jq -r '.[] | "\(.bucket): \(.name)"' <<< "$failed_checks"
+              echo "At least one check did not succeed; refusing to approve."
+              exit 1
             fi
 
-            echo "⏳ Waiting... (attempt $i/120)"
+            check_count=$(jq 'length' <<< "$other_checks")
+            pending_count=$(jq '[.[] | select(.bucket == "pending")] | length' <<< "$other_checks")
+            success_count=$(jq '[.[] | select(.bucket == "pass")] | length' <<< "$other_checks")
+
+            if [[ "$success_count" -gt 0 && "$first_success_seen" == false ]]; then
+              first_success_seen=true
+              echo "A check has succeeded; rechecking all checks after 30 seconds."
+            elif [[ "$check_count" -gt 0 && "$pending_count" -eq 0 && "$first_success_seen" == true ]]; then
+              echo "All checks have completed successfully or were skipped."
+              exit 0
+            else
+              echo "Checks: $success_count successful, $pending_count pending."
+            fi
+
+            if [[ "$attempt" -eq "$max_attempts" ]]; then
+              echo "Timed out waiting for checks; refusing to approve."
+              exit 1
+            fi
+
             sleep 30
           done
 
