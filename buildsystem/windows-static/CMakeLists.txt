@@ -27,6 +27,7 @@ find_package(Boost REQUIRED)
 find_package(cairo CONFIG REQUIRED)
 find_package(glew CONFIG REQUIRED)
 find_package(SDL2_image CONFIG REQUIRED)
+find_package(SDL2_mixer CONFIG REQUIRED)
 find_package(WebP CONFIG REQUIRED)
 find_package(SDL2_ttf CONFIG REQUIRED)
 find_package(freetype CONFIG REQUIRED)
@@ -154,6 +155,7 @@ target_link_libraries(
     cairo::cairo
     GLEW::GLEW
     SDL2_image::SDL2_image
+    SDL2_mixer::SDL2_mixer
     libwebp::libwebp
     sdl_ttf::sdl_ttf
     Freetype::Freetype
