@@ -122,6 +122,7 @@ endif()
 # Inject our own imgui config for our own vector operations
 add_compile_definitions(
     GLM_ENABLE_EXPERIMENTAL
+    BOOST_ALL_NO_LIB
     IMGUI_USER_CONFIG="${ANURA_SOURCE_DIR}/src/imgui_additions/imconfig_anura.h"
     NOMINMAX
 )
@@ -152,6 +153,10 @@ target_link_libraries(
     anura
     PRIVATE
     boost::boost
+    Boost::date_time
+    Boost::filesystem
+    Boost::locale
+    Boost::regex
     cairo::cairo
     GLEW::GLEW
     SDL2_image::SDL2_image
