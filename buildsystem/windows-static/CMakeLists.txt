@@ -152,7 +152,7 @@ add_executable(anura "${anura_SRC}")
 target_link_libraries(
     anura
     PRIVATE
-    boost::boost
+    Boost::boost
     Boost::date_time
     Boost::filesystem
     Boost::locale
