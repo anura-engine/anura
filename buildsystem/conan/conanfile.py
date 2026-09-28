@@ -19,7 +19,6 @@ class Anura(ConanFile):
         "glew/2.2.0",
         "libwebp/1.5.0", # 1.6.0 wants -mavx2 which breaks builds on SteamOS
         "sdl_image/2.8.2",
-        "sdl_mixer/2.8.1",
         "sdl_ttf/2.24.0",
         "sdl/2.28.3",
         "vorbis/1.3.7",
@@ -34,3 +33,7 @@ class Anura(ConanFile):
         # Force static libs by default
         "*:shared": False,
     }
+
+    def requirements(self):
+        if self.settings.os == "Windows":
+            self.requires("sdl_mixer/2.8.1")
