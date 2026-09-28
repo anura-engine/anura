@@ -70,14 +70,14 @@ jobs:
           cmake buildsystem/windows-static `
             --preset="${{ matrix.build-type }}"
 
-      - name: temp show
-        run: dir
-
       - name: Build Anura
         run: |
           cmake --build "buildsystem/windows-static/build/${{ matrix.build-type }}" `
             --config "${{ matrix.build-type }}" `
             --parallel
 
-      - name: temp show
-        run: dir
+      - name: Run Anura unit tests
+        run: |
+          ctest --test-dir "buildsystem/windows-static/build/${{ matrix.build-type }}" `
+            --build-config "${{ matrix.build-type }}" `
+            --output-on-failure

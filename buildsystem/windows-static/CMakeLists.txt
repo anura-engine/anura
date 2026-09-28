@@ -20,6 +20,8 @@ endif()
 # Build target for CXX project "anura"
 project(anura LANGUAGES CXX)
 
+enable_testing()
+
 get_filename_component(ANURA_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
 
 # Build time dependencies
@@ -167,5 +169,12 @@ target_link_libraries(
     SDL2::SDL2main
     vorbis::vorbis
 )
+
+add_test(
+    NAME engine_unit_tests
+    COMMAND $<TARGET_FILE:anura> --tests
+    WORKING_DIRECTORY "${ANURA_SOURCE_DIR}"
+)
+set_tests_properties(engine_unit_tests PROPERTIES LABELS "unittest")
 
 # END Linker config
