@@ -1,0 +1,83 @@
+name: Unit Tests / Required / Static / Windows
+on:
+  pull_request:
+  merge_group:
+  schedule:
+    - cron: '0 0 * * 0' # Weekly on Sunday
+
+jobs:
+  build:
+    name: Build and Test on Windows
+    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        build-type:
+          - Release
+          - Debug
+    steps:
+      - name: Checkout Anura
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@802fa1a2c4e212495c05bf94dba2704a92a472be # v2.0.2
+        with:
+          cmake-version: 4.4.3
+
+      # Only write to cache on scheduled builds on trunk
+      # Don't restore when creating and saving cache
+      - name: Set ccache up
+        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
+        with:
+          key: unit-tests-windows-${{ matrix.build-type }}
+          append-timestamp: false
+          save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
+          restore: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
+
+      - name: Install Conan
+        uses: conan-io/setup-conan@09566912d661de90608308897a4d513e850c04e8 # v1.2.0
+        with:
+          use_venv: true
+
+      # Don't restore when creating and saving cache
+      - name: Restore Conan Cache
+        if: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.conan2/p
+          key: conan-windows-static-${{ matrix.build-type }}
+
+      - name: Install Dependencies with Conan
+        run: |
+          $cmakePath = (Get-Command cmake).Source
+          conan install buildsystem/conan `
+            -s build_type="${{ matrix.build-type }}" `
+            -s compiler.cppstd=17 `
+            -c "tools.cmake:cmake_program=$cmakePath" `
+            -c "tools.cmake.cmaketoolchain:generator=Visual Studio 18 2026" `
+            --build=missing
+
+      # Only write to cache on scheduled builds on trunk
+      - name: Save Conan Cache
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/trunk'
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.conan2/p
+          key: conan-windows-static-${{ matrix.build-type }}
+
+      - name: Build Prep Anura
+        run: |
+          cmake buildsystem/windows-static `
+            --preset="${{ matrix.build-type }}"
+
+      - name: Build Anura
+        run: |
+          cmake --build "buildsystem/windows-static/build/${{ matrix.build-type }}" `
+            --config "${{ matrix.build-type }}" `
+            --parallel
+
+      - name: Run Anura unit tests
+        run: |
+          ctest --test-dir "buildsystem/windows-static/build/${{ matrix.build-type }}" `
+            --build-config "${{ matrix.build-type }}" `
+            --output-on-failure

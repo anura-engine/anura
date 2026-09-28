@@ -1,3 +1,6 @@
+#include <chrono>
+#include <thread>
+
 #include "intrusive_ptr.hpp"
 
 #include "http_client.hpp"
@@ -313,7 +316,7 @@ COMMAND_LINE_UTILITY(test_tbs_relay_server)
 	int x = 0;
 	for(int count = 0; ; ++count) {
 		io_context.poll();
-		usleep(100000);
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 		if(count%10 == 0 && client->num_requests_in_flight() == 0) {
 			std::map<variant,variant> m;
