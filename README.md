@@ -366,12 +366,14 @@ On Pull Requests:
   * Alma Linux
     * 8
     * 9
-    * 10
   * openSUSE Leap
     * 15.4
     * 15.5
     * 15.6
     * 16.0
+
+Alma Linux 10 is omitted because its repositories no longer provide SDL2-devel,
+which the dynamic build requires. Rocky Linux 10 remains in the smoketest matrix.
 
 This set should cover most popular use cases and also derivative distributions
 of these root distributions. There are no plans to test on rolling release
