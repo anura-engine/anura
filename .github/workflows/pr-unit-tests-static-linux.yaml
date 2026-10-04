@@ -27,6 +27,17 @@ jobs:
           # - ??? v5 - Debian Trixie / 13 - not in the container registry yet
     container: registry.gitlab.steamos.cloud/steamrt/${{ matrix.steam-runtime }}/sdk
     steps:
+      # Debian 11 is EOL; use the archived final security repository.
+      - name: Use Debian 11 Security Archive
+        if: matrix.steam-runtime == 'sniper'
+        run: |
+          sed -i \
+            -e 's#http://deb.debian.org/debian-security-debug#https://archive.debian.org/debian-security-debug#g' \
+            -e 's#http://deb.debian.org/debian-security#https://archive.debian.org/debian-security#g' \
+            /etc/apt/sources.list
+          printf 'Acquire::Check-Valid-Until "false";\n' \
+            > /etc/apt/apt.conf.d/99archive
+
       - name: Install Dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
