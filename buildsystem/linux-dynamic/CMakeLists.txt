@@ -56,30 +56,86 @@ endif()
 # Fetch vendored dependencies
 include(FetchContent)
 
-find_package(Git REQUIRED)
+# imgui is normally vendored by downloading it while configuring. Build hosts
+# without network access can use a copy which is already present on the machine
+# instead. See README.md ("Building without network access"). glm is never
+# vendored here, it always comes from the machine.
 
-FetchContent_Declare(
-    imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG d4ddc46e7773e9a9b68f965d007968f35ca4e09a # https://github.com/ocornut/imgui/releases/tag/v1.89.7
-    GIT_SHALLOW TRUE
-    SOURCE_DIR "${CMAKE_SOURCE_DIR}/build/src/imgui"
-    SOURCE_SUBDIR purposefully-empty-to-skip-build
+# The imgui version which is vendored by default, used to warn about system
+# provided imgui versions which the engine cannot be built against
+set(anura_VENDORED_IMGUI_VERSION "1.89.7")
+
+option(
+    ANURA_USE_SYSTEM_IMGUI
+    "Use an imgui which is present on the machine instead of downloading it"
+    OFF
+)
+set(
+    ANURA_IMGUI_DIR
+    ""
+    CACHE PATH
+    "Directory of an unpacked imgui source tree, used when ANURA_USE_SYSTEM_IMGUI is enabled"
 )
 
-FetchContent_MakeAvailable(imgui)
+# Git is only needed to download the vendored dependencies
+if(NOT ANURA_USE_SYSTEM_IMGUI)
+    find_package(Git REQUIRED)
+endif()
 
-# XXX - 1.0.0 is the latest one which builds with C++17 on LLVM
-FetchContent_Declare(
-    glm
-    GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG 33b0eb9fa336ffd8551024b1d2690e418014553b # https://github.com/g-truc/glm/releases/tag/1.0.0
-    GIT_SHALLOW TRUE
-    SOURCE_DIR "${CMAKE_SOURCE_DIR}/build/src/glm"
-    SOURCE_SUBDIR purposefully-empty-to-skip-build
-)
+if(ANURA_USE_SYSTEM_IMGUI)
+    find_package(ImGui REQUIRED)
+    message(STATUS "Using system provided imgui ${IMGUI_VERSION} (${IMGUI_IMPLEMENTATION})")
 
-FetchContent_MakeAvailable(glm)
+    # imgui 1.92 removed the old ImGui::Combo()/ListBox() getter overloads and
+    # reworked the font and texture handling, none of which anura handles yet
+    if(IMGUI_VERSION_NUM AND IMGUI_VERSION_NUM GREATER_EQUAL 19200)
+        message(
+            WARNING
+            "The system provided imgui is ${IMGUI_VERSION}, while anura is built "
+            "against the ${anura_VENDORED_IMGUI_VERSION} which it normally vendors. "
+            "imgui 1.92 removed API which the engine still uses, for example the old "
+            "ImGui::Combo()/ListBox() getters, so expect compilation errors. Point "
+            "'-D ANURA_IMGUI_DIR=<dir>' at an imgui ${anura_VENDORED_IMGUI_VERSION} "
+            "source tree if the build fails."
+        )
+    endif()
+else()
+    FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG d4ddc46e7773e9a9b68f965d007968f35ca4e09a # https://github.com/ocornut/imgui/releases/tag/v1.89.7
+        GIT_SHALLOW TRUE
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/build/src/imgui"
+        SOURCE_SUBDIR purposefully-empty-to-skip-build
+    )
+
+    FetchContent_MakeAvailable(imgui)
+
+    # imgui has no build system of its own, its sources are compiled into anura
+    set(IMGUI_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/build/src/imgui")
+    set(
+        IMGUI_SOURCES
+        "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui.cpp"
+        "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_draw.cpp"
+        "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_tables.cpp"
+        "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_widgets.cpp"
+    )
+    set(IMGUI_LIBRARIES "")
+endif()
+
+# The vendored dependencies are compiled into the executable itself, system
+# provided ones may have to be linked in explicitly
+set(anura_VENDORED_LIBS "")
+if(IMGUI_LIBRARIES)
+    list(APPEND anura_VENDORED_LIBS "${IMGUI_LIBRARIES}")
+endif()
+
+# imgui is provided by an imported target when it was not vendored, such a
+# target carries its own include directories
+set(anura_VENDORED_INCLUDE_DIRS "")
+if(IMGUI_INCLUDE_DIR)
+    list(APPEND anura_VENDORED_INCLUDE_DIRS "${IMGUI_INCLUDE_DIR}")
+endif()
 
 # Use ccache to accelerate iterating on CXX files, if available
 find_program(CCACHE "ccache")
@@ -88,13 +144,11 @@ if(CCACHE)
 endif(CCACHE)
 
 # Add the source code
+# XXX - IMGUI_SOURCES is empty when imgui is provided as a system library
 file(
     GLOB
     anura_SRC
-    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_draw.cpp"
-    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_tables.cpp"
-    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_widgets.cpp"
-    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui.cpp"
+    ${IMGUI_SOURCES}
     "${CMAKE_SOURCE_DIR}/../../src/*.cpp"
     "${CMAKE_SOURCE_DIR}/../../src/hex/*.cpp"
     "${CMAKE_SOURCE_DIR}/../../src/imgui_additions/*.cpp"
@@ -121,6 +175,8 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 # https://cmake.org/cmake/help/v3.12/module/FindFreetype.html
 find_package(Freetype REQUIRED)
+# https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/modules/FindGLM.cmake
+find_package(GLM REQUIRED)
 
 # https://github.com/shadow/shadow/blob/aa0445f42d4b5413b27b27d267d0a7f3ec29bed1/cmake/FindRT.cmake
 find_package(RT REQUIRED)
@@ -142,8 +198,7 @@ find_package(Cairo REQUIRED)
 # Add the headers
 # XXX - Unknown as of 2023-08 why only Freetype ft2build and SLD2 are needed
 include_directories(
-    "${CMAKE_SOURCE_DIR}/build/src/glm"
-    "${CMAKE_SOURCE_DIR}/build/src/imgui"
+    ${anura_VENDORED_INCLUDE_DIRS}
     "${CMAKE_SOURCE_DIR}/../../src"
     "${CMAKE_SOURCE_DIR}/../../src/hex"
     "${CMAKE_SOURCE_DIR}/../../src/imgui_additions"
@@ -240,6 +295,7 @@ target_link_libraries(
     "${ZLIB_LIBRARIES}"
     "${OPENGL_LIBRARIES}"
     "${GLEW_LIBRARIES}"
+    "${GLM_LIBRARIES}"
     "${FREETYPE_LIBRARIES}"
     "${SDL2_LIBRARY}"
     "${SDL2_IMAGE_LIBRARIES}"
@@ -247,6 +303,7 @@ target_link_libraries(
     "${SDL2_TTF_LIBRARIES}"
     "${Vorbis_File_LIBRARY}"
     "${Cairo_LIBRARIES}"
+    ${anura_VENDORED_LIBS}
 )
 
 # END Linker config
