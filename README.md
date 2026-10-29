@@ -375,7 +375,6 @@ On Pull Requests:
   * Alma Linux
     * 8
     * 9
-    * 10
   * openSUSE Leap
     * 15.4
     * 15.5
