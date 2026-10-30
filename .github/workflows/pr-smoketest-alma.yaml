@@ -32,18 +32,8 @@ jobs:
           - alma: "9"
             compiler: g++
             build-type: Release
-          - alma: "10"
-            compiler: g++
-            build-type: Debug
-          - alma: "10"
-            compiler: g++
-            build-type: Release
-          - alma: "10"
-            compiler: clang++
-            build-type: Debug
-          - alma: "10"
-            compiler: clang++
-            build-type: Release
+          # Alma Linux 10 no longer provides SDL2-devel; Anura's dynamic build still requires SDL2.
+          # EL10 coverage remains available through Rocky Linux 10.
           # 11 is expected in 2028-05
           # 12 is expected in 2031-05
     container: almalinux:${{ matrix.alma }}

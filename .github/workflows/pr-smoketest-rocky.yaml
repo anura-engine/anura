@@ -41,7 +41,7 @@ jobs:
           - rocky: "10"
             compiler: clang++
             build-type: Debug
-          - rocky: "8"
+          - rocky: "10"
             compiler: clang++
             build-type: Release
           # 11 is expected in 2028-05
