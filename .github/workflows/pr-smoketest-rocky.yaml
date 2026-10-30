@@ -12,19 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # 8 is the oldest Rocky Linux to exist
-          - rocky: "8"
-            compiler: g++
-            build-type: Debug
-          - rocky: "8"
-            compiler: g++
-            build-type: Release
-          - rocky: "8"
-            compiler: clang++
-            build-type: Debug
-          - rocky: "8"
-            compiler: clang++
-            build-type: Release
+          # 9 is the oldest Rocky Linux with a new enough libboost
           # Rocky 9 ships Clang 20 and that cannot build against Boost MPL older than 1.86, and Rocky 9 ships 1.75
           - rocky: "9"
             compiler: g++

@@ -111,8 +111,13 @@ file(
 
 # https://cmake.org/cmake/help/v3.12/module/FindThreads.html
 find_package(Threads REQUIRED)
-# https://cmake.org/cmake/help/v3.12/module/FindBoost.html
-find_package(Boost REQUIRED COMPONENTS filesystem locale regex system)
+# Require Boost 1.70+ and use Boost's CONFIG package instead of CMake's legacy
+# FindBoost module.
+#
+# We do this because CMake's FindBoost path is being removed in newer CMake
+# releases (CMP0167), and Boost 1.90+ / distro packaging changes mean the old
+# component-based lookup for `system` is no longer reliable across our CI matrix.
+find_package(Boost CONFIG REQUIRED COMPONENTS filesystem locale regex)
 # https://cmake.org/cmake/help/v3.12/module/FindZLIB.html
 find_package(ZLIB REQUIRED)
 # https://cmake.org/cmake/help/v3.12/module/FindOpenGL.html
@@ -236,7 +241,14 @@ target_link_libraries(
     PRIVATE
     "${RT_LIBRARIES}"
     "${CMAKE_THREAD_LIBS_INIT}"
-    "${Boost_LIBRARIES}"
+    # Link the imported Boost targets directly instead of using
+    # Boost_LIBRARIES.
+    #
+    # The CONFIG package exports these targets, and that is the supported
+    # modern way to express the dependency graph.
+    Boost::filesystem
+    Boost::locale
+    Boost::regex
     "${ZLIB_LIBRARIES}"
     "${OPENGL_LIBRARIES}"
     "${GLEW_LIBRARIES}"
@@ -248,6 +260,13 @@ target_link_libraries(
     "${Vorbis_File_LIBRARY}"
     "${Cairo_LIBRARIES}"
 )
+
+if(TARGET Boost::system)
+    # Some distro/Boost combinations no longer export the system component
+    # target in the old way, so only link it when the config package actually
+    # provides it.
+    target_link_libraries(anura PRIVATE Boost::system)
+endif()
 
 # END Linker config
 
