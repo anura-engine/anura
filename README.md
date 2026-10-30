@@ -306,7 +306,10 @@ We only provide static builds for shopfronts and their runtimes.
 
 ##### Steam Linux Runtime
 
-Only supporting v3 / [Sniper](https://gitlab.steamos.cloud/steamrt/steam-runtime-tools/-/blob/main/docs/container-runtime.md#steam-runtime-3-sniper) as of 2024-01.
+Supporting:
+
+* v3 / [Sniper](https://gitlab.steamos.cloud/steamrt/sniper/sdk)
+* v4 / [steamrt4](https://gitlab.steamos.cloud/steamrt/steamrt4/sdk)
 
 Details are purposefully sparse here as the monetization model of Frogatto is convenience.
 
