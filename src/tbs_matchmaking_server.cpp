@@ -215,10 +215,10 @@ class matchmaking_server : public game_logic::FormulaCallable, public http::web_
 {
 	struct SessionInfo;
 public:
-	matchmaking_server(boost::asio::io_service& io_service, int port)
-	  : http::web_server(io_service, port),
-	    io_service_(io_service), port_(port),
-		timer_(io_service), db_timer_(io_service),
+	matchmaking_server(boost::asio::io_context& io_context, int port)
+	  : http::web_server(io_context, port),
+	    io_context_(io_context), port_(port),
+		timer_(io_context), db_timer_(io_context),
 		time_ms_(0), send_at_time_ms_(1000), terminated_servers_(0),
 		controller_(game_logic::FormulaObject::create("matchmaking_server")),
 		status_doc_state_id_(1),
@@ -2277,7 +2277,7 @@ private:
 		send_msg(sock, "text/json", msg.write_json(), "");
 	}
 
-	boost::asio::io_service& io_service_;
+	boost::asio::io_context& io_context_;
 	int port_;
 	boost::asio::deadline_timer timer_;
 	boost::asio::deadline_timer db_timer_;
@@ -3267,9 +3267,9 @@ void process_tbs_matchmaking_server()
 {
 	int port = 23456;
 	if(g_internal_tbs_matchmaking_server) {
-		static boost::asio::io_service io_service;
-		static ffl::IntrusivePtr<matchmaking_server> server(new matchmaking_server(io_service, port));
-		io_service.poll();
+		static boost::asio::io_context io_context;
+		static ffl::IntrusivePtr<matchmaking_server> server(new matchmaking_server(io_context, port));
+		io_context.poll();
 	}
 }
 
@@ -3291,9 +3291,9 @@ COMMAND_LINE_UTILITY(tbs_matchmaking_server) {
 	}
 
 	try {
-		boost::asio::io_service io_service;
-		ffl::IntrusivePtr<matchmaking_server> server(new matchmaking_server(io_service, port));
-		io_service.run();
+		boost::asio::io_context io_context;
+		ffl::IntrusivePtr<matchmaking_server> server(new matchmaking_server(io_context, port));
+		io_context.run();
 	} catch(const RestartServerException& e) {
 #if !defined(_MSC_VER)
 		execv(e.argv[0], &e.argv[0]);
@@ -3327,8 +3327,8 @@ COMMAND_LINE_UTILITY(db_script) {
 
 	variant commands = f.execute(*callable);
 
-	boost::asio::io_service io_service;
-	ffl::IntrusivePtr<matchmaking_server> server(new matchmaking_server(io_service, 29543));
+	boost::asio::io_context io_context;
+	ffl::IntrusivePtr<matchmaking_server> server(new matchmaking_server(io_context, 29543));
 
 	server->executeCommand(commands);
 

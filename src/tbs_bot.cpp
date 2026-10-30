@@ -57,10 +57,10 @@ private:
 
 	PREF_INT(tbs_bot_delay_ms, 20, "Artificial delay for tbs bots");
 
-	bot::bot(boost::asio::io_service& service, const std::string& host, const std::string& port, variant v)
+	bot::bot(boost::asio::io_context& context, const std::string& host, const std::string& port, variant v)
   		: session_id_(v["session_id"].as_int()),
-  		  service_(service),
-  		  timer_(service),
+  		  context_(context),
+  		  timer_(context),
   		  host_(host),
   		  port_(port),
   		  script_(v["script"].as_list()),
@@ -133,7 +133,7 @@ private:
 				ipc_client_->send_request(send);
 			} else {
 				if(!client_) {
-					client_.reset(new client(host_, port_, session_id, &service_));
+					client_.reset(new client(host_, port_, session_id, &context_));
 				}
 				client_->set_use_local_cache(false);
 				client_->send_request(send, callable, std::bind(&bot::handle_response, this, std::placeholders::_1, callable));

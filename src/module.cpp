@@ -25,10 +25,12 @@
 
 #include <boost/filesystem/exception.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <glm/common.hpp>
 
 #include "asserts.hpp"
 #include "base64.hpp"
 #include "compress.hpp"
+#include "controls.hpp"
 #include "custom_object_type.hpp"
 #include "i18n.hpp"
 #include "filesystem.hpp"
@@ -405,6 +407,9 @@ namespace module
 		auto speech_dialog_bg_color = std::make_shared<KRE::Color>(58, 61, 76, 255);
 		variant player_type;
 
+		std::map<std::string, controls::ComboList> module_keys = {};
+		std::map<std::string, std::string> action_names = {};
+
 		const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";
 		if(sys::file_exists(constants_path)) {
 			const std::string contents = sys::read_file(constants_path);
@@ -509,13 +514,34 @@ namespace module
 		modules m = {name, pretty_name, abbrev,
 					 {make_base_module_path(name), make_user_module_path(name)},
 				def_font, def_font_cjk, speech_dialog_bg_color};
+
 		m.default_preferences = v["default_preferences"];
 		m.version_ = module_version;
+
+		controls::ActionBindings module_mappings;
+
+		if(v.has_key("controls")) {
+    		if(v["controls"].has_key("names")){
+      			module_mappings.parse_action_names(v["controls"]["names"]);
+     		}
+
+            if(v["controls"].has_key("key_bindings")){
+            	module_mappings.parse_keys(v["controls"]["key_bindings"]);
+            }
+
+            m.module_mappings = module_mappings;
+		}
+
+
 		loaded_paths().insert(loaded_paths().begin(), m);
 
 		if(initial) {
 			CustomObjectType::setPlayerVariantType(player_type);
 		}
+	}
+
+	controls::ActionBindings* get_module_mappings(){
+		return &loaded_paths().front().module_mappings;
 	}
 
 	std::string get_default_font()

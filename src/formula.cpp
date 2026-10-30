@@ -60,6 +60,27 @@
 #define STRICT_ERROR(s) if(g_strict_formula_checking_warnings) { LOG_WARN(s); } else { ASSERT_LOG(false, s); }
 #define STRICT_ASSERT(cond, s) if(!(cond)) { STRICT_ERROR(s); }
 
+namespace
+{
+	bool silence_warn_wo_sdl = false;
+
+	class ScopeSilenceWarn {
+	public:
+		ScopeSilenceWarn()
+			: old_value(silence_warn_wo_sdl)
+		{
+			silence_warn_wo_sdl = true;
+		}
+		~ScopeSilenceWarn()
+		{
+			silence_warn_wo_sdl = old_value;
+		}
+	private:
+		bool old_value;
+	};
+}
+#define LOG_WARN_LARGE(s) if(!(silence_warn_wo_sdl)) { LOG_WARN_WO_SDL(s); }
+
 PREF_INT(max_ffl_recursion, 100, "Maximum depth of FFL recursion");
 
 using namespace formula_vm;
@@ -1064,7 +1085,7 @@ namespace {
 						}
 
 						if(callable_def_->getTypeName() != nullptr) {
-							LOG_WARN_WO_SDL(
+							LOG_WARN_LARGE(
 									"Unknown symbol '" << id_ << "' in " <<
 									* callable_def_->getTypeName() << ' ' <<
 									debugPinpointLocation() << suggested_match <<
@@ -1079,7 +1100,7 @@ namespace {
 									"built-in functions), check recent console output to find the " <<
 									"list of known symbols.\n");
 						} else {
-							LOG_WARN_WO_SDL(
+							LOG_WARN_LARGE(
 									"Unknown identifier '" << id_ << "' " <<
 									debugPinpointLocation() << suggested_match <<
 									"\nIdentifiers that are valid in this scope:\n" <<
@@ -5644,7 +5665,7 @@ UNIT_TEST(generic_function_1) {
 	const Formula code_variant_formula(code_variant);
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			code_variant_formula.execute();
 		} catch (const validation_failure_exception vfe) {
@@ -5720,8 +5741,8 @@ UNIT_TEST(identifier_suggested_0) {
 	// XXX  a warning (suggesting a different identifier, typo detection),
 	// XXX  but that there is no such warning when not providing this
 	// XXX  `StrictCheckScope`.
-	const game_logic::Formula::StrictCheckScope strict_checking(
-			true, true);
+	const game_logic::Formula::StrictCheckScope strict_checking(false);
+	const ScopeSilenceWarn silence_warn_wo_sdl;
 
 	//   There is only one similar identifier at a same distance to `aaaa`.
 	// So correcting to `aaaaa` is suggested.
@@ -5735,14 +5756,40 @@ UNIT_TEST(identifier_suggested_0) {
 	CHECK_EQ(output, variant());
 }
 
+UNIT_TEST(identifier_suggested_0_fail) {
+
+	// XXX    Can not assert that with this `StrictCheckScope` code emits
+	// XXX  a warning (suggesting a different identifier, typo detection),
+	// XXX  but that there is no such warning when not providing this
+	// XXX  `StrictCheckScope`.
+	const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
+	const Formula::StrictCheckScope strict_scope(true, false);
+	const ScopeSilenceWarn silence_warn_wo_sdl;
+
+	//   There is only one similar identifier at a same distance to `aaaa`.
+	// So correcting to `aaaaa` is suggested.
+	const std::string code =
+			"aaaa where aaaaa = 3";
+
+	const variant code_variant(code);
+
+	bool excepted = false;
+	try {
+		const Formula code_variant_formula(code_variant);
+	} catch(const validation_failure_exception& vfe) {
+		excepted = true;
+	}
+	CHECK_EQ(excepted, true);
+}
+
 UNIT_TEST(identifier_suggested_1) {
 
 	// XXX    Can not assert that with this `StrictCheckScope` code emits
 	// XXX  a warning (suggesting a different identifier, typo detection),
 	// XXX  but that there is no such warning when not providing this
 	// XXX  `StrictCheckScope`.
-	const game_logic::Formula::StrictCheckScope strict_checking(
-			true, true);
+	const game_logic::Formula::StrictCheckScope strict_checking(false);
+	const ScopeSilenceWarn silence_warn_wo_sdl;
 
 	//   There are two similar identifiers at the same distance to `aaaa`.
 	// So no correction is suggested.
@@ -5754,6 +5801,32 @@ UNIT_TEST(identifier_suggested_1) {
 	const variant output = code_variant_formula.execute();
 	check::type_is_null(output);
 	CHECK_EQ(output, variant());
+}
+
+UNIT_TEST(identifier_suggested_1_fail) {
+
+	// XXX    Can not assert that with this `StrictCheckScope` code emits
+	// XXX  a warning (suggesting a different identifier, typo detection),
+	// XXX  but that there is no such warning when not providing this
+	// XXX  `StrictCheckScope`.
+	const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
+	const Formula::StrictCheckScope strict_scope(true, false);
+	const ScopeSilenceWarn silence_warn_wo_sdl;
+
+	//   There are two similar identifiers at the same distance to `aaaa`.
+	// So no correction is suggested.
+	const std::string code =
+			"aaaa where aaab = 3 where aaaaa = 3";
+
+	const variant code_variant(code);
+
+	bool excepted = false;
+	try {
+		const Formula code_variant_formula(code_variant);
+	} catch(const validation_failure_exception& vfe) {
+		excepted = true;
+	}
+	CHECK_EQ(excepted, true);
 }
 
 UNIT_TEST(semicolon_sequencing) {

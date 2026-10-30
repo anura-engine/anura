@@ -1,6 +1,8 @@
 name: Smoketest / Informative / Alma
 on:
   pull_request:
+  schedule:
+    - cron: "0 0 * * 0" # Weekly on Sunday
 
 jobs:
   test:
@@ -9,71 +11,91 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        alma:
+        include:
           # 8 is the oldest Alma Linux to exist
-          - "8"
-          - "9"
-          # 10 is expected in 2025-05
+          - alma: "8"
+            compiler: g++
+            build-type: Debug
+          - alma: "8"
+            compiler: g++
+            build-type: Release
+          - alma: "8"
+            compiler: clang++
+            build-type: Debug
+          - alma: "8"
+            compiler: clang++
+            build-type: Release
+          # Alma 9 ships Clang 20 and that cannot build against Boost MPL older than 1.86, and Alma 9 ships 1.75
+          - alma: "9"
+            compiler: g++
+            build-type: Debug
+          - alma: "9"
+            compiler: g++
+            build-type: Release
+          # Alma Linux 10 no longer provides SDL2-devel; Anura's dynamic build still requires SDL2.
+          # EL10 coverage remains available through Rocky Linux 10.
           # 11 is expected in 2028-05
           # 12 is expected in 2031-05
-        compiler:
-          - g++
-          - clang++
-        build-type:
-          - Release
-          - Debug
     container: almalinux:${{ matrix.alma }}
     steps:
       - name: Install Dependencies
         run: |
-            dnf -qy update
-            # We need to add an extra command to DNF to manage its config
-            dnf install -qy 'dnf-command(config-manager)'
-            # We need either PowerTools or CodeReady Builder
-            # Alma 8 has PowerTools, Alma 9 has CodeReady Builder
-            dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled crb
-            # We need packages from EPEL
-            dnf install -qy epel-release
-            dnf install -qy \
-              git \
-              cmake \
-              gcc-c++ \
-              clang \
-              ccache \
-              boost-devel \
-              zlib-devel \
-              mesa-libGL-devel \
-              glew-devel \
-              freetype-devel \
-              glm-devel \
-              SDL2-devel \
-              SDL2_image-devel \
-              SDL2_mixer-devel \
-              SDL2_ttf-devel \
-              libogg-devel \
-              libvorbis-devel \
-              cairo-devel
+          dnf -qy update
+          # We need to add an extra command to DNF to manage its config
+          dnf install -qy 'dnf-command(config-manager)'
+          # We need either PowerTools or CodeReady Builder
+          # Alma 8 has PowerTools, Alma 9 has CodeReady Builder
+          dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled crb
+          # We need packages from EPEL
+          dnf install -qy epel-release
+          dnf install -qy \
+            git \
+            cmake \
+            gcc-c++ \
+            clang \
+            ccache \
+            boost-devel \
+            zlib-devel \
+            mesa-libGL-devel \
+            glew-devel \
+            freetype-devel \
+            SDL2-devel \
+            SDL2_image-devel \
+            SDL2_mixer-devel \
+            SDL2_ttf-devel \
+            libogg-devel \
+            libvorbis-devel \
+            cairo-devel
 
       - name: Checkout Anura
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-            submodules: true
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      # Only write to cache on scheduled builds on trunk
+      # Don't restore when creating and saving cache
       - name: Set ccache up
-        uses: hendrikmuhs/ccache-action@a1209f81afb8c005c13b4296c32e363431bffea5 # v1.2.17
+        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
         with:
           key: ${{ github.job }}-alma-${{ matrix.alma }}-${{ matrix.compiler }}-${{ matrix.build-type }}
+          append-timestamp: false
+          save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
+          restore: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
 
       - name: Build Prep Anura
         run: |
           cmake buildsystem/linux-dynamic \
-          -D CMAKE_CXX_COMPILER="${{ matrix.compiler }}" \
-          -D CMAKE_BUILD_TYPE="${{ matrix.build-type }}"
+            --preset="${{ matrix.build-type }}" \
+            -D CMAKE_CXX_COMPILER="${{ matrix.compiler }}"
 
       - name: Build Anura
         run: |
           # Compile with number of available hyperthreads
-          make -j "$(getconf _NPROCESSORS_ONLN)"
+          cmake \
+            --build buildsystem/linux-dynamic/build/"${{ matrix.build-type }}" \
+            --parallel "$(getconf _NPROCESSORS_ONLN)"
 
       - name: Run Unit Tests
-        run: ./anura --tests
+        run: |
+          ctest \
+            --output-on-failure \
+            --test-dir buildsystem/linux-dynamic/build/"${{ matrix.build-type }}" \
+            -L unittest

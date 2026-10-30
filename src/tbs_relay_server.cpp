@@ -7,12 +7,12 @@
 class tbs_relay_server : public http::web_server
 {
 	struct OutgoingSocketInfo {
-#if BOOST_ASIO_VERSION >= 101400
+#if BOOST_VERSION < 107000
+		explicit OutgoingSocketInfo(boost::asio::io_context& context)
+		  : socket(context)
+#else
 		explicit OutgoingSocketInfo(boost::asio::ip::tcp::socket::executor_type executor)
 		  : socket(executor)
-#else
-		explicit OutgoingSocketInfo(boost::asio::io_service& service)
-		  : socket(service)
 #endif
 		{
 		}
@@ -77,9 +77,9 @@ class tbs_relay_server : public http::web_server
 	std::map<uint32_t, SessionInfo> sessions_;
 
 public:
-	tbs_relay_server(boost::asio::io_service& io_service, int incoming_port, int outgoing_port)
-	  : http::web_server(io_service, incoming_port),
-	    acceptor_(io_service, tcp::endpoint(tcp::v4(), outgoing_port))
+	tbs_relay_server(boost::asio::io_context& io_context, int incoming_port, int outgoing_port)
+	  : http::web_server(io_context, incoming_port),
+	    acceptor_(io_context, tcp::endpoint(tcp::v4(), outgoing_port))
 	{
 		start_accept_outgoing();
 	}
@@ -91,10 +91,10 @@ public:
 
 	void start_accept_outgoing()
 	{
-#if BOOST_ASIO_VERSION >= 101400
-		OutgoingSocketPtr socket(new OutgoingSocketInfo(acceptor_.get_executor()));
+#if BOOST_VERSION < 107000
+		OutgoingSocketPtr socket(new OutgoingSocketInfo(acceptor_.get_io_context()));
 #else
-		OutgoingSocketPtr socket(new OutgoingSocketInfo(acceptor_.get_io_service()));
+		OutgoingSocketPtr socket(new OutgoingSocketInfo(acceptor_.get_executor()));
 #endif
 		acceptor_.async_accept(socket->socket, std::bind(&tbs_relay_server::handle_accept_outgoing, this, socket, std::placeholders::_1));
 	}
@@ -270,19 +270,19 @@ COMMAND_LINE_UTILITY(tbs_relay_server)
 		}
 	}
 
-	boost::asio::io_service io_service;
+	boost::asio::io_context io_context;
 
-	tbs_relay_server server(io_service, incoming_port, outgoing_port);
+	tbs_relay_server server(io_context, incoming_port, outgoing_port);
 
-	io_service.run();
+	io_context.run();
 }
 
 namespace {
 class test_web_server : public http::web_server
 {
 public:
-	test_web_server(boost::asio::io_service& io_service, int port=23456)
-	  : http::web_server(io_service, port)
+	test_web_server(boost::asio::io_context& io_context, int port=23456)
+	  : http::web_server(io_context, port)
 	{}
 
 	void handlePost(socket_ptr socket, variant doc, const http::environment& env, const std::string& raw_msg) override
@@ -303,16 +303,16 @@ public:
 
 COMMAND_LINE_UTILITY(test_tbs_relay_server)
 {
-	boost::asio::io_service io_service;
+	boost::asio::io_context io_context;
 
-	test_web_server web_server(io_service, 23456);
+	test_web_server web_server(io_context, 23456);
 	web_server.connect_proxy(1, "localhost", "23459");
 
-	ffl::IntrusivePtr<http_client> client(new http_client("localhost", "23458", 1, &io_service));
+	ffl::IntrusivePtr<http_client> client(new http_client("localhost", "23458", 1, &io_context));
 
 	int x = 0;
 	for(int count = 0; ; ++count) {
-		io_service.poll();
+		io_context.poll();
 		usleep(100000);
 
 		if(count%10 == 0 && client->num_requests_in_flight() == 0) {

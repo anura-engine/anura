@@ -2,6 +2,8 @@ name: Unit Tests / Required / Static / Linux
 on:
   pull_request:
   merge_group:
+  schedule:
+    - cron: "0 0 * * 0" # Weekly on Sunday
 
 jobs:
   build:
@@ -33,45 +35,87 @@ jobs:
           sudo dpkg-reconfigure --frontend=noninteractive tzdata
           sudo apt-get -qq update
           sudo apt-get -qq upgrade -y
-          sudo apt-get -qq install -y --no-install-recommends \
-            autoconf-archive
+          sudo apt-get -qq --no-install-recommends install -y \
+            python3-venv \
+            libfontenc-dev \
+            libxmuu-dev \
+            libxres-dev
 
       - name: Checkout Anura
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
-          submodules: true
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Ignore Filesystem Permissions for Git
         run: git config --global --add safe.directory '*'
 
-      # Sets a cache up for vcpkg
-      - name: Install vcpkg
-        uses: lukka/run-vcpkg@5e0cab206a5ea620130caf672fce3e4a6b5666a1 # v11.5
-
+      # Only write to cache on scheduled builds on trunk
+      # Don't restore when creating and saving cache
       - name: Set ccache up
-        uses: hendrikmuhs/ccache-action@a1209f81afb8c005c13b4296c32e363431bffea5 # v1.2.17
+        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
         with:
           key: unit-tests-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
+          append-timestamp: false
+          save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
+          restore: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
+
+      - name: Install Conan
+        uses: conan-io/setup-conan@2f4bd34e8e0af00e1a77a66e1d284e06d71d703f # v1.3.0
+        with:
+          version: 2.33.0
+          use_venv: true
+
+      # Don't restore when creating and saving cache
+      - name: Restore Conan Cache
+        if: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: ~/.conan2/p
+          key: conan-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
+
+      - name: Install Dependencies with Conan
+        run: |
+          # XXX - We need to force build b2 as Conan assumes a too new libc++
+          # Conan Center's bison binary requires a newer glibc than Steam Sniper.
+          conan install buildsystem/conan \
+            --lockfile=buildsystem/conan.lock \
+            -s build_type="${{ matrix.build-type }}" \
+            -s compiler.cppstd=17 \
+            --build='bison/*' \
+            --build='b2/*' \
+            --build='m4/*' \
+            --build=missing
+
+      # Only write to cache on scheduled builds on trunk
+      - name: Save Conan Cache
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/trunk'
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: ~/.conan2/p
+          key: conan-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
 
       - name: Build Prep Anura
         run: |
           cmake buildsystem/linux-steam \
-            -D CMAKE_CXX_COMPILER="${{ matrix.compiler }}" \
-            -D CMAKE_BUILD_TYPE="${{ matrix.build-type }}"
+            --preset="${{ matrix.build-type }}" \
+            -D CMAKE_CXX_COMPILER="${{ matrix.compiler }}"
 
       - name: Build Anura
         run: |
           # Compile with number of available hyperthreads
-          make -j "$(getconf _NPROCESSORS_ONLN)"
+          cmake \
+            --build buildsystem/linux-steam/build/"${{ matrix.build-type }}" \
+            --parallel "$(getconf _NPROCESSORS_ONLN)"
 
       - name: Run Unit Tests
-        run: ./anura --tests
+        run: |
+          ctest \
+            --output-on-failure \
+            --test-dir buildsystem/linux-steam/build/"${{ matrix.build-type }}" \
+            -L unittest
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: anura-static-binary-${{ matrix.build-type }}-${{ matrix.steam-runtime }}-${{ matrix.compiler }}-${{ github.sha }}
-          path: anura
+          path: buildsystem/linux-steam/build/${{ matrix.build-type }}/anura
           if-no-files-found: error
 
   test:
@@ -97,9 +141,9 @@ jobs:
     container: registry.gitlab.steamos.cloud/steamrt/${{ matrix.steam-runtime }}/platform
     steps:
       - name: Checkout Anura
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: anura-static-binary-${{ matrix.build-type }}-${{ matrix.steam-runtime }}-${{ matrix.compiler }}-${{ github.sha }}
 

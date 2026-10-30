@@ -52,7 +52,7 @@ namespace multiplayer
 {
 	namespace
 	{
-		std::shared_ptr<boost::asio::io_service> asio_service;
+		std::shared_ptr<boost::asio::io_context> asio_context;
 		std::shared_ptr<tcp::socket> tcp_socket;
 		std::shared_ptr<udp::socket> udp_socket;
 		std::shared_ptr<udp::endpoint> udp_endpoint;
@@ -93,7 +93,7 @@ namespace multiplayer
 	Manager::Manager(bool activate)
 	{
 		if(activate) {
-			asio_service.reset(new boost::asio::io_service);
+			asio_context.reset(new boost::asio::io_context);
 		}
 	}
 
@@ -101,21 +101,20 @@ namespace multiplayer
 		udp_endpoint.reset();
 		tcp_socket.reset();
 		udp_socket.reset();
-		asio_service.reset();
+		asio_context.reset();
 		player_slot = 0;
 	}
 
 	void setup_networked_game(const std::string& server)
 	{
-		boost::asio::io_service& io_service = *asio_service;
-		tcp::resolver resolver(io_service);
+		boost::asio::io_context& io_context = *asio_context;
+		tcp::resolver resolver(io_context);
 
-		tcp::resolver::query query(server, "17002");
+		tcp::resolver::results_type endpoints = resolver.resolve(server, "17002");
+		tcp::resolver::results_type::iterator endpoint_iterator = endpoints.begin();
+		tcp::resolver::results_type::iterator end = endpoints.end();
 
-		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-		tcp::resolver::iterator end;
-
-		tcp_socket.reset(new tcp::socket(io_service));
+		tcp_socket.reset(new tcp::socket(io_context));
 		tcp::socket& socket = *tcp_socket;
 		boost::system::error_code error = boost::asio::error::host_not_found;
 		while(error && endpoint_iterator != end) {
@@ -144,13 +143,13 @@ namespace multiplayer
 
 		LOG_INFO("ID: " << id);
 
-		udp::resolver udp_resolver(io_service);
-		udp::resolver::query udp_query(udp::v4(), server, "17001");
+		udp::resolver udp_resolver(io_context);
 		udp_endpoint.reset(new udp::endpoint);
-		*udp_endpoint = *udp_resolver.resolve(udp_query);
+		auto udp_result = udp_resolver.resolve(udp::v4(), server, "17001");
+		*udp_endpoint = *udp_result.begin();
 		udp::endpoint& receiver_endpoint = *udp_endpoint;
 
-		udp_socket.reset(new udp::socket(io_service));
+		udp_socket.reset(new udp::socket(io_context));
 		udp_socket->open(udp::v4());
 
 		std::array<char, 4> udp_msg;
@@ -345,8 +344,8 @@ namespace multiplayer
 		ASSERT_EQ(*ptr, '\n');
 		++ptr;
 
-		boost::asio::io_service& io_service = *asio_service;
-		udp::resolver udp_resolver(io_service);
+		boost::asio::io_context& io_context = *asio_context;
+		udp::resolver udp_resolver(io_context);
 
 		udp_endpoint_peers.clear();
 
@@ -372,9 +371,9 @@ namespace multiplayer
 			LOG_INFO("SLOT " << n << " = " << host << " " << port);
 
 			udp_endpoint_peers.push_back(std::make_shared<udp::endpoint>());
-			udp::resolver::query peer_query(udp::v4(), host, port);
 
-			*udp_endpoint_peers.back() = *udp_resolver.resolve(peer_query);
+			auto udp_result = udp_resolver.resolve(udp::v4(), host, port);
+			*udp_endpoint_peers.back() = *udp_result.begin();
 
 			if(preferences::relay_through_server()) {
 				*udp_endpoint_peers.back() = *udp_endpoint;
@@ -436,8 +435,8 @@ namespace multiplayer
 
 						std::string port_str = formatter() << port;
 
-						udp::resolver::query peer_query(udp::v4(), udp_endpoint_peers[n]->address().to_string(), port_str.c_str());
-						peer_endpoint = *udp_resolver.resolve(peer_query);
+						auto udp_result = udp_resolver.resolve(udp::v4(), udp_endpoint_peers[n]->address().to_string(), port_str.c_str());
+						peer_endpoint = *udp_result.begin();
 						udp_socket->send_to(boost::asio::buffer(msg), peer_endpoint);
 					}
 				}
@@ -628,8 +627,8 @@ struct Peer {
 }
 
 COMMAND_LINE_UTILITY(hole_punch_test) {
-	boost::asio::io_service io_service;
-	udp::resolver udp_resolver(io_service);
+	boost::asio::io_context io_context;
+	udp::resolver udp_resolver(io_context);
 
 	std::string server_hostname = "wesnoth.org";
 	std::string server_port = "17001";
@@ -648,11 +647,11 @@ COMMAND_LINE_UTILITY(hole_punch_test) {
 
 	ASSERT_LOG(narg == args.size(), "wrong number of args");
 
-	udp::resolver::query udp_query(udp::v4(), server_hostname.c_str(), server_port.c_str());
 	udp::endpoint udp_endpoint;
-	udp_endpoint = *udp_resolver.resolve(udp_query);
+	auto udp_result = udp_resolver.resolve(udp::v4(), server_hostname.c_str(), server_port.c_str());
+	udp_endpoint = *udp_result.begin();
 
-	udp::socket udp_socket(io_service);
+	udp::socket udp_socket(io_context);
 	udp_socket.open(udp::v4());
 
 	udp_socket.send_to(boost::asio::buffer("hello"), udp_endpoint);
@@ -682,9 +681,9 @@ COMMAND_LINE_UTILITY(hole_punch_test) {
 				const std::string host = peers[n].host;
 				const std::string port = peers[n].port;
 				LOG_INFO("sending to " << host << " " << port);
-				udp::resolver::query peer_query(udp::v4(), host, port);
+				auto udp_result = udp_resolver.resolve(udp::v4(), host, port);
 				udp::endpoint peer_endpoint;
-				peer_endpoint = *udp_resolver.resolve(peer_query);
+				peer_endpoint = *udp_result.begin();
 
 				udp_socket.send_to(boost::asio::buffer("peer"), peer_endpoint);
 			}
@@ -693,5 +692,5 @@ COMMAND_LINE_UTILITY(hole_punch_test) {
 		}
 	}
 
-	io_service.run();
+	io_context.run();
 }

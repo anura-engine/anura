@@ -85,8 +85,8 @@ namespace tbs
 	server::client_info::client_info() : nplayer(0), last_contact(0)
 	{}
 
-	server::server(boost::asio::io_service& io_service)
-	  : server_base(io_service), web_server_(nullptr)
+	server::server(boost::asio::io_context& io_context)
+	  : server_base(io_context), web_server_(nullptr)
 	{
 	}
 

@@ -48,8 +48,8 @@ namespace tbs
 		}
 	}
 
-	server_base::server_base(boost::asio::io_service& io_service)
-		: timer_(io_service), nheartbeat_(0), scheduled_write_(0), status_id_(0)
+	server_base::server_base(boost::asio::io_context& io_context)
+		: timer_(io_context), nheartbeat_(0), scheduled_write_(0), status_id_(0)
 	{
 		heartbeat(boost::asio::error::timed_out);
 	}

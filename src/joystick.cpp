@@ -89,12 +89,23 @@ namespace joystick
 			} else {
 				SDL_Joystick* j = SDL_JoystickOpen(n);
 				if(j) {
-					if (SDL_JoystickNumButtons(j) == 0) {
-						// We're probably dealing with an accellerometer here.
-						SDL_JoystickClose(j);
+					const char* name = SDL_JoystickName(j);
+					int buttons = SDL_JoystickNumButtons(j);
+					int axes = SDL_JoystickNumAxes(j);
+					int balls = SDL_JoystickNumBalls(j);
+					int hats = SDL_JoystickNumHats(j);
+					if (buttons == 0) {
+						// We're probably dealing with an accelerometer here.
 
-						LOG_INFO("discarding joystick " << n << " for being an accellerometer");
+						LOG_INFO("discarding joystick #" << n << ": " << name << " for being an accelerometer");
+						SDL_JoystickClose(j);
+					} else if (axes < 2) {
+						// Could be a volume knob, but it's probably not a usable controller
+
+						LOG_INFO("discarding joystick #" << n << ": " << name << " for having less than 2 axes");
+						SDL_JoystickClose(j);
 					} else {
+						LOG_INFO("adding joystick #" << n << ": " << name << " which has " << axes << "/" << buttons << "/" << balls << "/" << hats << " axes/buttons/balls/hats");
 						joysticks.push_back(std::shared_ptr<SDL_Joystick>(j, [](SDL_Joystick* js){SDL_JoystickClose(js);}));
 					}
 				}

@@ -36,7 +36,7 @@ UNIT_TEST(svg_length_0) {
 UNIT_TEST(svg_length_1) {
 	bool excepted = false;
 	{
-		const assert_recover_scope unit_test_exception_expected;
+		const assert_recover_scope unit_test_exception_expected(SilenceAsserts);
 		try {
 			KRE::SVG::svg_length svg_length(99, KRE::SVG::svg_length::LengthUnit::SVG_LENGTHTYPE_UNKNOWN);
 			const auto zero = svg_length.value_in_specified_units(KRE::SVG::svg_length::LengthUnit::SVG_LENGTHTYPE_UNKNOWN);

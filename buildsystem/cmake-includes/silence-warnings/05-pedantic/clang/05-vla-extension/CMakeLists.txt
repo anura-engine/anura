@@ -2,7 +2,7 @@
 # XXX - The leading spaces in this file are meaningful for string concatenation!
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/asserts.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/asserts.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-vla-extension"
 )

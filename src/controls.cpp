@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include "variant_type.hpp"
+#include <SDL2/SDL_keycode.h>
 #ifdef _MSC_VER
 #include <winsock2.h>
 #else
@@ -37,6 +39,7 @@
 
 #include "asserts.hpp"
 #include "controls.hpp"
+#include "module.hpp"
 #include "joystick.hpp"
 #include "multiplayer.hpp"
 #include "preferences.hpp"
@@ -46,6 +49,185 @@ PREF_INT(max_control_history, 1024, "Maximum number of frames to keep control hi
 
 namespace controls
 {
+	ActionBindings::ActionBindings(){
+	}
+	ActionBindings::~ActionBindings(){
+		//TODO: Is there anything I need to free here?
+	}
+	void ActionBindings::parse_action_names(variant node){
+		std::map<variant, variant> acts = node.as_map();
+
+		for(auto p = acts.begin(); p!=acts.end();++p){
+			std::string act_id = p->first.as_string();
+			std::string act_name = p->second.as_string();
+			this->action_names.insert({act_id, act_name});
+		}
+	};
+
+	void ActionBindings::parse_keys(variant node){
+		std::map<variant, variant> key_binds = node.as_map();
+		for(auto p = key_binds.begin(); p != key_binds.end(); ++p) {
+		    std::string action_name = p->first.as_string();
+			ComboList combo_list;
+
+			std::vector<variant> key_sequences = p->second.as_list();
+			for(int i=0;i<key_sequences.size();i++){
+				std::vector<std::string> key_combo = key_sequences[i].as_list_string();
+				KeyCombination kb;
+
+				for(int j=0;j<key_combo.size();j++){
+					const char* key_name = key_combo[j].c_str();
+					int keycode = SDL_GetKeyFromName(key_name);
+					//TODO: Handle 'unknown' key
+					if(keycode != SDLK_UNKNOWN){
+						kb.push_back(keycode);
+					}
+				}
+				combo_list.push_back(kb);
+			}
+			this->key_mapping.insert({action_name, combo_list});
+		}
+	};
+
+	variant ActionBindings::get_keys_for_action(std::string action_name){
+		std::vector<variant> result = {};
+
+		if (this->key_mapping.find(action_name) != this->key_mapping.end()) {
+			ComboList events = this->key_mapping[action_name];
+			for(int i=0;i<events.size();i++){
+				KeyCombination kb;
+				kb = events[i];
+				std::vector<variant> tmp = {};
+				for(int j=0;j<kb.size();j++){
+					tmp.push_back(variant(kb[j]));
+				}
+				result.emplace_back(variant(&tmp));
+			}
+	    }
+
+		return variant(&result);
+	}
+
+	variant ActionBindings::add_key_for_action(std::string action_name, int before_index, KeyCombination value){
+		if (this->key_mapping.find(action_name) != this->key_mapping.end()) {
+			ComboList events = this->key_mapping[action_name];
+
+			KeyCombination k;
+			for(int i=0;i<value.size();i++){
+				k.push_back(value[i]);
+			}
+
+			std::vector<int> temp = k;
+			if(before_index >= events.size() && before_index != 0){
+				// List index out of range
+				return variant::from_bool(false);
+			}
+			events.insert(events.begin() + before_index, temp);
+			this->key_mapping[action_name] = events;
+
+			// Assign back the modified array
+			this->dirty_actions[action_name] = true;
+			return variant::from_bool(true);
+		}
+		return variant::from_bool(false);
+	}
+
+	variant ActionBindings::del_key_for_action(std::string action_name, int at_index){
+		if (this->key_mapping.find(action_name) != this->key_mapping.end()) {
+			ComboList events = this->key_mapping[action_name];
+
+			if(at_index >= events.size()){
+				// List index out of range
+				return variant::from_bool(false);
+			}
+			//TODO: Determine if the allocated memory for the KeyCombo at events[at_index] will be
+			// automatically freed
+			events.erase(events.begin() + at_index);
+
+			// Assign back the modified array
+			this->key_mapping[action_name] = events;
+
+			this->dirty_actions[action_name] = true;
+			return variant::from_bool(true);
+		}
+		return variant::from_bool(false);
+	}
+
+	std::map<std::string, std::string> ActionBindings::get_action_names(){
+		return action_names;
+	}
+
+	void ActionBindings::set_keys_for_action(std::string action, ComboList &combos){
+		this->key_mapping[action] = combos;
+	}
+
+	bool ActionBindings::has_action(std::string action_name){
+		if(this->key_mapping.find(action_name) == this->key_mapping.end()){
+			return false;
+		}
+		return true;
+	}
+	void ActionBindings::set_are_bindings_default(std::string action_name, bool value){
+		if(value == false){
+			this->dirty_actions[action_name] = true;
+		} else {
+			auto itor = this->dirty_actions.find(action_name);
+			if (itor != this->dirty_actions.end()){
+				this->dirty_actions.erase(itor);
+			}
+		}
+	}
+
+	bool ActionBindings::are_bindings_default_for_action(std::string action_name){
+		if (this->dirty_actions.find(action_name) == this->dirty_actions.end()) {
+			return true;
+		}
+		return false;
+	}
+
+	void ActionBindings::write_to_preferences(variant_builder *node){
+		for(auto p = this->action_names.begin(); p != this->action_names.end(); ++p) {
+      		std::string action_name = p->first;
+        	if(this->are_bindings_default_for_action(action_name)){
+         		continue;
+         	}
+        	std::string preference_name = "keys_";
+        	preference_name += action_name;
+
+         	node->add(preference_name, this->get_keys_for_action(action_name));
+		}
+	}
+
+	void ActionBindings::read_from_preferences(variant node){
+		for(auto p = action_names.begin(); p != action_names.end(); ++p) {
+      		std::string action_name = p->first;
+        	std::string preference_name = "keys_";
+        	preference_name += action_name;
+
+         	// For each 'keys_action' that is found in preferences.cfg
+        	const variant keys_node = node[preference_name];
+         	if(keys_node.is_null() == false) {
+          		// Mark action as dirty, i.e. changed from default
+          		this->set_are_bindings_default(action_name, false);
+
+            	// Parse the data (key combinations) from variants
+             	// to the KeyCombination type.
+            	controls::ComboList combos;
+            	std::vector<variant> temp = keys_node.as_list();
+             	for(int i=0;i<temp.size();i++){
+              		controls::KeyCombination key_combo;
+               		key_combo = temp[i].as_list_int();
+            		combos.push_back(key_combo);
+              	}
+
+              	// Assign the new bindings
+              	this->set_keys_for_action(action_name, combos);
+			}
+		}
+	}
+
+	ActionBindings engine_mappings;
+
 	const char** control_names()
 	{
 		static const char* names[] = { "up", "down", "left", "right", "attack", "jump", "tongue", "sprint", nullptr };
@@ -350,7 +532,6 @@ namespace controls
 			if(joystick::button(3)) {
 				state.keys |= 0x80;
 			}
-			
 
 			if(g_user_ctrl_output.is_null() == false) {
 				state.user = g_user_ctrl_output.write_json();

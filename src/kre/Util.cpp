@@ -78,8 +78,10 @@ UNIT_TEST(split_test_2) {
 			"aether", "aeiou",
 			Util::SplitFlags::ALLOW_EMPTY_STRINGS);
 	const std::vector<std::string> expected_vector { "r" };
-	for (const auto &string : strings_vector) {
-		LOG_INFO(string);
+	if (strings_vector.size() != expected_vector.size()) {
+		for (const auto &string : strings_vector) {
+			LOG_INFO(string);
+		}
 	}
 	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
 	unsigned index = 0;
@@ -94,8 +96,10 @@ UNIT_TEST(split_test_3) {
 			"entropia aether", "aeiou",
 			Util::SplitFlags::ALLOW_EMPTY_STRINGS);
 	const std::vector<std::string> expected_vector { "r" };
-	for (const auto &string : strings_vector) {
-		LOG_INFO(string);
+	if (strings_vector.size() != expected_vector.size()) {
+		for (const auto &string : strings_vector) {
+			LOG_INFO(string);
+		}
 	}
 	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
 	unsigned index = 0;
@@ -110,8 +114,10 @@ UNIT_TEST(split_test_4) {
 			"materia entropia aether", "aeiou",
 			Util::SplitFlags::ALLOW_EMPTY_STRINGS);
 	const std::vector<std::string> expected_vector { "r" };
-	for (const auto &string : strings_vector) {
-		LOG_INFO(string);
+	if (strings_vector.size() != expected_vector.size()) {
+		for (const auto &string : strings_vector) {
+			LOG_INFO(string);
+		}
 	}
 	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
 	unsigned index = 0;

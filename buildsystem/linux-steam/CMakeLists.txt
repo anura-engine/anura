@@ -1,7 +1,10 @@
 # BEGIN CMake setup
 
 # 3.12 added add_compile_definitions
-cmake_minimum_required(VERSION 3.12)
+# 3.14 added FetchContent
+# 3.19 added presets v1: we use configurePresets
+# XXX - We cannot take this further than 3.23 as that's what ships in the Steam Sniper SDK!
+cmake_minimum_required(VERSION 3.19)
 
 if(DEFINED ENV{CXX})
   message("")
@@ -18,14 +21,25 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-# Use vcpkg for dependencies
-set(VCPKG_MANIFEST_DIR "${CMAKE_BINARY_DIR}")
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_BINARY_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
-
 # Default to using LTO for Release builds
 if (CMAKE_BUILD_TYPE MATCHES Release)
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
+
+# Prefer pkgconfig as that's what Conan will provide
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/../conan/conan_toolchain.cmake")
+    message("Conan toolchain file not found. ")
+    message("")
+    message(
+        FATAL_ERROR
+        "Please run 'conan install buildsystem/conan -s build_type=Debug --build=b2 --build=missing' first."
+  )
+endif()
+
+# Use Conan as the package manager
+include(${CMAKE_SOURCE_DIR}/../conan/conan_toolchain.cmake)
 
 # END CMake setup
 
@@ -33,6 +47,46 @@ endif()
 
 # Build target for CXX project "anura"
 project(anura LANGUAGES CXX)
+
+# For running tests through CTest
+enable_testing()
+
+# Build time dependencies
+find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package(freetype REQUIRED)
+find_package(SDL2 REQUIRED CONFIG)
+find_package(Cairo REQUIRED CONFIG)
+find_package(GLEW REQUIRED CONFIG)
+find_package(SDL2_ttf REQUIRED CONFIG)
+find_package(SDL2_image REQUIRED CONFIG)
+find_package(Vorbis REQUIRED CONFIG)
+find_package(Git REQUIRED)
+
+# Fetch vendored dependencies
+include(FetchContent)
+
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG d4ddc46e7773e9a9b68f965d007968f35ca4e09a # https://github.com/ocornut/imgui/releases/tag/v1.89.7
+    GIT_SHALLOW TRUE
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}/build/src/imgui"
+    SOURCE_SUBDIR purposefully-empty-to-skip-build
+)
+
+FetchContent_MakeAvailable(imgui)
+
+# XXX - 1.0.0 is the latest one which builds with C++17 on LLVM
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 33b0eb9fa336ffd8551024b1d2690e418014553b # https://github.com/g-truc/glm/releases/tag/1.0.0
+    GIT_SHALLOW TRUE
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}/build/src/glm"
+    SOURCE_SUBDIR purposefully-empty-to-skip-build
+)
+
+FetchContent_MakeAvailable(glm)
 
 # Use ccache to accelerate iterating on CXX files, if available
 find_program(CCACHE "ccache")
@@ -44,53 +98,32 @@ endif(CCACHE)
 file(
     GLOB
     anura_SRC
-    "${CMAKE_BINARY_DIR}/src/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/hex/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui_draw.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui_tables.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui_widgets.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui/imgui.cpp"
-    "${CMAKE_BINARY_DIR}/src/imgui_additions/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/kre/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/svg/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/tiled/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/treetree/*.cpp"
-    "${CMAKE_BINARY_DIR}/src/xhtml/*.cpp"
+    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_draw.cpp"
+    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_tables.cpp"
+    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui_widgets.cpp"
+    "${CMAKE_SOURCE_DIR}/build/src/imgui/imgui.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/hex/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/imgui_additions/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/kre/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/svg/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/tiled/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/treetree/*.cpp"
+    "${CMAKE_SOURCE_DIR}/../../src/xhtml/*.cpp"
 )
-
-# Configure compiling against vcpkg provided libraries
-# XXX - At the moment (2023-08) we have no idea of the upper and lower bounds
-# XXX - At the moment (2023-08) we have no idea of the full minimal set
-find_package(Threads REQUIRED)
-find_package(Boost REQUIRED COMPONENTS filesystem locale regex system)
-find_package(ZLIB REQUIRED)
-find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(Freetype REQUIRED)
-find_package(GLM REQUIRED)
-find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
-find_package(SDL2_mixer REQUIRED)
-find_package(SDL2_ttf REQUIRED)
-find_package(Ogg REQUIRED)
-find_package(Vorbis REQUIRED)
-find_package(harfbuzz CONFIG REQUIRED)
-find_package(WebP CONFIG REQUIRED)
-find_package(unofficial-lerc CONFIG REQUIRED)
-find_package(zstd CONFIG REQUIRED)
 
 # Add the headers
 include_directories(
-    "${CMAKE_BINARY_DIR}/src"
-    "${CMAKE_BINARY_DIR}/src/hex"
-    "${CMAKE_BINARY_DIR}/src/imgui"
-    "${CMAKE_BINARY_DIR}/src/imgui_additions"
-    "${CMAKE_BINARY_DIR}/src/kre"
-    "${CMAKE_BINARY_DIR}/src/svg"
-    "${CMAKE_BINARY_DIR}/src/tiled"
-    "${CMAKE_BINARY_DIR}/src/treetree"
-    "${CMAKE_BINARY_DIR}/src/xhtml"
-    "${CMAKE_BINARY_DIR}/vcpkg_installed/x64-linux/include"
+    "${CMAKE_SOURCE_DIR}/build/src/glm"
+    "${CMAKE_SOURCE_DIR}/build/src/imgui"
+    "${CMAKE_SOURCE_DIR}/../../src"
+    "${CMAKE_SOURCE_DIR}/../../src/hex"
+    "${CMAKE_SOURCE_DIR}/../../src/imgui_additions"
+    "${CMAKE_SOURCE_DIR}/../../src/kre"
+    "${CMAKE_SOURCE_DIR}/../../src/svg"
+    "${CMAKE_SOURCE_DIR}/../../src/tiled"
+    "${CMAKE_SOURCE_DIR}/../../src/treetree"
+    "${CMAKE_SOURCE_DIR}/../../src/xhtml"
 )
 
 # END Project config
@@ -109,21 +142,15 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
     # Debug builds need to be debuggable
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og")
-    set(VCPKG_TARGET_TRIPLET x64-linux-dbg)
-    set(VCPKG_BUILD_TYPE debug)
-    link_directories("${CMAKE_BINARY_DIR}/vcpkg_installed/x64-linux/debug/lib")
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
     # Optimize release builds
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-    set(VCPKG_TARGET_TRIPLET x64-linux-rel)
-    set(VCPKG_BUILD_TYPE release)
-    link_directories("${CMAKE_BINARY_DIR}/vcpkg_installed/x64-linux/release/lib")
 endif()
 
 # Inject our own imgui config for our own vector operations
-add_compile_definitions(IMGUI_USER_CONFIG="${CMAKE_BINARY_DIR}/src/imgui_additions/imconfig_anura.h")
+add_compile_definitions(IMGUI_USER_CONFIG="${CMAKE_SOURCE_DIR}/../../src/imgui_additions/imconfig_anura.h")
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
     # Turn all things debug, like assertions, off for a release build
@@ -136,10 +163,14 @@ endif()
 # XXX - imgui_custom.cpp relies on these
 add_compile_definitions(IMGUI_DEFINE_MATH_OPERATORS)
 
+# Quaternions have become experimental in GLM???
+# XXX - Newer versions of GLM need this for some reason
+add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
+
 # XXX - The md5 module of anura does not build without this.
 # XXX - Other files also emit the warning, but somehow this gets elevated to an error - no clue, probably worse.
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/md5.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/md5.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-narrowing"
 )
@@ -148,104 +179,41 @@ set_property(
 
 # BEGIN Linker config
 
-# Staticly link dependencies in
-set(VCPKG_CRT_LINKAGE static)
-set(VCPKG_LIBRARY_LINKAGE static)
-
 # Output an executable from the anura sources for anura
 add_executable(anura "${anura_SRC}")
 
+# Set manual LTO flags as CMAKE_INTERPROCEDURAL_OPTIMIZATION does not parallelize
+if (CMAKE_BUILD_TYPE MATCHES Release)
+    include(ProcessorCount)
+    ProcessorCount(NPROC)
+    target_compile_options(anura PRIVATE "-flto=${NPROC}")
+    target_link_options(anura PRIVATE "-flto=${NPROC}")
+endif()
+
 # Link libraries
-# XXX - The order of the static linking matters!
-# XXX - The grouping of the static linking matters!
-# XXX - DO NOT BUMP VCPKG BASELINE - ANURA CODE CHANGES REQUIRED FIRST!
-# XXX - Some stuff is simply not staticly linkable:
-# - Audio stuff (samplerate, ALSA, Pulseaudio)
-# - Graphics stuff (OpenGL, EGL, DRM, GBM)
-# - X11
-# - Wayland
-# - libc (with: realtme, dlopen)
-#
-# We must YOLO and trust the platform has these things
 target_link_libraries(
     anura
     PRIVATE
-    -Wl,-Bstatic
-
-    -Wl,--start-group
-    SDL2
-    -Wl,--end-group
-
-    -Wl,--start-group
+    boost::boost
+    Freetype::Freetype
+    SDL2::SDL2
     Boost::filesystem
-    -Wl,--end-group
-
-    -Wl,--start-group
-    cairo
-    pixman-1
-    freetype
-    ZLIB::ZLIB
-    fontconfig
-    png
-    expat
-    brotlidec
-    brotlicommon
-    uuid
-    -Wl,--end-group
-
-    -Wl,--start-group
+    cairo::cairo
     GLEW::GLEW
-    -Wl,--end-group
-
-    -Wl,--start-group
-    vorbisfile
-    vorbis
-    ogg
-    -Wl,--end-group
-
-    -Wl,--start-group
-    SDL2_ttf
-    harfbuzz::harfbuzz
-    -Wl,--end-group
-
-    -Wl,--start-group
-    Boost::locale
-    -Wl,--end-group
-
-    -Wl,--start-group
-    SDL2_image
-    WebP::webp
-    WebP::webpdemux
-    WebP::webpdecoder
-    tiff
-    lzma
-    deflate
-    WebP::webp
-    jpeg
-    unofficial::Lerc::Lerc
-    zstd::libzstd_static
-    -Wl,--end-group
-
-    -Wl,-Bdynamic
-    -lrt
-    -ldl
-    -ldrm
-    -lgbm
-    -lX11
-    -lXcursor
-    -lXext
-    -lXfixes
-    -lXi
-    -lXrandr
-    -lXss
-    -lxkbcommon
-    -ldecor-0
-    -lwayland-client
-    -lwayland-cursor
-    -lwayland-egl
-    -lsamplerate
-    -lasound
-    -lpulse
+    sdl_ttf::sdl_ttf
+    SDL2_image::SDL2_image
+    vorbis::vorbis
 )
 
 # END Linker config
+
+# BEGIN Test config
+
+add_test(
+    NAME engine_unit_tests
+    COMMAND $<TARGET_FILE:anura> --tests
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/../../
+)
+set_tests_properties(engine_unit_tests PROPERTIES LABELS "unittest")
+
+# END Test config

@@ -83,10 +83,11 @@ builds.
 
 The default build type on every platform is Debug.
 
-Additionally on some platforms it is possible to also build the engine
-dynamically linked against the operating system provided libraries. The default
-build type on every platform is to use vcpkg to pull the dependencies in and to
-statically link those in into the resulting binary for the ease of distribution.
+The default build type is to link dynamically against OS provided libraries.
+
+A static build also exists for the following platforms:
+
+* Steam Linux Runtime "Medic"
 
 Anura is an old clunky beast with over a decade of history. It's currently
 (2023-08) spitting out a lot of compiler warnings on most platforms we
@@ -145,8 +146,8 @@ Linux operating systems.
 Sample build flow:
 
 ```bash
-cmake buildsystem/linux-dynamic -D CMAKE_CXX_COMPILER='clang++' -D CMAKE_BUILD_TYPE=Release
-make -j "$(getconf _NPROCESSORS_ONLN)"
+cmake buildsystem/linux-dynamic --preset=Debug
+cmake --build buildsystem/linux-dynamic/build/Debug --parallel "$(getconf _NPROCESSORS_ONLN)"
 ```
 
 You may not pass the compiler in via the environment variable `CXX` as that
@@ -177,11 +178,14 @@ The sets of warnings and diagnostics we currently silence:
     * [`-Wno-c++11-narrowing`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/01-cxx-11-narrowing/CMakeLists.txt)
     * [`-Wno-unused-result`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/02-unused-result/CMakeLists.txt)
     * [`-Wno-deprecated-declarations`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/03-deprecated-declarations/CMakeLists.txt)
+    * [`-Wno-enum-constexpr-conversion`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/04-enum-constexpr-conversion/CMakeLists.txt)
+    * [`-Wno-nontrivial-memcall`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/01-default/clang/05-nontrivial-memcall/CMakeLists.txt)
 * LTO (`-flto`)
   * GCC - these need to get set globally or the linker does not get them passed in!
     * [`-Wno-odr`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/01-odr/CMakeLists.txt)
     * [`-Wno-aggressive-loop-optimizations`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/02-aggressive-loop-optimizations/CMakeLists.txt)
     * [`-Wno-lto-type-mismatch`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/03-lto-type-mismatch/CMakeLists.txt)
+    * [`-Wno-stringpop-overflow`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/02-lto/gcc/04-stringpop-overflow/CMakeLists.txt)
   * Clang is currently (2023-09) LTO warning free
 * `-Wall`
   * GCC
@@ -205,6 +209,7 @@ The sets of warnings and diagnostics we currently silence:
     * [`-Wno-unused-local-typedef`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/08-unused-local-typedef/CMakeLists.txt)
     * [`-Wno-unused-const-variable`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/09-unused-const-variable/CMakeLists.txt)
     * [`-Wno-unused-lambda-capture`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/10-unused-lambda-capture/CMakeLists.txt)
+    * [`-Wno-uninitialized-const-pointer`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/03-all/clang/11-uninitialized-const-pointer/CMakeLists.txt)
 * `-Wextra`
   * GCC
     * [`-Wno-unused-parameter`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/01-unused-parameter/CMakeLists.txt)
@@ -213,6 +218,7 @@ The sets of warnings and diagnostics we currently silence:
     * [`-Wno-dangling-reference`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/04-dangling-reference/CMakeLists.txt)
     * [`-Wno-deprecated-copy`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/05-deprecated-copy/CMakeLists.txt)
     * [`-Wno-missing-field-initializers`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/06-missing-field-initializers/CMakeLists.txt)
+    * [`-Wno-type-limits`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/gcc/07-type-limits/CMakeLists.txt)
   * Clang
     * [`-Wno-unused-parameter`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/clang/01-unused-parameter/CMakeLists.txt)
     * [`-Wno-sign-compare`](https://github.com/anura-engine/anura/blob/trunk/buildsystem/cmake-includes/silence-warnings/04-extra/clang/02-sign-compare/CMakeLists.txt)
@@ -239,7 +245,7 @@ On any rolling release distributions we assume you know what you are doing and
 you are on your own.
 
 There is a loose plan to have an Anura package available again in Debian in time
-for the Debian Trixie release expected in early Summer 2025.
+for the Debian Forky release expected in Summer 2027.
 
 ##### Debian
 
@@ -336,17 +342,12 @@ On Pull Requests:
 
 * Smoketest dynamic builds on Linux (both g++ and clang++)
   * Debian
-    * 10 / Buster
-    * 11 / Bullseye
     * 12 / Bookworm
+    * 13 / Trixie
   * Ubuntu
-    * 20.04 / Focal Fossa
     * 22.04 / Jammy Jellyfish
     * 24.04 / Noble Numbat
   * Fedora
-    * 30
-    * 31
-    * 32
     * 33
     * 34
     * 35
@@ -356,9 +357,12 @@ On Pull Requests:
     * 39
     * 40
     * 41
+    * 42
+    * 43
   * Rocky Linux
     * 8
     * 9
+    * 10
   * Alma Linux
     * 8
     * 9
@@ -366,6 +370,7 @@ On Pull Requests:
     * 15.4
     * 15.5
     * 15.6
+    * 16.0
 
 This set should cover most popular use cases and also derivative distributions
 of these root distributions. There are no plans to test on rolling release
@@ -399,6 +404,29 @@ On Pull Requests:
     * Anura runs just fine in a virtual framebuffer with `xvfb-run`
 * NOT IMPLEMENTED [LLVM
   scan-build](https://clang-analyzer.llvm.org/scan-build.html)
+
+### Caching
+
+In October 2025 GitHub got stricter about how its free caching tier works. We
+now get 7d lifetime on the caches created instead of the previously
+undocumented-but-sorta-inferrable 30d. We will also get a 10GB hard limit where
+new entries evict the oldest entries on creation where previously we simply had
+a warning about having exceeded the free 10GB limit.
+
+The previous caching strategy (before 2025-09) simply wrote to the cache from
+all builds, leading into situations where we could be consuming 100s of GBs of
+cache. Which we deemed fine as it only resulted in a soft warning and no extra
+costs.
+
+The current (2025-10) hot set of ccache stored objects for all the build
+permutations of Anura is about 13GB. This means we will get build acceleration
+happening for free for up to 10GB, which is ok enough for at least quartering
+the compute we spend on a per push basis.
+
+The resulting caching strategy going forwards:
+
+* Write to cache on Sundays to ensure we always have some hot 10GB set within the 7d limit
+* Consume from cache on all builds
 
 ## CD
 

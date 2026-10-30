@@ -27,11 +27,8 @@
 #include <boost/asio.hpp>
 #include <boost/regex.hpp>
 // boost::thread < 1.51 conflicts with C++11-capable compilers
-#if BOOST_VERSION < 105100
-    #include <ctime>
-    #undef TIME_UTC
-#endif
 //#include <boost/thread.hpp>
+// Should this be uncommented now?
 
 #include <iostream>
 #include <string>
@@ -54,10 +51,10 @@ namespace multiplayer
 	class server
 	{
 	public:
-		explicit server(boost::asio::io_service& io_service)
-		  : acceptor_(io_service, tcp::endpoint(tcp::v4(), 17002)),
+		explicit server(boost::asio::io_context& io_context)
+		  : acceptor_(io_context, tcp::endpoint(tcp::v4(), 17002)),
 			next_id_(0),
-			udp_socket_(io_service, udp::endpoint(udp::v4(), 17001))
+			udp_socket_(io_context, udp::endpoint(udp::v4(), 17001))
 		{
 			start_accept();
 			start_udp_receive();
@@ -66,10 +63,10 @@ namespace multiplayer
 	private:
 		void start_accept()
 		{
-#if BOOST_ASIO_VERSION >= 101400
-			socket_ptr socket(new tcp::socket(acceptor_.get_executor()));
+#if BOOST_VERSION < 107000
+			socket_ptr socket(new tcp::socket(acceptor_.get_io_context()));
 #else
-			socket_ptr socket(new tcp::socket(acceptor_.get_io_service()));
+			socket_ptr socket(new tcp::socket(acceptor_.get_executor()));
 #endif
 			acceptor_.async_accept(*socket, std::bind(&server::handle_accept, this, socket, std::placeholders::_1));
 		}
@@ -309,8 +306,8 @@ namespace multiplayer
 
 COMMAND_LINE_UTILITY(multiplayer_server)
 {
-	boost::asio::io_service io_service;
+	boost::asio::io_context io_context;
 
-	multiplayer::server srv(io_service);
-	io_service.run();
+	multiplayer::server srv(io_context);
+	io_context.run();
 }

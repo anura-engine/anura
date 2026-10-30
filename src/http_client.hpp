@@ -44,7 +44,7 @@ namespace http
 class http_client : public game_logic::FormulaCallable
 {
 public:
-	http_client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=nullptr);
+	http_client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_context* context=nullptr);
 	~http_client();
 	void send_request(std::string method_path,
 	                  std::string request,
@@ -64,11 +64,11 @@ private:
 	DECLARE_CALLABLE(http_client)
 	int session_id_;
 
-	std::shared_ptr<boost::asio::io_service> io_service_buf_;
-	boost::asio::io_service* io_service_;
+	std::shared_ptr<boost::asio::io_context> io_context_buf_;
+	boost::asio::io_context* io_context_;
 
 	struct Connection {
-		explicit Connection(boost::asio::io_service& serv) : socket(new tcp::socket(serv)), nbytes_sent(0), expected_len(-1), retry_on_error(0), timeout_deadline(-1), timeout_period(-1), timeout_nbytes_needed(-1), aborted(false)
+		explicit Connection(boost::asio::io_context& ctx) : socket(new tcp::socket(ctx)), nbytes_sent(0), expected_len(-1), retry_on_error(0), timeout_deadline(-1), timeout_period(-1), timeout_nbytes_needed(-1), aborted(false)
 		{}
 		explicit Connection(std::shared_ptr<tcp::socket> sock) : socket(sock), nbytes_sent(0), expected_len(-1), retry_on_error(0), timeout_deadline(-1), timeout_period(-1), timeout_nbytes_needed(-1), aborted(false)
 		{}
@@ -100,8 +100,8 @@ private:
 
 	void send_connection_request(connection_ptr conne);
 
-	void handle_resolve(const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator, connection_ptr conn);
-	void handle_connect(const boost::system::error_code& error, connection_ptr conn, tcp::resolver::iterator resolve_itor);
+	void handle_resolve(const boost::system::error_code& err, tcp::resolver::results_type endpoint_result, connection_ptr conn);
+	void handle_connect(const boost::system::error_code& error, tcp::endpoint endpoint, connection_ptr conn);
 	void write_connection_data(connection_ptr conn);
 	void handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes, std::shared_ptr<std::string> buf_ptr);
 	void handle_receive(connection_ptr conn, const boost::system::error_code& e, size_t nbytes);
@@ -117,8 +117,7 @@ private:
 	RESOLUTION_STATE resolution_state_;
 
 	std::shared_ptr<tcp::resolver> resolver_;
-	std::shared_ptr<tcp::resolver::query> resolver_query_;
-	tcp::resolver::iterator endpoint_iterator_;
+	tcp::resolver::results_type endpoint_result_;
 	std::string host_, port_;
 
 	int in_flight_;

@@ -32,7 +32,7 @@ namespace tbs
 	class web_server : public http::web_server
 	{
 	public:
-		static boost::asio::io_service* service();
+		static boost::asio::io_context* context();
 		static int port();
 		static boost::interprocess::named_semaphore* termination_semaphore();
 
@@ -40,7 +40,7 @@ namespace tbs
 		//happening in the server.
 		static void set_debug_state(variant v);
 
-		explicit web_server(server& serv, boost::asio::io_service& io_service, int port=23456);
+		explicit web_server(server& serv, boost::asio::io_context& io_context, int port=23456);
 		~web_server();
 	private:
 		web_server(const web_server&);

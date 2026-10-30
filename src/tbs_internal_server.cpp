@@ -58,10 +58,10 @@ namespace tbs
 		internal_server_ptr server_ptr;
 	}
 
-	boost::asio::io_service internal_server::io_service_;
+	boost::asio::io_context internal_server::io_context_;
 
 	internal_server::internal_server()
-		: server_base(io_service_)
+		: server_base(io_context_)
 	{
 	}
 
@@ -522,8 +522,8 @@ void terminate_utility_process(bool* complete=nullptr)
 				session_id,
 				request);
 		}
-		io_service_.poll();
-		io_service_.reset();
+		io_context_.poll();
+		io_context_.restart();
 	}
 
 	void internal_server::queue_msg(int session_id, const std::string& msg, bool has_priority)

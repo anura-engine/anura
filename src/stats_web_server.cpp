@@ -42,8 +42,8 @@
 
 std::string global_debug_str;
 
-web_server::web_server(boost::asio::io_service& io_service, int port)
-	: http::web_server(io_service, port), timer_(io_service), nheartbeat_(0)
+web_server::web_server(boost::asio::io_context& io_context, int port)
+	: http::web_server(io_context, port), timer_(io_context), nheartbeat_(0)
 {
 	heartbeat();
 }

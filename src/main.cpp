@@ -535,6 +535,20 @@ int main(int argcount, char* argvec[])
 
 	PreferenceData preference_data = preferences::load_preferences();
 
+	// Load control scheme from engine's config file
+	try {
+		variant cfg = json::parse_from_file("data/controls.cfg");
+
+		controls::engine_mappings.parse_action_names(cfg["controls"]["names"]);
+		controls::engine_mappings.parse_keys(cfg["controls"]["key_bindings"]);
+
+		//controls::parse_action_names(cfg["controls"]["names"]);
+		//controls::parse_keys_from_node_into_map(cfg["controls"]["key_bindings"], &controls::engine_keys);
+	} catch(const json::ParseError& error) {
+		LOG_ERROR(error.errorMessage());
+		return 1;
+	}
+
 	if(preference_data.error){
 		LOG_ERROR("Preference data error: " << preference_data.error_message);
 	}
@@ -950,22 +964,18 @@ int main(int argcount, char* argvec[])
 		int width = 0;
 		int height = 0;
 
+		bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
 		if(!preference_data.error){
-			bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
-			//graphics::GameScreen::autoSelectResolution(main_wnd, preference_data.resolution_width, preference_data.resolution_height, true, isFullscreen);
-
-			preferences::adjust_virtual_width_to_match_physical(preference_data.resolution_width, preference_data.resolution_height);
-
-			main_wnd->setWindowSize(preference_data.resolution_width, preference_data.resolution_height);
+			width = preference_data.resolution_width;
+			height = preference_data.resolution_height;
 		}
-		else{
-			bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
+		if(width == 0 || height == 0){
 			graphics::GameScreen::autoSelectResolution(main_wnd, width, height, true, isFullscreen);
-
-			preferences::adjust_virtual_width_to_match_physical(width, height);
-
-			main_wnd->setWindowSize(width, height);
 		}
+
+		preferences::adjust_virtual_width_to_match_physical(width, height);
+
+		main_wnd->setWindowSize(width, height);
 	}
 
 	int vw = preferences::requested_virtual_window_width() > 0

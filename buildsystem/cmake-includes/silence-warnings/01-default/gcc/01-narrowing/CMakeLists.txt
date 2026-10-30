@@ -2,31 +2,31 @@
 # XXX - The leading spaces in this file are meaningful for string concatenation!
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/cairo.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/cairo.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-narrowing"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/custom_object.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/custom_object.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-narrowing"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/FontSDL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/FontSDL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-narrowing"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/kre/SurfaceSDL.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/kre/SurfaceSDL.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-narrowing"
 )
 
 set_property(
-    SOURCE "${CMAKE_BINARY_DIR}/src/md5.cpp"
+    SOURCE "${CMAKE_SOURCE_DIR}/../../src/md5.cpp"
     APPEND_STRING
     PROPERTY COMPILE_FLAGS " -Wno-narrowing"
 )

@@ -40,8 +40,8 @@ namespace tbs
 	PREF_INT(tbs_fake_error_rate, 0, "Percentage error rate for tbs connections; used to debug issues");
 
 	client::client(const std::string& host, const std::string& port,
-				   int session, boost::asio::io_service* service)
-	  : http_client(host, port, session, service), use_local_cache_(g_tbs_client_prediction),
+				   int session, boost::asio::io_context* context)
+	  : http_client(host, port, session, context), use_local_cache_(g_tbs_client_prediction),
 		local_game_cache_(nullptr), local_nplayer_(-1)
 	{
 	}

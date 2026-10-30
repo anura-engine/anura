@@ -48,9 +48,9 @@
 
 using boost::asio::ip::tcp;
 
-ModuleWebServer::ModuleWebServer(const std::string& data_path, const std::string& chunk_path, boost::asio::io_service& io_service, int port)
-	: http::web_server(io_service, port),
-	timer_(io_service),
+ModuleWebServer::ModuleWebServer(const std::string& data_path, const std::string& chunk_path, boost::asio::io_context& io_context, int port)
+	: http::web_server(io_context, port),
+	timer_(io_context),
 	nheartbeat_(0),
 	data_path_(data_path),
 	chunk_path_(chunk_path),
@@ -679,7 +679,7 @@ COMMAND_LINE_UTILITY(module_server)
 	}
 
 	const assert_recover_scope recovery;
-	boost::asio::io_service io_service;
-	ModuleWebServer server(path, chunk_path, io_service, port);
-	io_service.run();
+	boost::asio::io_context io_context;
+	ModuleWebServer server(path, chunk_path, io_context, port);
+	io_context.run();
 }

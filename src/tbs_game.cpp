@@ -625,7 +625,7 @@ namespace {
 
 		//handleEvent("add_bot", map_into_callable(info).get());
 
-	//	ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), info));
+	//	ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::context(), "127.0.0.1", formatter() << web_server::port(), info));
 	//	bots_.push_back(new_bot);
 	}
 
@@ -845,12 +845,12 @@ namespace {
 					ffl::IntrusivePtr<ipc_client> cli(new ipc_client(p.second));
 
 					LOG_INFO("CREATED BOT: " << n << "/" << value.num_elements());
-					ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", "23456", value[n]));
+					ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::context(), "127.0.0.1", "23456", value[n]));
 					new_bot->set_ipc_client(cli);
 
 					obj.bots_.push_back(new_bot);
 				} else {
-					ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), value[n]));
+					ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::context(), "127.0.0.1", formatter() << web_server::port(), value[n]));
 					obj.bots_.push_back(new_bot);
 				}
 			}

@@ -52,14 +52,13 @@ namespace http
 		typedef web_server::socket_ptr socket_ptr;
 	}
 	struct WebServerProxyInfo {
-		WebServerProxyInfo(web_server& server, uint32_t session_id, boost::asio::io_service& io_service, const std::string& host, const std::string& port);
+		WebServerProxyInfo(web_server& server, uint32_t session_id, boost::asio::io_context& io_context, const std::string& host, const std::string& port);
 		web_server* server;
 		uint32_t session_id;
 		std::string host;
 		std::string port;
 		std::shared_ptr<tcp::resolver> resolver;
-		std::shared_ptr<tcp::resolver::query> resolver_query;
-		tcp::resolver::iterator endpoint_iterator;
+		tcp::resolver::results_type endpoint_result;
 		socket_ptr socket;
 	};
 
@@ -82,8 +81,8 @@ namespace http
 		void handle_proxy_connect(WebServerProxyInfoPtr info, const boost::system::error_code& error)
 		{
 			if(error) {
-				++(info->endpoint_iterator);
-				proxy_connect(info);
+				LOG_ERROR("Failed to connect to proxy: " << info->host);
+				return;
 			} else {
 				std::shared_ptr<std::string> msg(new std::string);
 				msg->resize(4);
@@ -95,20 +94,15 @@ namespace http
 
 		void proxy_connect(WebServerProxyInfoPtr info)
 		{
-			if(info->endpoint_iterator == tcp::resolver::iterator()) {
-				LOG_ERROR("Failed to connect to proxy: " << info->host);
-				return;
-			}
-
 			boost::asio::async_connect(info->socket->socket,
-			  info->endpoint_iterator,
+			  info->endpoint_result,
 			  std::bind(&handle_proxy_connect, info, std::placeholders::_1));
 		}
 
-		void handle_resolve_proxy(WebServerProxyInfoPtr info, const boost::system::error_code& error, tcp::resolver::iterator endpoint_iterator)
+		void handle_resolve_proxy(WebServerProxyInfoPtr info, const boost::system::error_code& error, tcp::resolver::results_type endpoint_result)
 		{
 			if(!error) {
-				info->endpoint_iterator = endpoint_iterator;
+				info->endpoint_result = endpoint_result;
 				proxy_connect(info);
 
 			} else {
@@ -116,33 +110,32 @@ namespace http
 			}
 		}
 
-		std::shared_ptr<WebServerProxyInfo> create_web_server_proxy(web_server& server_, uint32_t session_id_, boost::asio::io_service& io_service_, const std::string& host_, const std::string& port_)
+		std::shared_ptr<WebServerProxyInfo> create_web_server_proxy(web_server& server_, uint32_t session_id_, boost::asio::io_context& io_context_, const std::string& host_, const std::string& port_)
 		{
-			std::shared_ptr<WebServerProxyInfo> result(new WebServerProxyInfo(server_, session_id_,io_service_, host_, port_));
-			result->resolver->async_resolve(*result->resolver_query,
+			std::shared_ptr<WebServerProxyInfo> result(new WebServerProxyInfo(server_, session_id_,io_context_, host_, port_));
+			result->resolver->async_resolve(host_, port_,
 		  	   std::bind(handle_resolve_proxy, result, std::placeholders::_1, std::placeholders::_2));
 			return result;
 		}
 	}
 
-	WebServerProxyInfo::WebServerProxyInfo(web_server& server_, uint32_t session_id_, boost::asio::io_service& io_service_, const std::string& host_, const std::string& port_)
+	WebServerProxyInfo::WebServerProxyInfo(web_server& server_, uint32_t session_id_, boost::asio::io_context& io_context_, const std::string& host_, const std::string& port_)
 	  : server(&server_), session_id(session_id_), host(host_), port(port_),
-	    resolver(new tcp::resolver(io_service_)),
-		resolver_query(new tcp::resolver::query(tcp::resolver::query::protocol_type::v4(), host_.c_str(), port_.c_str())),
-		socket(new web_server::SocketInfo(io_service_))
+	    resolver(new tcp::resolver(io_context_)),
+		socket(new web_server::SocketInfo(io_context_))
 	{
 	}
 
-	web_server::SocketInfo::SocketInfo(boost::asio::io_service& service)
-	  : socket(service), client_version(0), supports_deflate(false)
+	web_server::SocketInfo::SocketInfo(boost::asio::io_context& context)
+	  : socket(context), client_version(0), supports_deflate(false)
 	{
 	}
 
-	web_server::web_server(boost::asio::io_service& io_service, int port)
-	  : io_service_(io_service)
+	web_server::web_server(boost::asio::io_context& io_context, int port)
+	  : io_context_(io_context)
 	{
 		if(port) {
-			acceptor_.reset(new boost::asio::ip::tcp::acceptor(io_service, tcp::endpoint(tcp::v4(), port)));
+			acceptor_.reset(new boost::asio::ip::tcp::acceptor(io_context, tcp::endpoint(tcp::v4(), port)));
 			boost::asio::socket_base::reuse_address option(true);
 			acceptor_->set_option(option);
 		}
@@ -163,7 +156,7 @@ namespace http
 
 	void web_server::connect_proxy(uint32_t session_id, const std::string& host, const std::string& port)
 	{
-		std::shared_ptr<WebServerProxyInfo> proxy = create_web_server_proxy(*this, session_id, io_service_, host, port);
+		std::shared_ptr<WebServerProxyInfo> proxy = create_web_server_proxy(*this, session_id, io_context_, host, port);
 		proxies_.push_back(proxy);
 
 	}
@@ -174,7 +167,7 @@ namespace http
 			return;
 		}
 
-		socket_ptr socket(new SocketInfo(io_service_));
+		socket_ptr socket(new SocketInfo(io_context_));
 		acceptor_->async_accept(socket->socket, std::bind(&web_server::handle_accept, this, socket, std::placeholders::_1));
 	}
 
@@ -278,7 +271,7 @@ namespace http
 	{
 		for(auto& p : proxies_) {
 			if(p->socket == socket) {
-				p->socket.reset(new SocketInfo(io_service_));
+				p->socket.reset(new SocketInfo(io_context_));
 				proxy_connect(p);
 				break;
 			}
@@ -419,7 +412,7 @@ namespace http
 	{
 		for(auto& p : proxies_) {
 			if(p->socket == socket) {
-				p->socket.reset(new SocketInfo(io_service_));
+				p->socket.reset(new SocketInfo(io_context_));
 				proxy_connect(p);
 				break;
 			}
@@ -490,7 +483,7 @@ namespace {
 using namespace http;
 class test_web_server : public http::web_server {
 public:
-	test_web_server(boost::asio::io_service& io_service) : web_server(io_service) {}
+	test_web_server(boost::asio::io_context& io_context) : web_server(io_context) {}
 	void handlePost(socket_ptr socket, variant doc, const environment& env, const std::string& raw_msg) override {
 
 		send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
@@ -506,9 +499,9 @@ private:
 COMMAND_LINE_UTILITY(test_http_server) {
 	using namespace http;
 
-	boost::asio::io_service io_service;
-	test_web_server server(io_service);
+	boost::asio::io_context io_context;
+	test_web_server server(io_context);
 
 
-	io_service.run();
+	io_context.run();
 }

@@ -28,7 +28,7 @@
 class web_server : public http::web_server
 {
 public:
-	explicit web_server(boost::asio::io_service& io_service, int port=23456);
+	explicit web_server(boost::asio::io_context& io_context, int port=23456);
 private:
 	void heartbeat();
 
