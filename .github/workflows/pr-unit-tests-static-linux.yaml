@@ -50,7 +50,7 @@ jobs:
       # Only write to cache on scheduled builds on trunk
       # Don't restore when creating and saving cache
       - name: Set ccache up
-        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
+        uses: hendrikmuhs/ccache-action@33522472633dbd32578e909b315f5ee43ba878ce # v1.2.22
         with:
           key: unit-tests-linux-static-steam-${{ matrix.build-type }}-${{ matrix.compiler }}-${{ matrix.steam-runtime }}
           append-timestamp: false
