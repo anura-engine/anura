@@ -60,6 +60,7 @@ jobs:
       - name: Install Conan
         uses: conan-io/setup-conan@2f4bd34e8e0af00e1a77a66e1d284e06d71d703f # v1.3.0
         with:
+          version: 2.33.0
           use_venv: true
 
       # Don't restore when creating and saving cache
@@ -73,9 +74,12 @@ jobs:
       - name: Install Dependencies with Conan
         run: |
           # XXX - We need to force build b2 as Conan assumes a too new libc++
+          # Conan Center's bison binary requires a newer glibc than Steam Sniper.
           conan install buildsystem/conan \
+            --lockfile=buildsystem/conan.lock \
             -s build_type="${{ matrix.build-type }}" \
             -s compiler.cppstd=17 \
+            --build='bison/*' \
             --build='b2/*' \
             --build='m4/*' \
             --build=missing
@@ -108,7 +112,7 @@ jobs:
             --test-dir buildsystem/linux-steam/build/"${{ matrix.build-type }}" \
             -L unittest
 
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: anura-static-binary-${{ matrix.build-type }}-${{ matrix.steam-runtime }}-${{ matrix.compiler }}-${{ github.sha }}
           path: buildsystem/linux-steam/build/${{ matrix.build-type }}/anura
