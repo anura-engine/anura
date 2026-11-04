@@ -50,6 +50,7 @@
 #include "preferences.hpp"
 #include "screen_handling.hpp"
 #include "speech_dialog.hpp"
+#include "string_utils.hpp"
 
 #include "tooltip.hpp"
 
@@ -501,10 +502,25 @@ void render_scene(Level& lvl, const screen_position& pos)
 		--scene_title_duration_;
 		const ConstGraphicalFontPtr f = GraphicalFont::get("default");
 		ASSERT_LOG(f.get() != nullptr, "COULD NOT LOAD DEFAULT FONT");
-		const rect r = f->dimensions(scene_title());
+		const auto lines = util::split(scene_title(), '\n', 0);
+	
+		std::vector<rect> rects {};
+		rects.reserve(lines.size());
+		int total_height = 0;
+		for(const std::string& line : lines) {
+			const rect lineSize { f->dimensions(line, 2) };
+			total_height += lineSize.h();
+			rects.push_back(lineSize);
+		}
+	
 		const float alpha = scene_title_duration_ > 10 ? 1.0f : scene_title_duration_/10.0f;
-		f->draw(screen_width/2 - r.w()/2 + 2, screen_height/2 - r.h()/2 + 2, scene_title(), 2, KRE::Color(0.f, 0.f, 0.f, 0.5f*alpha));
-		f->draw(screen_width/2 - r.w()/2, screen_height/2 - r.h()/2, scene_title(), 2, KRE::Color(1.f,1.f,1.f,alpha));
+		int y = screen_height/2 - total_height/2;
+		for(std::size_t n = 0; n < lines.size(); ++n) {
+			const int x = screen_width/2 - rects[n].w()/2;
+			f->draw(x + 2, y + 2, lines[n], 2, KRE::Color(0.f, 0.f, 0.f, 0.5f*alpha));
+			f->draw(x, y, lines[n], 2, KRE::Color(1.f, 1.f, 1.f, alpha));
+			y += rects[n].h();
+		}
 	}
 
 	if(current_achievement && current_achievement_duration > 0) {
