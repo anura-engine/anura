@@ -30,7 +30,7 @@ include(${CMAKE_SOURCE_DIR}/../conan/conan_toolchain.cmake)
 # BEGIN Project config
 
 # Build target for CXX project "anura"
-project(anura LANGUAGES CXX)
+project(anura LANGUAGES CXX OBJCXX)
 
 # For running tests through CTest
 enable_testing()
@@ -45,6 +45,7 @@ find_package(SDL2_ttf REQUIRED CONFIG)
 find_package(SDL2_image REQUIRED CONFIG)
 find_package(Vorbis REQUIRED CONFIG)
 find_package(Git REQUIRED)
+find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
 
 # Fetch vendored dependencies
 include(FetchContent)
@@ -96,6 +97,11 @@ file(
     "${CMAKE_SOURCE_DIR}/../../src/xhtml/*.cpp"
 )
 
+set_source_files_properties(
+    "${CMAKE_SOURCE_DIR}/../../src/main.cpp"
+    PROPERTIES LANGUAGE OBJCXX
+)
+
 # Add the headers
 include_directories(
     "${CMAKE_SOURCE_DIR}/build/src/glm"
@@ -119,10 +125,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Turn off (GNU) extensions (-std=c++17 vs. -std=gnu++17)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_OBJCXX_STANDARD 17)
+set(CMAKE_OBJCXX_STANDARD_REQUIRED ON)
+set(CMAKE_OBJCXX_EXTENSIONS OFF)
 
 # Keep configuration-specific flags compatible with Xcode's multi-config generator.
 string(APPEND CMAKE_CXX_FLAGS_DEBUG " -g3 -Og")
 string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
+string(APPEND CMAKE_OBJCXX_FLAGS_DEBUG " -g3 -Og")
+string(APPEND CMAKE_OBJCXX_FLAGS_RELEASE " -O3")
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 
 # Inject our own imgui config for our own vector operations
@@ -156,6 +167,7 @@ target_link_libraries(
     sdl_ttf::sdl_ttf
     SDL2_image::SDL2_image
     vorbis::vorbis
+    ${COCOA_FRAMEWORK}
 )
 
 # END Linker config
