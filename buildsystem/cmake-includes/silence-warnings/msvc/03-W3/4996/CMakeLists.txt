@@ -18,6 +18,7 @@ set_property(
     "${ANURA_SOURCE_DIR}/src/particle_system_proxy.cpp"
     "${ANURA_SOURCE_DIR}/src/preferences.cpp"
     "${ANURA_SOURCE_DIR}/src/sound.cpp"
+    "${ANURA_SOURCE_DIR}/src/StackWalker.cpp"
     "${ANURA_SOURCE_DIR}/src/string_utils.cpp"
     "${ANURA_SOURCE_DIR}/src/tbs_matchmaking_server.cpp"
     "${ANURA_SOURCE_DIR}/src/uuid.cpp"
