@@ -3,12 +3,15 @@ set_property(
     SOURCE
     "${ANURA_SOURCE_DIR}/src/ParticleSystemWidget.cpp"
     "${ANURA_SOURCE_DIR}/src/anura_shader.cpp"
+    "${ANURA_SOURCE_DIR}/src/cairo.cpp"
+    "${ANURA_SOURCE_DIR}/src/custom_object.cpp"
     "${ANURA_SOURCE_DIR}/src/debug_console.cpp"
     "${ANURA_SOURCE_DIR}/src/filesystem.cpp"
     "${ANURA_SOURCE_DIR}/src/formula.cpp"
     "${ANURA_SOURCE_DIR}/src/formula_callable_definition.cpp"
     "${ANURA_SOURCE_DIR}/src/formula_function.cpp"
     "${ANURA_SOURCE_DIR}/src/formula_garbage_collector.cpp"
+    "${ANURA_SOURCE_DIR}/src/formula_profiler.cpp"
     "${ANURA_SOURCE_DIR}/src/formula_vm.cpp"
     "${ANURA_SOURCE_DIR}/src/hex/tile_rules.cpp"
     "${ANURA_SOURCE_DIR}/src/kre/Color.cpp"
@@ -18,7 +21,9 @@ set_property(
     "${ANURA_SOURCE_DIR}/src/kre/ParticleSystem.cpp"
     "${ANURA_SOURCE_DIR}/src/kre/ParticleSystemAffectors.cpp"
     "${ANURA_SOURCE_DIR}/src/kre/ParticleSystemEmitters.cpp"
+    "${ANURA_SOURCE_DIR}/src/kre/ParticleSystemUI.cpp"
     "${ANURA_SOURCE_DIR}/src/kre/Surface.cpp"
+    "${ANURA_SOURCE_DIR}/src/level.cpp"
     "${ANURA_SOURCE_DIR}/src/multiplayer.cpp"
     "${ANURA_SOURCE_DIR}/src/particle_system_proxy.cpp"
     "${ANURA_SOURCE_DIR}/src/sound.cpp"
@@ -27,6 +32,7 @@ set_property(
     "${ANURA_SOURCE_DIR}/src/svg/svg_utils.cpp"
     "${ANURA_SOURCE_DIR}/src/tbs_matchmaking_server.cpp"
     "${ANURA_SOURCE_DIR}/src/tbs_server_base.cpp"
+    "${ANURA_SOURCE_DIR}/src/variant.cpp"
     "${ANURA_SOURCE_DIR}/src/xhtml/xhtml_text_box.cpp"
     APPEND PROPERTY
     COMPILE_OPTIONS /wd4267
