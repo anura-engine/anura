@@ -324,7 +324,7 @@ namespace KRE
 	bool SurfaceSDL::setClipRect(int x, int y, unsigned width, unsigned height)
 	{
 		ASSERT_LOG(surface_ != nullptr, "surface_ is null");
-		SDL_Rect r = {x,y,width,height};
+		SDL_Rect r = {x,y,static_cast<int>(width),static_cast<int>(height)};
 		return SDL_SetClipRect(surface_, &r) != SDL_TRUE;
 	}
 
