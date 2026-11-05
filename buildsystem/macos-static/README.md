@@ -12,7 +12,7 @@ conan profile detect --force
 Install dependencies for the configuration you want to build, then generate the Xcode project:
 
 ```sh
-conan install buildsystem/conan --lockfile=buildsystem/conan.lock -s build_type=Debug -s compiler.cppstd=17 --build=missing
+conan install buildsystem/conan --lockfile=buildsystem/conan.lock --lockfile-partial -s build_type=Debug -s compiler.cppstd=17 --build=missing
 cmake buildsystem/macos-static --preset Debug
 open buildsystem/macos-static/build/Debug/anura.xcodeproj
 ```

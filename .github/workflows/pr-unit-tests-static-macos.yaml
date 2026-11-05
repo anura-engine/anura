@@ -47,6 +47,7 @@ jobs:
         run: |
           conan install buildsystem/conan \
             --lockfile=buildsystem/conan.lock \
+            --lockfile-partial \
             -s build_type="${{ matrix.build-type }}" \
             -s compiler.cppstd=17 \
             --build=missing
