@@ -25,14 +25,17 @@ jobs:
         with:
           cmake-version: 4.4.3
 
-      # Only write to cache on scheduled builds on trunk
-      # Don't restore when creating and saving cache
+      # Save on PRs, merge groups, and scheduled builds on trunk.
+      # Scheduled trunk runs refresh the base cache from a clean build.
       - name: Set ccache up
         uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
         with:
-          key: unit-tests-windows-${{ matrix.build-type }}
+          key: unit-tests-windows-${{ matrix.build-type }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            unit-tests-windows-${{ matrix.build-type }}-
+            unit-tests-windows-${{ matrix.build-type }}
           append-timestamp: false
-          save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
+          save: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' || (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
           restore: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
 
       - name: Install Conan
@@ -40,7 +43,7 @@ jobs:
         with:
           use_venv: true
 
-      # Restore the newest scheduled cache for this matrix configuration.
+      # Restore the latest cache for this matrix configuration.
       - name: Restore Conan Cache
         if: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -61,9 +64,9 @@ jobs:
             -c "tools.cmake.cmaketoolchain:generator=Visual Studio 18 2026" `
             --build=missing
 
-      # Only write to cache on scheduled builds on trunk
+      # Save on PRs, merge groups, and scheduled builds on trunk.
       - name: Save Conan Cache
-        if: github.event_name == 'schedule' && github.ref == 'refs/heads/trunk'
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group' || (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk')
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.conan2/p
