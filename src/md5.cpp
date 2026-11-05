@@ -295,8 +295,8 @@ UNIT_TEST(md5_test3) {
 	uint8_t result[16] = { 0 };
 	uint8_t values[3] = { 'a', 'b', 'c' };
 	uint8_t good_result[16] = {
-		'\x90', '\x01', '\x50', '\x98', '\x3C', '\xD2', '\x4F', '\xB0',
-		'\xD6', '\x96', '\x3F', '\x7D', '\x28', '\xE1', '\x7F', '\x72',
+		0x90, 0x01, 0x50, 0x98, 0x3C, 0xD2, 0x4F, 0xB0,
+		0xD6, 0x96, 0x3F, 0x7D, 0x28, 0xE1, 0x7F, 0x72,
 	};
 	struct md5::MD5Context ctx;
 	md5::MD5Init(&ctx);
@@ -341,5 +341,4 @@ UNIT_TEST(md5_test7) {
 	std::string md5sum = MD5::calc("12345678901234567890123456789012345678901234567890123456789012345678901234567890") ;
 	CHECK_EQ(md5sum, "\x57\xED\xF4\xA2\x2B\xE3\xC9\x55\xAC\x49\xDA\x2E\x21\x07\xB6\x7A");
 }
-
 
