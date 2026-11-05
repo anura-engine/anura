@@ -40,7 +40,7 @@ namespace KRE
 
 		SDL_Color to_SDL_Color(const Color& c)
 		{
-			SDL_Color color = {c.r_int(), c.g_int(), c.b_int(), c.a_int()};
+			SDL_Color color = {static_cast<Uint8>(c.r_int()), static_cast<Uint8>(c.g_int()), static_cast<Uint8>(c.b_int()), static_cast<Uint8>(c.a_int())};
 			return color;
 		}
 
