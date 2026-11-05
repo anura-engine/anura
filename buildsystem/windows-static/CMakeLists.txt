@@ -154,6 +154,7 @@ add_executable(anura "${anura_SRC}")
 if(MSVC)
     target_compile_options(anura PRIVATE /W1 /WX)
     # XXX - Keep warning exclusions grouped by MSVC warning level as we raise it.
+    include("${ANURA_SOURCE_DIR}/buildsystem/cmake-includes/silence-warnings/msvc/CMakeLists.txt")
 endif()
 
 target_link_libraries(
