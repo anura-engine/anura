@@ -87,6 +87,7 @@ The default build type is to link dynamically against OS provided libraries.
 
 A static build also exists for the following platforms:
 
+* Windows
 * Steam Linux Runtime "Medic"
 
 Anura is an old clunky beast with over a decade of history. It's currently
@@ -290,7 +291,42 @@ way of the land.
 
 #### Windows
 
-Undocumented as of 2023-08.
+For a new development environment, install Visual Studio Community, Conan, and
+Git from PowerShell:
+
+```powershell
+winget install -e --id Microsoft.VisualStudio.Community `
+  --override "--passive --wait --norestart --add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended"
+winget install -e --id JFrog.Conan
+winget install -e --id Git.Git
+```
+
+The C++ workload includes MSVC, the Windows SDK, and CMake tools. The current
+Windows presets require CMake 4.3.1 or newer. Restart Visual Studio after
+installing the tools so it can find them.
+
+> **Note:** The unversioned Visual Studio Community package currently installs
+> Visual Studio 2026, which is used by our Windows build. When a newer major
+> version is released, winget may install an untested version instead. At that
+> point, use a versioned Visual Studio 2026 package if available.
+
+For an existing Visual Studio installation, add the **Desktop development with
+C++** workload and its recommended components using the Visual Studio Installer.
+
+Clone Anura and place the module of your choice under `modules/`. In Visual
+Studio, open the repository folder and accept the prompt to enable CMake.
+In the CMake workspace settings that open, set `enableCMake` to `true` and
+`sourceDirectory` to `buildsystem/windows-static`. Select the **Visual Studio**
+configure preset, then select the **Debug** or **Release** build preset. The
+first configuration uses Conan to install dependencies for both configurations
+and can take a long time.
+
+Select `anura` as the startup item and press **F5** to build and debug. The
+working directory is the repository root. To select a module, add
+`--module=<module-name>` in the target's debug and launch settings.
+
+Run or debug `engine_unit_tests` in Test Explorer, or use **Test > Run Test
+Preset**. The test log is written to `unit-tests.log` in the repository root.
 
 #### macOS
 

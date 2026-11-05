@@ -1,0 +1,95 @@
+name: Unit Tests / Required / Static / Windows
+on:
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0' # Weekly on Sunday
+
+jobs:
+  build:
+    name: Build and Test on Windows
+    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        build-type:
+          - Release
+          - Debug
+    steps:
+      - name: Checkout Anura
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@802fa1a2c4e212495c05bf94dba2704a92a472be # v2.0.2
+        with:
+          cmake-version: 4.4.3
+
+      # Scheduled trunk runs refresh the base cache from a clean build.
+      # Pull requests and merge groups restore it without saving their changes.
+      - name: Set ccache up
+        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2.20
+        with:
+          key: unit-tests-windows-${{ matrix.build-type }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            unit-tests-windows-${{ matrix.build-type }}-
+            unit-tests-windows-${{ matrix.build-type }}
+          append-timestamp: false
+          save: ${{ github.event_name == 'schedule' && github.ref == 'refs/heads/trunk' }}
+          restore: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+
+      - name: Install Conan
+        uses: conan-io/setup-conan@09566912d661de90608308897a4d513e850c04e8 # v1.2.0
+        with:
+          use_venv: true
+
+      - name: Restore Conan Cache
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.conan2/p
+          key: conan-windows-static-${{ matrix.build-type }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            conan-windows-static-${{ matrix.build-type }}-
+            conan-windows-static-${{ matrix.build-type }}
+
+      - name: Build Prep Anura
+        env:
+          PYTHONHASHSEED: "0"
+        run: |
+          cmake buildsystem/windows-static `
+            --preset="Visual Studio" `
+            -D "CONAN_INSTALL_BUILD_CONFIGURATIONS=${{ matrix.build-type }}" `
+            -D "CMAKE_CONFIGURATION_TYPES=${{ matrix.build-type }}"
+
+      - name: Build Anura
+        run: |
+          cmake --build "buildsystem/windows-static/build/visual-studio" `
+            --config "${{ matrix.build-type }}" `
+            --parallel
+
+      - name: Clean Conan Cache
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/trunk'
+        run: conan cache clean "*" --source --build --temp
+
+      - name: Save Conan Cache
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/trunk'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.conan2/p
+          key: conan-windows-static-${{ matrix.build-type }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Run Anura unit tests
+        timeout-minutes: 5
+        run: |
+          ctest --test-dir "buildsystem/windows-static/build/visual-studio" `
+            -C "${{ matrix.build-type }}" -L unittest --output-on-failure
+
+      - name: Print Anura unit test log
+        if: always()
+        run: |
+          if (Test-Path "unit-tests.log") {
+            Get-Content "unit-tests.log"
+          } else {
+            Write-Host "Unit test log was not created."
+          }
