@@ -28,7 +28,6 @@
 #include <cmath>
 #include <vector>
 
-#include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_loadso.h>
 
 #include <vorbis/vorbisfile.h>

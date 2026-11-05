@@ -59,7 +59,7 @@ jobs:
           key: conan-macos-static-${{ matrix.build-type }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Configure Xcode Project
-        run: cmake --preset "${{ matrix.build-type }}"
+        run: cmake buildsystem/macos-static --preset "${{ matrix.build-type }}"
 
       - name: Build Anura
         run: |
