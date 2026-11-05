@@ -151,6 +151,11 @@ set(VCPKG_LIBRARY_LINKAGE static)
 # Output an executable from the anura sources for anura
 add_executable(anura "${anura_SRC}")
 
+if(MSVC)
+    target_compile_options(anura PRIVATE /W1 /WX)
+    # XXX - Keep warning exclusions grouped by MSVC warning level as we raise it.
+endif()
+
 target_link_libraries(
     anura
     PRIVATE
