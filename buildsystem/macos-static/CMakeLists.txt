@@ -152,7 +152,7 @@ add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 # BEGIN Linker config
 
 # Output an executable from the anura sources for anura
-add_executable(anura "${anura_SRC}")
+add_executable(anura MACOSX_BUNDLE "${anura_SRC}")
 
 # Link libraries
 target_link_libraries(
@@ -170,6 +170,18 @@ target_link_libraries(
     ${COCOA_FRAMEWORK}
 )
 
+foreach(resource data images modules music)
+    add_custom_command(
+        TARGET anura
+        POST_BUILD
+        COMMAND
+            ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/../../${resource}"
+            "$<TARGET_BUNDLE_DIR:anura>/Contents/Resources/${resource}"
+        VERBATIM
+    )
+endforeach()
+
 # END Linker config
 
 # BEGIN Test config
@@ -177,7 +189,7 @@ target_link_libraries(
 add_test(
     NAME engine_unit_tests
     COMMAND $<TARGET_FILE:anura> --tests
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/../../
+    WORKING_DIRECTORY "$<TARGET_BUNDLE_DIR:anura>/Contents/Resources"
 )
 set_tests_properties(engine_unit_tests PROPERTIES LABELS "unittest")
 

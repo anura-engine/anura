@@ -399,9 +399,7 @@ int main(int argcount, char* argvec[])
 #endif
 
 #if defined(__APPLE__) && TARGET_OS_MAC
-    if(!sys::file_exists("data/controls.cfg")) {
-        chdir([[[NSBundle mainBundle] resourcePath] fileSystemRepresentation]);
-    }
+    chdir([[[NSBundle mainBundle] resourcePath] fileSystemRepresentation]);
 #endif
 
 #ifdef NO_STDERR
