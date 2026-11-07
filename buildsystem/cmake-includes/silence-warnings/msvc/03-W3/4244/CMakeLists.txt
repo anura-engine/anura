@@ -12,6 +12,10 @@ set_property(
     "${ANURA_SOURCE_DIR}/src/tbs_matchmaking_server.cpp"
     "${ANURA_SOURCE_DIR}/src/theme_imgui.cpp"
     "${ANURA_SOURCE_DIR}/src/utility_object_compiler.cpp"
+    "${ANURA_SOURCE_DIR}/src/base64.cpp"
+    "${ANURA_SOURCE_DIR}/src/imgui_additions/imgui_custom.cpp"
+    "${ANURA_SOURCE_DIR}/src/kre/TextureUtils.cpp"
+    "${ANURA_SOURCE_DIR}/src/kre/AttributeSet.cpp"
     APPEND PROPERTY
     COMPILE_OPTIONS /wd4244
 )

@@ -152,7 +152,7 @@ set(VCPKG_LIBRARY_LINKAGE static)
 add_executable(anura "${anura_SRC}")
 
 if(MSVC)
-    target_compile_options(anura PRIVATE /W4 /WX /wd4100)
+    target_compile_options(anura PRIVATE /W4 /WX)
     # Bad things, to get rid of
     include("${ANURA_SOURCE_DIR}/buildsystem/cmake-includes/silence-warnings/msvc/CMakeLists.txt")
 endif()
