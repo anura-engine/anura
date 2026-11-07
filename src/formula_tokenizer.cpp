@@ -130,7 +130,7 @@ namespace formula_tokenizer
 				t.type = FFL_TOKEN_TYPE::DECIMAL;
 				//   Finish the parsing of the decimal number.
 				++i1;
-				while (util::c_isdigit(*i1)) {
+				while (i1 != i2 && util::c_isdigit(*i1)) {
 					++i1;
 				}
 				t.end = i1;
