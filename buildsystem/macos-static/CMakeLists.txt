@@ -149,6 +149,8 @@ add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 
 # END Compiler config
 
+include("${CMAKE_SOURCE_DIR}/../cmake-includes/silence-warnings/CMakeLists.txt")
+
 # BEGIN Linker config
 
 # Output an executable from the anura sources for anura
