@@ -191,6 +191,10 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
     ProcessorCount(NPROC)
     target_compile_options(anura PRIVATE "-flto=${NPROC}")
     target_link_options(anura PRIVATE "-flto=${NPROC}")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_link_options(anura PRIVATE "-Wno-error=odr")
+        target_compile_options(anura PRIVATE "-Wno-error=odr")
+    endif()
 endif()
 
 # Link libraries
