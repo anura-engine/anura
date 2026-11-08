@@ -157,6 +157,9 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
     add_compile_definitions(NDEBUG)
 endif()
 
+# Warnings as errors
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+
 # Bad things, to get rid of
 
 # Use imgui provided vector math
@@ -188,6 +191,10 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
     ProcessorCount(NPROC)
     target_compile_options(anura PRIVATE "-flto=${NPROC}")
     target_link_options(anura PRIVATE "-flto=${NPROC}")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_link_options(anura PRIVATE "-Wno-error=odr")
+        target_compile_options(anura PRIVATE "-Wno-error=odr")
+    endif()
 endif()
 
 # Link libraries
