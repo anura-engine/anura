@@ -1,0 +1,78 @@
+name: Unit Tests / Static / macOS
+on:
+  pull_request:
+  merge_group:
+  schedule:
+    - cron: "0 0 * * 0" # Weekly on Sunday
+
+jobs:
+  build:
+    name: Build and Test (${{ matrix.build-type }})
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        build-type:
+          - Debug
+          - Release
+    steps:
+      - name: Checkout Anura
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Build Tools
+        run: brew install ccache cmake conan pkg-config
+
+      - name: Detect Conan Profile
+        run: conan profile detect --force
+
+      - name: Set ccache up
+        uses: hendrikmuhs/ccache-action@f09c25b45002a07be2955cbe52e8cee55643f89d # v1.2.24
+        with:
+          key: unit-tests-macos-static-${{ matrix.build-type }}-${{ runner.arch }}
+          restore-keys: |
+            unit-tests-macos-static-${{ matrix.build-type }}-${{ runner.arch }}-
+          save: ${{ (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') || github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+          restore: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
+
+      - name: Restore Conan Cache
+        if: ${{ ! (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') }}
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.conan2/p
+          key: conan-macos-static-${{ matrix.build-type }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            conan-macos-static-${{ matrix.build-type }}-${{ runner.arch }}-
+
+      - name: Install Dependencies with Conan
+        run: |
+          conan install buildsystem/conan \
+            --lockfile=buildsystem/conan.lock \
+            --lockfile-partial \
+            -s build_type="${{ matrix.build-type }}" \
+            -s compiler.cppstd=17 \
+            --build=missing
+
+      - name: Save Conan Cache
+        if: ${{ (github.event_name == 'schedule' && github.ref == 'refs/heads/trunk') || github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.conan2/p
+          key: conan-macos-static-${{ matrix.build-type }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Configure Xcode Project
+        run: cmake buildsystem/macos-static --preset "${{ matrix.build-type }}"
+
+      - name: Build Anura
+        run: |
+          cmake \
+            --build buildsystem/macos-static/build/"${{ matrix.build-type }}" \
+            --config "${{ matrix.build-type }}" \
+            --parallel "$(sysctl -n hw.ncpu)"
+
+      - name: Run Unit Tests
+        run: |
+          ctest \
+            --output-on-failure \
+            --test-dir buildsystem/macos-static/build/"${{ matrix.build-type }}" \
+            --build-config "${{ matrix.build-type }}" \
+            -L unittest
