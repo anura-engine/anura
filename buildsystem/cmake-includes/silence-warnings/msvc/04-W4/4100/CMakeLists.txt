@@ -226,4 +226,6 @@ set_property(
     "${ANURA_SOURCE_DIR}/src/xhtml/xhtml_script_interface.cpp"
     "${ANURA_SOURCE_DIR}/src/xhtml/xhtml_style_tree.cpp"
     "${ANURA_SOURCE_DIR}/src/xhtml/xslider.cpp"
+    APPEND PROPERTY
+    COMPILE_OPTIONS /wd4100
 )
