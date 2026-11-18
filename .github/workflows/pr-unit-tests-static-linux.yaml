@@ -87,6 +87,10 @@ jobs:
             --build='m4/*' \
             --build=missing
 
+      - name: Clean Conan Cache
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/trunk'
+        run: conan cache clean "*" --source --build --temp
+
       # Only write to cache on scheduled builds on trunk
       - name: Save Conan Cache
         if: github.event_name == 'schedule' && github.ref == 'refs/heads/trunk'
