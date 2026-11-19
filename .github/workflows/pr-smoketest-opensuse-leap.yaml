@@ -17,8 +17,9 @@ jobs:
           - "15.5"
           - "15.6"
           - "16.0"
-          # 16.1 is expected in 2026-06
+          - "16.1"
           # 16.2 is expected in 2027-06
+          # 16.3 is expected in 2028-06
         compiler:
           - g++
           - clang++
