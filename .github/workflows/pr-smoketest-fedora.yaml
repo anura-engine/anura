@@ -24,8 +24,9 @@ jobs:
           - "41"
           - "42"
           - "43"
-          # 44 is expected in 2026-04
+          - "44"
           # 45 is expected in 2026-11
+          # 46 is expected in 2027-04
         compiler:
           - g++
           - clang++
