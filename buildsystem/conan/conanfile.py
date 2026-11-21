@@ -33,3 +33,7 @@ class Anura(ConanFile):
         # Force static libs by default
         "*:shared": False,
     }
+
+    def requirements(self):
+        if self.settings.os == "Windows":
+            self.requires("sdl_mixer/2.8.1")
